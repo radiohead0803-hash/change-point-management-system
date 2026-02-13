@@ -3,22 +3,28 @@ nixPkgs = ['nodejs']
 cmds = [
   'export SHELL=/bin/bash',
   'corepack enable',
-  'corepack prepare pnpm@8.15.1 --activate',
-  'mkdir -p /root/.local/share/pnpm',
-  'export PNPM_HOME="/root/.local/share/pnpm"',
-  'export PATH="$PNPM_HOME:$PATH"',
-  'npm install -g prisma@5.22.0'
+  'corepack prepare pnpm@8.15.1 --activate'
 ]
 
 [phases.install]
 cmds = [
+  'pnpm config set store-dir /root/.local/share/pnpm/store',
+  'pnpm config set node-linker hoisted',
   'pnpm install --no-frozen-lockfile'
 ]
 
 [phases.build]
 cmds = [
-  'cd packages/database && pnpm install --no-frozen-lockfile && npx prisma generate && pnpm build --no-frozen-lockfile && cd ../..',
-  'cd apps/api && pnpm install --no-frozen-lockfile && pnpm build --no-frozen-lockfile'
+  'cd packages/database',
+  'pnpm install --no-frozen-lockfile',
+  'npx prisma@5.22.0 generate',
+  'pnpm build --no-frozen-lockfile',
+  'cd ../..',
+  'cd apps/api',
+  'pnpm install --no-frozen-lockfile',
+  'pnpm build --no-frozen-lockfile',
+  'cd ../..',
+  'pnpm install --no-frozen-lockfile'
 ]
 
 [start]
@@ -27,8 +33,16 @@ cmd = 'cd apps/api && NODE_ENV=production pnpm start:prod'
 [variables]
 NODE_ENV = 'production'
 NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
-NPM_CONFIG_STORE = '/root/.local/share/pnpm/store'
 PNPM_HOME = '/root/.local/share/pnpm'
+PATH = '/root/.local/share/pnpm:$PATH'
+
+[build.env]
+PRISMA_SCHEMA_ENGINE_BINARY = '/root/.cache/prisma/master/schema-engine-debian-openssl-1.1.x'
+PRISMA_QUERY_ENGINE_BINARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
+PRISMA_QUERY_ENGINE_LIBRARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
+PRISMA_ENGINE_PROTOCOL = 'graphql'
+SKIP_PRISMA_POSTINSTALL = 'true'
+NPM_CONFIG_STORE = '/root/.local/share/pnpm/store'
 
 [build.env]
 PRISMA_SCHEMA_ENGINE_BINARY = '/root/.cache/prisma/master/schema-engine-debian-openssl-1.1.x'
