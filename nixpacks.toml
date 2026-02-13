@@ -1,17 +1,19 @@
 [phases.setup]
 nixPkgs = ['nodejs']
 cmds = [
-  'npm install -g pnpm@8.15.1'
+  'corepack enable',
+  'corepack prepare pnpm@8.15.1 --activate'
 ]
 
 [phases.install]
 cmds = [
-  'pnpm install --no-frozen-lockfile'
+  'pnpm install'
 ]
 
 [phases.build]
 cmds = [
-  'pnpm build'
+  'cd packages/database && pnpm build',
+  'cd ../../apps/api && pnpm build'
 ]
 
 [start]
@@ -19,3 +21,5 @@ cmd = 'cd apps/api && pnpm start:prod'
 
 [variables]
 NODE_ENV = 'production'
+NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
+NPM_CONFIG_STORE = '/root/.local/share/pnpm/store'
