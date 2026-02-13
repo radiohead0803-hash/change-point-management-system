@@ -7,7 +7,7 @@ cmds = [
   'mkdir -p /root/.local/share/pnpm',
   'export PNPM_HOME="/root/.local/share/pnpm"',
   'export PATH="$PNPM_HOME:$PATH"',
-  'npm install -g prisma'
+  'npm install -g prisma@5.22.0'
 ]
 
 [phases.install]
