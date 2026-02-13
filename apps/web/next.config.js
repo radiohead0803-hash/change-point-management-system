@@ -9,9 +9,6 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@cpms/database'],
-  experimental: {
-    serverActions: true,
-  },
 };
 
 module.exports = withPWA(nextConfig);
