@@ -1,11 +1,11 @@
 [build]
 builder = "nixpacks"
-buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && pnpm install --no-frozen-lockfile && pnpm -C apps/web build"
+buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && pnpm install --no-frozen-lockfile && cd packages/database && npx prisma generate && pnpm build && cd ../../apps/web && pnpm build"
 
 [deploy]
-startCommand = "pnpm -C apps/web start -p $PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 100
+startCommand = "cd apps/web && npx next start --hostname 0.0.0.0 --port ${PORT:-3000}"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 numReplicas = 1
 
