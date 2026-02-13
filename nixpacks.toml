@@ -8,14 +8,15 @@ cmds = [
 [phases.install]
 cmds = [
   'pnpm install',
-  'cd packages/database && pnpm prisma generate',
-  'cd ../..'
+  'cd packages/database && pnpm prisma generate && cd ../..',
+  'cd apps/api && pnpm prisma generate && cd ../..',
+  'pnpm install'
 ]
 
 [phases.build]
 cmds = [
-  'cd packages/database && pnpm build',
-  'cd ../../apps/api && pnpm prisma generate && pnpm build'
+  'cd packages/database && pnpm build && cd ../..',
+  'cd apps/api && pnpm build'
 ]
 
 [start]
@@ -31,3 +32,4 @@ PRISMA_SCHEMA_ENGINE_BINARY = '/root/.cache/prisma/master/schema-engine-debian-o
 PRISMA_QUERY_ENGINE_BINARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
 PRISMA_QUERY_ENGINE_LIBRARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
 PRISMA_ENGINE_PROTOCOL = 'graphql'
+SKIP_PRISMA_POSTINSTALL = 'true'
