@@ -19,8 +19,8 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'cd packages/database && pnpm build && cd ../..',
-  'cd apps/api && pnpm build'
+  'cd packages/database && pnpm install --no-frozen-lockfile && pnpm build && cd ../..',
+  'cd apps/api && pnpm install --no-frozen-lockfile && pnpm build'
 ]
 
 [start]
