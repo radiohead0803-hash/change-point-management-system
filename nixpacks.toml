@@ -2,14 +2,14 @@
 nixPkgs = ['nodejs', 'bash', 'dash']
 cmds = [
   'corepack enable',
-  'corepack prepare pnpm@8.15.1 --activate'
 ]
 
 [phases.install]
 cmds = [
+  'corepack prepare pnpm@8.15.1 --activate',
   'pnpm config set store-dir /root/.local/share/pnpm/store',
   'pnpm config set node-linker hoisted',
-  'pnpm install --no-frozen-lockfile'
+  'pnpm install --no-frozen-lockfile --ignore-scripts'
 ]
 
 [phases.build]

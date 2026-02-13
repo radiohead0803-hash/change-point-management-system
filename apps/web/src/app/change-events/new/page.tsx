@@ -51,21 +51,43 @@ export default function NewChangeEventPage() {
       receiptMonth: new Date().toISOString().slice(0, 7),
       occurredDate: new Date().toISOString().slice(0, 10),
       companyId: user?.companyId,
+      customer: '',
+      project: '',
+      productLine: '',
+      partNumber: '',
+      factory: '',
+      productionLine: '',
+      description: '',
+      department: '',
+      managerId: '',
+      primaryItemId: '',
+      tags: [],
     },
   });
 
   const onSubmit = async (data: ChangeEventForm) => {
+    if (!user?.id) {
+      toast({
+        variant: 'destructive',
+        title: '로그인이 필요합니다.',
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      const { tags, ...rest } = data;
       await changeEvents.create({
-        ...data,
+        ...rest,
         status: 'DRAFT',
-        company: undefined,
-        manager: undefined,
-        executive: undefined,
-        reviewer: undefined,
-        inspectionResults: [],
-        attachments: [],
+        changeType: 'FOUR_M',
+        category: '',
+        subCategory: '',
+        createdById: user.id,
+        tags: tags.map(tag => ({
+          itemId: tag.itemId,
+          tagType: tag.tagType,
+        })),
       });
       toast({
         title: '변동점이 등록되었습니다.',
