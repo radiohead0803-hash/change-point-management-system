@@ -26,7 +26,7 @@ const changeEventSchema = z.object({
   tags: z.array(z.object({
     itemId: z.string(),
     tagType: z.enum(['PRIMARY', 'TAG']),
-  })),
+  })).default([]),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
   department: z.string().min(1, '발생부서를 입력해주세요'),
   managerId: z.string().min(1, '실무담당자를 선택해주세요'),
@@ -43,6 +43,7 @@ export default function NewChangeEventPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ChangeEventForm>({
     resolver: zodResolver(changeEventSchema),
@@ -50,14 +51,22 @@ export default function NewChangeEventPage() {
       receiptMonth: new Date().toISOString().slice(0, 7),
       occurredDate: new Date().toISOString().slice(0, 10),
       companyId: user?.companyId,
-      changeType: 'FOUR_M',
     },
   });
 
   const onSubmit = async (data: ChangeEventForm) => {
     try {
       setLoading(true);
-      await changeEvents.create(data);
+      await changeEvents.create({
+        ...data,
+        status: 'DRAFT',
+        company: undefined,
+        manager: undefined,
+        executive: undefined,
+        reviewer: undefined,
+        inspectionResults: [],
+        attachments: [],
+      });
       toast({
         title: '변동점이 등록되었습니다.',
         description: '변동점 목록에서 확인하실 수 있습니다.',
