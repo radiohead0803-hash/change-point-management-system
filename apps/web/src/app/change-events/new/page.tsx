@@ -230,7 +230,7 @@ export default function NewChangeEventPage() {
               defaultValue={[]}
               render={({ field }) => (
                 <TagSelector
-                  value={field.value}
+                  value={field.value as any}
                   onChange={field.onChange}
                   required
                 />

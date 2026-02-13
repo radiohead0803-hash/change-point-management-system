@@ -38,11 +38,11 @@ export class ChangeEventsController {
   @ApiOperation({ summary: '변동점 목록 조회' })
   @ApiResponse({ status: 200, description: '변동점 목록을 반환합니다.' })
   findAll(
+    @Request() req: any,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
     @Query('status') status?: string,
     @Query('companyId') companyId?: string,
-    @Request() req: any,
   ) {
     const where: any = {};
     if (status) where.status = status;
@@ -75,7 +75,7 @@ export class ChangeEventsController {
     @Body() updateChangeEventDto: UpdateChangeEventDto,
     @Request() req: any,
   ) {
-    return this.changeEventsService.update(id, updateChangeEventDto, req.user.id, req.user.role);
+    return this.changeEventsService.update(id, updateChangeEventDto as any, req.user.id, req.user.role);
   }
 
   @Delete(':id')

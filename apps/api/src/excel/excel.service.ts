@@ -208,6 +208,6 @@ export class ExcelService {
     });
 
     // 엑셀 파일 생성
-    return await workbook.xlsx.writeBuffer();
+    return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 }

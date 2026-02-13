@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { changeEvents } from '@/lib/api-client';
+import { codeMasters } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
@@ -21,20 +21,20 @@ export function TagSelector({ value = [], onChange, required }: TagSelectorProps
   // 분류 목록 조회
   const { data: classes = [] } = useQuery({
     queryKey: ['change-classes'],
-    queryFn: () => changeEvents.findClasses().then((res) => res.data),
+    queryFn: () => codeMasters.findClasses().then((res) => res.data),
   });
 
   // 카테고리 목록 조회
   const { data: categories = [] } = useQuery({
     queryKey: ['change-categories', selectedClassCode],
-    queryFn: () => changeEvents.findCategories(selectedClassCode).then((res) => res.data),
+    queryFn: () => codeMasters.findCategories(selectedClassCode).then((res) => res.data),
     enabled: !!selectedClassCode,
   });
 
   // 항목 목록 조회
   const { data: items = [] } = useQuery({
     queryKey: ['change-items', selectedCategoryId],
-    queryFn: () => changeEvents.findItems(selectedCategoryId).then((res) => res.data),
+    queryFn: () => codeMasters.findItems(selectedCategoryId).then((res) => res.data),
     enabled: !!selectedCategoryId,
   });
 

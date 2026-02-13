@@ -31,7 +31,7 @@ export class InspectionController {
   @ApiResponse({ status: 201, description: '점검 템플릿이 생성되었습니다.' })
   @Roles(Role.ADMIN)
   createTemplate(@Body() createTemplateDto: CreateTemplateDto) {
-    return this.inspectionService.createTemplate(createTemplateDto);
+    return this.inspectionService.createTemplate(createTemplateDto as any);
   }
 
   @Get('templates')
@@ -70,7 +70,7 @@ export class InspectionController {
   @ApiResponse({ status: 201, description: '점검 항목이 생성되었습니다.' })
   @Roles(Role.ADMIN)
   createItem(@Body() createItemDto: CreateInspectionItemDto) {
-    return this.inspectionService.createItem(createItemDto);
+    return this.inspectionService.createItem(createItemDto as any);
   }
 
   @Patch('items/:id')
@@ -94,7 +94,7 @@ export class InspectionController {
   @ApiOperation({ summary: '점검 결과 생성' })
   @ApiResponse({ status: 201, description: '점검 결과가 생성되었습니다.' })
   createResult(@Body() createResultDto: CreateInspectionResultDto) {
-    return this.inspectionService.createResult(createResultDto);
+    return this.inspectionService.createResult(createResultDto as any);
   }
 
   @Get('results/event/:eventId')

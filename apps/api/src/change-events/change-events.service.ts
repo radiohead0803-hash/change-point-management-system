@@ -18,12 +18,16 @@ export class ChangeEventsService {
         key: 'REQUIRE_96_TAG',
         scopeType: 'GLOBAL',
         effectiveFrom: { lte: new Date() },
-        effectiveTo: { gte: new Date() } || null,
+        OR: [
+          { effectiveTo: { gte: new Date() } },
+          { effectiveTo: null },
+        ],
       },
     });
 
     // 정책이 활성화되어 있는데 96태그가 없는 경우
-    if (requireTag?.value?.enabled && (!tags || tags.length === 0)) {
+    const settingValue = requireTag?.value as any;
+    if (settingValue?.enabled && (!tags || tags.length === 0)) {
       throw new ForbiddenException('96항목 태그는 필수항목입니다.');
     }
 
@@ -137,7 +141,7 @@ export class ChangeEventsService {
     return event;
   }
 
-  async update(id: string, data: Prisma.ChangeEventUpdateInput, userId: string, userRole: Role) {
+  async update(id: string, data: any, userId: string, userRole: Role) {
     const event = await this.findOne(id);
 
     // 권한 체크
@@ -156,11 +160,21 @@ export class ChangeEventsService {
       }
     }
 
+    const { tags, ...updateData } = data;
     return this.prisma.changeEvent.update({
       where: { id },
       data: {
-        ...data,
+        ...updateData,
         updatedById: userId,
+        ...(tags ? {
+          tags: {
+            deleteMany: {},
+            create: tags.map((tag: any) => ({
+              itemId: tag.itemId,
+              tagType: tag.tagType,
+            })),
+          },
+        } : {}),
       },
       include: {
         company: true,

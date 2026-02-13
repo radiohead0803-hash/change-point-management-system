@@ -59,6 +59,8 @@ export interface ChangeEvent {
   executive?: User;
   reviewerId?: string;
   reviewer?: User;
+  primaryItemId?: string;
+  tags?: Array<{ itemId: string; tagType: 'PRIMARY' | 'TAG' }>;
   inspectionResults: InspectionResult[];
   attachments: Attachment[];
   createdAt: string;

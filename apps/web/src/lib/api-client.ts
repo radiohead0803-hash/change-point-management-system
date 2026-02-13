@@ -15,7 +15,7 @@ export const auth = {
 };
 
 export const changeEvents = {
-  create: (data: Omit<ChangeEvent, 'id' | 'createdAt' | 'updatedAt'>) =>
+  create: (data: any) =>
     api.post<ChangeEvent>('/change-events', data),
 
   list: (params?: {
@@ -69,8 +69,7 @@ export const excel = {
     api.get(`/excel/monthly/${year}/${month}`, { responseType: 'blob' }),
 };
 
-export const changeEvents = {
-  ...changeEvents,
+export const codeMasters = {
   findClasses: () => api.get('/change-events/codes/classes'),
   findCategories: (classCode?: string) =>
     api.get('/change-events/codes/categories', { params: { classCode } }),

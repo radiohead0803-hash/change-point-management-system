@@ -74,7 +74,10 @@ export class SettingsService {
         scopeType,
         scopeId: scopeId || null,
         effectiveFrom: { lte: new Date() },
-        effectiveTo: { gte: new Date() } || null,
+        OR: [
+          { effectiveTo: { gte: new Date() } },
+          { effectiveTo: null },
+        ],
         deletedAt: null,
       },
     });
