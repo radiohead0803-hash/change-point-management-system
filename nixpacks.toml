@@ -1,16 +1,18 @@
 [phases.setup]
-nixPkgs = ['nodejs', 'pnpm']
+nixPkgs = ['nodejs']
+cmds = [
+  'npm install -g pnpm@8.15.1'
+]
 
 [phases.install]
 cmds = [
-  'pnpm install'
+  'pnpm install --no-frozen-lockfile'
 ]
 
 [phases.build]
 cmds = [
-  'cd packages/database && pnpm build',
-  'cd ../../apps/api && pnpm build'
+  'pnpm build'
 ]
 
 [start]
-cmd = 'cd apps/api && pnpm start:prod'
+cmd = 'cd apps/api && NODE_ENV=production pnpm start:prod'
