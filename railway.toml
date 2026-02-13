@@ -1,4 +1,0 @@
-# 이 파일은 사용하지 않습니다.
-# 각 서비스별 설정:
-#   API  → railway.api.toml  (Railway UI에서 Config File Path 지정)
-#   Web  → railway.web.toml  (Railway UI에서 Config File Path 지정)
