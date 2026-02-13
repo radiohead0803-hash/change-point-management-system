@@ -43,10 +43,3 @@ PRISMA_QUERY_ENGINE_LIBRARY = '/root/.cache/prisma/master/libquery_engine-debian
 PRISMA_ENGINE_PROTOCOL = 'graphql'
 SKIP_PRISMA_POSTINSTALL = 'true'
 NPM_CONFIG_STORE = '/root/.local/share/pnpm/store'
-
-[build.env]
-PRISMA_SCHEMA_ENGINE_BINARY = '/root/.cache/prisma/master/schema-engine-debian-openssl-1.1.x'
-PRISMA_QUERY_ENGINE_BINARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
-PRISMA_QUERY_ENGINE_LIBRARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
-PRISMA_ENGINE_PROTOCOL = 'graphql'
-SKIP_PRISMA_POSTINSTALL = 'true'
