@@ -7,19 +7,27 @@ cmds = [
 
 [phases.install]
 cmds = [
-  'pnpm install'
+  'pnpm install',
+  'cd packages/database && pnpm prisma generate',
+  'cd ../..'
 ]
 
 [phases.build]
 cmds = [
   'cd packages/database && pnpm build',
-  'cd ../../apps/api && pnpm build'
+  'cd ../../apps/api && pnpm prisma generate && pnpm build'
 ]
 
 [start]
-cmd = 'cd apps/api && pnpm start:prod'
+cmd = 'cd apps/api && NODE_ENV=production pnpm start:prod'
 
 [variables]
 NODE_ENV = 'production'
 NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
 NPM_CONFIG_STORE = '/root/.local/share/pnpm/store'
+
+[build.env]
+PRISMA_SCHEMA_ENGINE_BINARY = '/root/.cache/prisma/master/schema-engine-debian-openssl-1.1.x'
+PRISMA_QUERY_ENGINE_BINARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
+PRISMA_QUERY_ENGINE_LIBRARY = '/root/.cache/prisma/master/libquery_engine-debian-openssl-1.1.x.so.node'
+PRISMA_ENGINE_PROTOCOL = 'graphql'
