@@ -42,7 +42,7 @@ export class ChangeEventsController {
     @Query('take') take?: string,
     @Query('status') status?: string,
     @Query('companyId') companyId?: string,
-    @Request() req,
+    @Request() req: any,
   ) {
     const where: any = {};
     if (status) where.status = status;
@@ -73,7 +73,7 @@ export class ChangeEventsController {
   update(
     @Param('id') id: string,
     @Body() updateChangeEventDto: UpdateChangeEventDto,
-    @Request() req,
+    @Request() req: any,
   ) {
     return this.changeEventsService.update(id, updateChangeEventDto, req.user.id, req.user.role);
   }

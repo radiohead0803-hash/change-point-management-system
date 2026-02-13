@@ -9,7 +9,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate",
     "db:migrate": "prisma migrate dev",
-    "build": "tsup",
+    "build": "prisma generate && tsup src/index.ts",
     "clean": "rimraf .turbo node_modules dist"
   },
   "dependencies": {
@@ -19,7 +19,11 @@
     "@types/node": "^20.11.16",
     "prisma": "^5.9.1",
     "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }
