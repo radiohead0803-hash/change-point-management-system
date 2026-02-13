@@ -9,13 +9,14 @@ cmds = [
 cmds = [
   'pnpm config set store-dir /root/.local/share/pnpm/store',
   'pnpm config set node-linker hoisted',
-  'pnpm install --no-frozen-lockfile'
+  'pnpm install'
 ]
 
 [phases.build]
 cmds = [
   'npx prisma@5.22.0 generate --schema=./packages/database/prisma/schema.prisma',
   'pnpm -C packages/database build',
+  'pnpm -C apps/api prisma generate',
   'pnpm -C apps/api build'
 ]
 
@@ -27,6 +28,9 @@ SHELL = '/bin/bash'
 NODE_ENV = 'production'
 NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
 PNPM_HOME = '/root/.local/share/pnpm'
+DISABLE_OPENCOLLECTIVE = 'true'
+OPENCOLLECTIVE_HIDE = 'true'
+PNPM_IGNORE_SCRIPTS = 'true'
 PATH = '/root/.local/share/pnpm:$PATH'
 
 [build.env]
