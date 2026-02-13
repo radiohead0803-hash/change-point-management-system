@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install --no-frozen-lockfile"
+buildCommand = "pnpm install --no-frozen-lockfile && pnpm -C packages/database build && pnpm -C apps/api build"
+
 
 [deploy]
 startCommand = "/bin/bash -c 'cd apps/api && pnpm start:prod'"
