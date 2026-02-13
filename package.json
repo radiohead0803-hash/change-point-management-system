@@ -11,7 +11,8 @@
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "setup-hooks": "husky install"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.6.0",
