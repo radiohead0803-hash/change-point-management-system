@@ -9,11 +9,41 @@ export class ChangeEventsService {
     this.prisma = new PrismaClient();
   }
 
-  async create(data: Prisma.ChangeEventCreateInput, userId: string) {
+  async create(data: any, userId: string) {
+    const { tags, ...eventData } = data;
+
+    // 정책 설정 확인
+    const requireTag = await this.prisma.policySetting.findFirst({
+      where: {
+        key: 'REQUIRE_96_TAG',
+        scopeType: 'GLOBAL',
+        effectiveFrom: { lte: new Date() },
+        effectiveTo: { gte: new Date() } || null,
+      },
+    });
+
+    // 정책이 활성화되어 있는데 96태그가 없는 경우
+    if (requireTag?.value?.enabled && (!tags || tags.length === 0)) {
+      throw new ForbiddenException('96항목 태그는 필수항목입니다.');
+    }
+
     return this.prisma.changeEvent.create({
       data: {
-        ...data,
+        ...eventData,
         createdById: userId,
+        tags: {
+          create: tags?.map((tag) => ({
+            itemId: tag.itemId,
+            tagType: tag.tagType,
+          })),
+        },
+      },
+      include: {
+        tags: {
+          include: {
+            item: true,
+          },
+        },
       },
     });
   }
@@ -40,6 +70,46 @@ export class ChangeEventsService {
             item: true,
           },
         },
+        tags: {
+          include: {
+            item: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findClasses() {
+    return this.prisma.changeClass.findMany({
+      where: {
+        deletedAt: null,
+      },
+    });
+  }
+
+  async findCategories(classCode?: string) {
+    return this.prisma.changeCategory.findMany({
+      where: {
+        deletedAt: null,
+        class: classCode ? {
+          code: classCode,
+        } : undefined,
+      },
+      include: {
+        class: true,
+        parent: true,
+      },
+    });
+  }
+
+  async findItems(categoryId?: string) {
+    return this.prisma.changeItem.findMany({
+      where: {
+        deletedAt: null,
+        categoryId: categoryId || undefined,
+      },
+      include: {
+        category: true,
       },
     });
   }
@@ -61,7 +131,7 @@ export class ChangeEventsService {
     });
 
     if (!event) {
-      throw new NotFoundException(\`변동점 ID \${id}를 찾을 수 없습니다.\`);
+      throw new NotFoundException(`변동점 ID ${id}를 찾을 수 없습니다.`);
     }
 
     return event;

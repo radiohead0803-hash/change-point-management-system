@@ -68,3 +68,37 @@ export const excel = {
   downloadMonthly: (year: number, month: number) =>
     api.get(`/excel/monthly/${year}/${month}`, { responseType: 'blob' }),
 };
+
+export const changeEvents = {
+  ...changeEvents,
+  findClasses: () => api.get('/change-events/codes/classes'),
+  findCategories: (classCode?: string) =>
+    api.get('/change-events/codes/categories', { params: { classCode } }),
+  findItems: (categoryId?: string) =>
+    api.get('/change-events/codes/items', { params: { categoryId } }),
+};
+
+export const settings = {
+  create: (data: {
+    key: string;
+    value: any;
+    scopeType: string;
+    scopeId?: string;
+    effectiveFrom?: Date;
+    effectiveTo?: Date;
+  }) => api.post('/settings', data),
+
+  findAll: () => api.get('/settings'),
+
+  findOne: (id: string) => api.get(`/settings/${id}`),
+
+  update: (id: string, data: {
+    value?: any;
+    scopeType?: string;
+    scopeId?: string;
+    effectiveFrom?: Date;
+    effectiveTo?: Date;
+  }) => api.patch(`/settings/${id}`, data),
+
+  remove: (id: string) => api.delete(`/settings/${id}`),
+};

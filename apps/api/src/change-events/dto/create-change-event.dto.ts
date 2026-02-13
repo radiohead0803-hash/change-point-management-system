@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString } from 'class-validator';
-import { ChangeType } from '@prisma/client';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ChangeEventTagDto } from './change-event-tag.dto';
 
 export class CreateChangeEventDto {
   @ApiProperty({ description: '접수월 (YYYY-MM)' })
@@ -48,20 +49,17 @@ export class CreateChangeEventDto {
   @IsNotEmpty()
   companyId: string;
 
-  @ApiProperty({ description: '4M/4M외 구분', enum: ChangeType })
-  @IsEnum(ChangeType)
-  @IsNotEmpty()
-  changeType: ChangeType;
-
-  @ApiProperty({ description: '대분류' })
+  @ApiProperty({ description: '주 분류 항목 ID' })
   @IsString()
   @IsNotEmpty()
-  category: string;
+  primaryItemId: string;
 
-  @ApiProperty({ description: '세부항목' })
-  @IsString()
-  @IsNotEmpty()
-  subCategory: string;
+  @ApiProperty({ description: '추가 분류 태그', type: [ChangeEventTagDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChangeEventTagDto)
+  @IsOptional()
+  tags?: ChangeEventTagDto[];
 
   @ApiProperty({ description: '변경 상세내용' })
   @IsString()

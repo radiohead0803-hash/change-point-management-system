@@ -30,6 +30,20 @@ export class ExcelService {
             item: true,
           },
         },
+        tags: {
+          include: {
+            item: {
+              include: {
+                category: {
+                  include: {
+                    class: true,
+                    parent: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: 'asc',
@@ -50,9 +64,12 @@ export class ExcelService {
       { header: '공장', key: 'factory', width: 10 },
       { header: '라인', key: 'productionLine', width: 10 },
       { header: '협력사', key: 'companyName', width: 15 },
-      { header: '4M/4M외', key: 'changeType', width: 10 },
-      { header: '대분류', key: 'category', width: 15 },
-      { header: '세부항목', key: 'subCategory', width: 15 },
+      { header: '주 분류', key: 'primaryClass', width: 15 },
+      { header: '주 카테고리', key: 'primaryCategory', width: 15 },
+      { header: '주 항목', key: 'primaryItem', width: 15 },
+      { header: '96구분', key: 'cp96Class', width: 15 },
+      { header: '96대분류', key: 'cp96Category', width: 15 },
+      { header: '96세부항목', key: 'cp96Items', width: 30 },
       { header: '변경내용', key: 'description', width: 30 },
       { header: '발생부서', key: 'department', width: 15 },
       { header: '실무담당자', key: 'managerName', width: 12 },
@@ -61,6 +78,29 @@ export class ExcelService {
     ];
 
     events.forEach((event) => {
+      // 주 분류 항목 찾기
+      const primaryTag = event.tags.find(tag => tag.tagType === 'PRIMARY');
+      const primaryItem = primaryTag?.item;
+      const primaryCategory = primaryItem?.category;
+      const primaryClass = primaryCategory?.class;
+
+      // 96항목 태그 찾기
+      const cp96Tags = event.tags.filter(tag => 
+        tag.tagType === 'TAG' && 
+        tag.item.category.class.code === 'CP_96'
+      );
+
+      // 96항목 그룹화
+      const cp96Items = cp96Tags.reduce((acc, tag) => {
+        const category = tag.item.category;
+        const topCategory = category.parent || category;
+        if (!acc[topCategory.name]) {
+          acc[topCategory.name] = [];
+        }
+        acc[topCategory.name].push(tag.item.name);
+        return acc;
+      }, {} as Record<string, string[]>);
+
       masterSheet.addRow({
         receiptMonth: event.receiptMonth,
         occurredDate: event.occurredDate.toISOString().split('T')[0],
@@ -71,9 +111,14 @@ export class ExcelService {
         factory: event.factory,
         productionLine: event.productionLine,
         companyName: event.company.name,
-        changeType: event.changeType,
-        category: event.category,
-        subCategory: event.subCategory,
+        primaryClass: primaryClass?.name || '',
+        primaryCategory: primaryCategory?.name || '',
+        primaryItem: primaryItem?.name || '',
+        cp96Class: Object.keys(cp96Items)[0] || '',
+        cp96Category: Object.keys(cp96Items).join('; '),
+        cp96Items: Object.values(cp96Items)
+          .flat()
+          .join('; '),
         description: event.description,
         department: event.department,
         managerName: event.manager.name,
@@ -85,10 +130,41 @@ export class ExcelService {
     // 99_Code 시트
     const codeSheet = workbook.addWorksheet('99_Code');
     codeSheet.columns = [
-      { header: '구분', key: 'type', width: 15 },
+      { header: '분류', key: 'class', width: 15 },
+      { header: '대분류', key: 'category', width: 15 },
+      { header: '세부항목', key: 'item', width: 30 },
       { header: '코드', key: 'code', width: 15 },
       { header: '명칭', key: 'name', width: 30 },
     ];
+
+    // 코드 마스터 데이터 추가
+    const classes = await this.prisma.changeClass.findMany({
+      where: { deletedAt: null },
+      include: {
+        categories: {
+          where: { deletedAt: null },
+          include: {
+            items: {
+              where: { deletedAt: null },
+            },
+          },
+        },
+      },
+    });
+
+    classes.forEach(cls => {
+      cls.categories.forEach(cat => {
+        cat.items.forEach(item => {
+          codeSheet.addRow({
+            class: cls.name,
+            category: cat.name,
+            item: item.name,
+            code: item.code,
+            name: item.name,
+          });
+        });
+      });
+    });
 
     // 98_InspectionResult 시트
     const resultSheet = workbook.addWorksheet('98_InspectionResult');

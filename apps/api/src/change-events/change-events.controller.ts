@@ -92,4 +92,25 @@ export class ChangeEventsController {
   findByMonth(@Param('year') year: string, @Param('month') month: string) {
     return this.changeEventsService.findByMonth(parseInt(year, 10), parseInt(month, 10));
   }
+
+  @Get('codes/classes')
+  @ApiOperation({ summary: '변경 분류 코드 조회' })
+  @ApiResponse({ status: 200, description: '변경 분류 코드 목록을 반환합니다.' })
+  findClasses() {
+    return this.changeEventsService.findClasses();
+  }
+
+  @Get('codes/categories')
+  @ApiOperation({ summary: '변경 카테고리 코드 조회' })
+  @ApiResponse({ status: 200, description: '변경 카테고리 코드 목록을 반환합니다.' })
+  findCategories(@Query('classCode') classCode?: string) {
+    return this.changeEventsService.findCategories(classCode);
+  }
+
+  @Get('codes/items')
+  @ApiOperation({ summary: '변경 항목 코드 조회' })
+  @ApiResponse({ status: 200, description: '변경 항목 코드 목록을 반환합니다.' })
+  findItems(@Query('categoryId') categoryId?: string) {
+    return this.changeEventsService.findItems(categoryId);
+  }
 }

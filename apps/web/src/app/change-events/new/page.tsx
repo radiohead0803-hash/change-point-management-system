@@ -1,14 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents } from '@/lib/api-client';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
+import { TagSelector } from '@/components/change-events/tag-selector';
 
 const changeEventSchema = z.object({
   receiptMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, '올바른 접수월을 입력해주세요 (YYYY-MM)'),
@@ -20,9 +22,11 @@ const changeEventSchema = z.object({
   factory: z.string().min(1, '공장을 입력해주세요'),
   productionLine: z.string().min(1, '라인을 입력해주세요'),
   companyId: z.string().min(1, '협력사를 선택해주세요'),
-  changeType: z.enum(['FOUR_M', 'NON_FOUR_M']),
-  category: z.string().min(1, '대분류를 입력해주세요'),
-  subCategory: z.string().min(1, '세부항목을 입력해주세요'),
+  primaryItemId: z.string().min(1, '주 분류 항목을 선택해주세요'),
+  tags: z.array(z.object({
+    itemId: z.string(),
+    tagType: z.enum(['PRIMARY', 'TAG']),
+  })),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
   department: z.string().min(1, '발생부서를 입력해주세요'),
   managerId: z.string().min(1, '실무담당자를 선택해주세요'),
@@ -184,29 +188,22 @@ export default function NewChangeEventPage() {
             />
           </div>
 
-          {/* 대분류 */}
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              대분류
+          {/* 변경 항목 태그 */}
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              변경 항목
             </label>
-            <Input id="category" {...register('category')} error={errors.category?.message} />
-          </div>
-
-          {/* 세부항목 */}
-          <div>
-            <label
-              htmlFor="subCategory"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              세부항목
-            </label>
-            <Input
-              id="subCategory"
-              {...register('subCategory')}
-              error={errors.subCategory?.message}
+            <Controller
+              name="tags"
+              control={control}
+              defaultValue={[]}
+              render={({ field }) => (
+                <TagSelector
+                  value={field.value}
+                  onChange={field.onChange}
+                  required
+                />
+              )}
             />
           </div>
 

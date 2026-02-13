@@ -67,6 +67,59 @@ enum CompanyType {
   CUSTOMER
 }
 
+// 코드 마스터 - 변경 분류
+model ChangeClass {
+  id          String    @id @default(cuid())
+  code        String    @unique // FOUR_M, OUTSIDE_17, CP_96
+  name        String
+  description String?
+  categories  ChangeCategory[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("change_classes")
+}
+
+// 코드 마스터 - 변경 카테고리
+model ChangeCategory {
+  id          String    @id @default(cuid())
+  classId     String
+  class       ChangeClass @relation(fields: [classId], references: [id])
+  parentId    String?
+  parent      ChangeCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ChangeCategory[] @relation("CategoryHierarchy")
+  code        String
+  name        String
+  description String?
+  depth       Int      @default(1)
+  items       ChangeItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([classId, code])
+  @@map("change_categories")
+}
+
+// 코드 마스터 - 변경 항목
+model ChangeItem {
+  id          String    @id @default(cuid())
+  categoryId  String
+  category    ChangeCategory @relation(fields: [categoryId], references: [id])
+  code        String
+  name        String
+  description String?
+  tags        ChangeEventTag[]
+  primaryEvents ChangeEvent[] @relation("PrimaryClassification")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([categoryId, code])
+  @@map("change_items")
+}
+
 // 변동점 모델
 model ChangeEvent {
   id              String    @id @default(cuid())
@@ -80,9 +133,9 @@ model ChangeEvent {
   productionLine  String    // 라인
   companyId       String    // 협력사 ID
   company         Company   @relation(fields: [companyId], references: [id])
-  changeType      ChangeType // 4M/4M외 구분
-  category        String    // 대분류
-  subCategory     String    // 세부항목
+  primaryItemId   String    // 주 분류 항목
+  primaryItem     ChangeItem @relation("PrimaryClassification", fields: [primaryItemId], references: [id])
+  tags            ChangeEventTag[] // 추가 분류 태그
   description     String    // 변경 상세내용
   department      String    // 발생부서
   status          EventStatus @default(DRAFT)
@@ -113,9 +166,49 @@ model ChangeEvent {
   @@map("change_events")
 }
 
-enum ChangeType {
-  FOUR_M
-  NON_FOUR_M
+// 변동점 태그
+model ChangeEventTag {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       ChangeEvent @relation(fields: [eventId], references: [id])
+  itemId      String
+  item        ChangeItem @relation(fields: [itemId], references: [id])
+  tagType     TagType   @default(TAG)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([eventId, itemId])
+  @@map("change_event_tags")
+}
+
+enum TagType {
+  PRIMARY
+  TAG
+}
+
+// 정책 설정
+model PolicySetting {
+  id            String    @id @default(cuid())
+  key           String    // REQUIRE_96_TAG
+  value         Json      // { "enabled": true }
+  scopeType     ScopeType @default(GLOBAL)
+  scopeId       String?
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@unique([key, scopeType, scopeId])
+  @@map("policy_settings")
+}
+
+enum ScopeType {
+  GLOBAL
+  CUSTOMER
+  PROGRAM
+  RECEIPT_MONTH
 }
 
 enum EventStatus {
