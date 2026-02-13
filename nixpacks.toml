@@ -1,7 +1,6 @@
 [phases.setup]
 nixPkgs = ['nodejs']
 cmds = [
-  'export SHELL=/bin/bash',
   'corepack enable',
   'corepack prepare pnpm@8.15.1 --activate'
 ]
@@ -31,6 +30,7 @@ cmds = [
 cmd = 'cd apps/api && NODE_ENV=production pnpm start:prod'
 
 [variables]
+SHELL = '/bin/bash'
 NODE_ENV = 'production'
 NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
 PNPM_HOME = '/root/.local/share/pnpm'
