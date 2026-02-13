@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 모델
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          Role      @default(TIER2_EDITOR)
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdById   String?
+  createdBy     User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
+  updatedById   String?
+  updatedBy     User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  
+  // 관계
+  createdUsers  User[]    @relation("UserCreatedBy")
+  updatedUsers  User[]    @relation("UserUpdatedBy")
+  createdEvents ChangeEvent[] @relation("EventCreatedBy")
+  updatedEvents ChangeEvent[] @relation("EventUpdatedBy")
+  reviewedEvents ChangeEvent[] @relation("EventReviewer")
+  approvedEvents ChangeEvent[] @relation("EventApprover")
+  managedEvents ChangeEvent[] @relation("EventManager")
+
+  @@map("users")
+}
+
+// 역할 enum
+enum Role {
+  ADMIN
+  TIER1_EDITOR
+  TIER2_EDITOR
+  TIER1_REVIEWER
+  EXEC_APPROVER
+  CUSTOMER_VIEWER
+}
+
+// 회사 모델
+model Company {
+  id        String    @id @default(cuid())
+  name      String
+  type      CompanyType
+  code      String    @unique
+  users     User[]
+  events    ChangeEvent[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("companies")
+}
+
+enum CompanyType {
+  TIER1
+  TIER2
+  CUSTOMER
+}
+
+// 변동점 모델
+model ChangeEvent {
+  id              String    @id @default(cuid())
+  receiptMonth    String    // 접수월 (YYYY-MM)
+  occurredDate    DateTime  // 발생일
+  customer        String    // 고객사
+  project         String    // 프로젝트
+  productLine     String    // 제품군
+  partNumber      String    // 부품번호
+  factory         String    // 공장
+  productionLine  String    // 라인
+  companyId       String    // 협력사 ID
+  company         Company   @relation(fields: [companyId], references: [id])
+  changeType      ChangeType // 4M/4M외 구분
+  category        String    // 대분류
+  subCategory     String    // 세부항목
+  description     String    // 변경 상세내용
+  department      String    // 발생부서
+  status          EventStatus @default(DRAFT)
+  
+  // 담당자 정보
+  managerId       String    // 실무담당자
+  manager         User      @relation("EventManager", fields: [managerId], references: [id])
+  executiveId     String?   // 전담중역
+  executive       User?     @relation("EventApprover", fields: [executiveId], references: [id])
+  reviewerId      String?   // 검토자
+  reviewer        User?     @relation("EventReviewer", fields: [reviewerId], references: [id])
+
+  // 점검 결과
+  inspectionResults InspectionResult[]
+  
+  // Attachments
+  attachments    Attachment[]
+
+  // Audit
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdById   String
+  createdBy     User      @relation("EventCreatedBy", fields: [createdById], references: [id])
+  updatedById   String?
+  updatedBy     User?     @relation("EventUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("change_events")
+}
+
+enum ChangeType {
+  FOUR_M
+  NON_FOUR_M
+}
+
+enum EventStatus {
+  DRAFT
+  SUBMITTED
+  REVIEW_RETURNED
+  REVIEWED
+  APPROVED
+  CLOSED
+  REJECTED
+}
+
+// 점검 템플릿
+model InspectionTemplate {
+  id          String    @id @default(cuid())
+  name        String
+  version     String
+  isActive    Boolean   @default(true)
+  items       InspectionItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("inspection_templates")
+}
+
+// 점검 항목
+model InspectionItem {
+  id          String    @id @default(cuid())
+  templateId  String
+  template    InspectionTemplate @relation(fields: [templateId], references: [id])
+  order       Int
+  category    String
+  question    String
+  type        ItemType
+  required    Boolean   @default(false)
+  options     String[]  // JSON array for select/radio/checkbox options
+  results     InspectionResult[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("inspection_items")
+}
+
+enum ItemType {
+  TEXT
+  TEXTAREA
+  SELECT
+  RADIO
+  CHECKBOX
+  NUMBER
+  DATE
+}
+
+// 점검 결과
+model InspectionResult {
+  id            String    @id @default(cuid())
+  eventId       String
+  event         ChangeEvent @relation(fields: [eventId], references: [id])
+  itemId        String
+  item          InspectionItem @relation(fields: [itemId], references: [id])
+  value         String    // JSON string for multiple values
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@map("inspection_results")
+}
+
+// 첨부파일
+model Attachment {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       ChangeEvent @relation(fields: [eventId], references: [id])
+  filename    String
+  path        String
+  mimetype    String
+  size        Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("attachments")
+}
