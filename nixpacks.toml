@@ -2,15 +2,15 @@
 nixPkgs = ['nodejs']
 cmds = [
   'corepack enable',
-  'corepack prepare pnpm@8.15.1 --activate'
+  'corepack prepare pnpm@8.15.1 --activate',
+  'pnpm install -g prisma'
 ]
 
 [phases.install]
 cmds = [
   'pnpm install',
-  'cd packages/database && pnpm prisma generate && cd ../..',
-  'cd apps/api && pnpm prisma generate && cd ../..',
-  'pnpm install'
+  'prisma generate --schema=./packages/database/prisma/schema.prisma',
+  'prisma generate --schema=./apps/api/prisma/schema.prisma'
 ]
 
 [phases.build]
