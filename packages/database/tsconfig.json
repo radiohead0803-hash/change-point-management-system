@@ -4,7 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
-    "module": "commonjs"
+    "module": "commonjs",
+    "incremental": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
