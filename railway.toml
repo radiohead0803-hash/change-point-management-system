@@ -4,7 +4,7 @@ buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && pn
 
 [deploy]
 startCommand = "cd apps/web && npx next start --hostname 0.0.0.0 --port ${PORT:-3000}"
-healthcheckPath = "/"
+healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 numReplicas = 1
