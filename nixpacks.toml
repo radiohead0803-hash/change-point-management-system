@@ -1,12 +1,13 @@
 [phases.setup]
 nixPkgs = ['nodejs']
 cmds = [
+  'export SHELL=/bin/bash',
   'corepack enable',
   'corepack prepare pnpm@8.15.1 --activate',
-  'pnpm setup',
+  'mkdir -p /root/.local/share/pnpm',
   'export PNPM_HOME="/root/.local/share/pnpm"',
   'export PATH="$PNPM_HOME:$PATH"',
-  'pnpm install -g prisma'
+  'npm install -g prisma'
 ]
 
 [phases.install]
