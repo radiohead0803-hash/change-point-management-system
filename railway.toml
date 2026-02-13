@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "/bin/bash -c 'pnpm install --no-frozen-lockfile && npx prisma@5.22.0 generate --schema=./packages/database/prisma/schema.prisma && pnpm -C packages/database build && pnpm -C apps/api build'"
+buildCommand = "pnpm install --no-frozen-lockfile"
 
 [deploy]
 startCommand = "/bin/bash -c 'cd apps/api && pnpm start:prod'"

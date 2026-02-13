@@ -14,9 +14,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'npx prisma@5.22.0 generate --schema=./packages/database/prisma/schema.prisma',
-  'pnpm -C packages/database build',
-  'pnpm -C apps/api build'
+  'bash -c "cd packages/database && npx prisma@5.22.0 generate"',
+  'bash -c "cd packages/database && pnpm build"',
+  'bash -c "cd apps/api && pnpm build"'
 ]
 
 [start]
