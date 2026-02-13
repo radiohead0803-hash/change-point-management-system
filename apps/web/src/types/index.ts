@@ -63,6 +63,8 @@ export interface ChangeEvent {
   attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  createdById: string;
+  createdBy: User;
 }
 
 export interface InspectionTemplate {
