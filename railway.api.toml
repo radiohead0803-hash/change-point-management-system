@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && pnpm install --no-frozen-lockfile && pnpm -C packages/database build && pnpm -C apps/api build"
+
+[deploy]
+startCommand = "pnpm -C apps/api start:prod"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+numReplicas = 1
+
+[deploy.env]
+NODE_ENV = "production"
