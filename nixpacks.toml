@@ -14,16 +14,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'cd packages/database',
-  'pnpm install --no-frozen-lockfile',
-  'npx prisma@5.22.0 generate',
-  'pnpm build --no-frozen-lockfile',
-  'cd ../..',
-  'cd apps/api',
-  'pnpm install --no-frozen-lockfile',
-  'pnpm build --no-frozen-lockfile',
-  'cd ../..',
-  'pnpm install --no-frozen-lockfile'
+  'npx prisma@5.22.0 generate --schema=./packages/database/prisma/schema.prisma',
+  'pnpm -C packages/database build',
+  'pnpm -C apps/api build'
 ]
 
 [start]
