@@ -8,6 +8,3 @@ healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 numReplicas = 1
-
-[deploy.env]
-NODE_ENV = "production"
