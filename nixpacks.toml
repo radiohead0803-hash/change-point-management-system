@@ -12,15 +12,13 @@ cmds = [
 
 [phases.install]
 cmds = [
-  'pnpm install --no-frozen-lockfile',
-  'cd packages/database && npx prisma generate && cd ../..',
   'pnpm install --no-frozen-lockfile'
 ]
 
 [phases.build]
 cmds = [
-  'cd packages/database && pnpm install --no-frozen-lockfile && pnpm build && cd ../..',
-  'cd apps/api && pnpm install --no-frozen-lockfile && pnpm build'
+  'cd packages/database && pnpm install --no-frozen-lockfile && npx prisma generate && pnpm build --no-frozen-lockfile && cd ../..',
+  'cd apps/api && pnpm install --no-frozen-lockfile && pnpm build --no-frozen-lockfile'
 ]
 
 [start]
