@@ -13,11 +13,11 @@
     "clean": "rimraf .turbo node_modules dist"
   },
   "dependencies": {
-    "@prisma/client": "^5.9.1"
+    "@prisma/client": "5.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
-    "prisma": "^5.9.1",
+    "prisma": "5.22.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.0.1",
