@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/admin/AppData/Roaming/npm/node_modules/pnpm/bin/pnpm.cjs", "--filter", "@cpms/api", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/admin/AppData/Roaming/npm/node_modules/pnpm/bin/pnpm.cjs", "--filter", "@cpms/web", "dev"],
+      "port": 3001
+    }
+  ]
+}
