@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && pnpm install --no-frozen-lockfile && pnpm --filter @cpms/database build && pnpm --filter @cpms/api build"
+
+[deploy]
+startCommand = "pnpm --filter @cpms/api start:prod"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+numReplicas = 1
