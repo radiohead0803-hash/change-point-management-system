@@ -25,6 +25,9 @@ async function bootstrap() {
     },
   }));
 
+  // Global prefix
+  app.setGlobalPrefix('api');
+
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('변동점 관리 시스템 API')
@@ -33,15 +36,12 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-
-  // Global prefix
-  app.setGlobalPrefix('api');
+  SwaggerModule.setup('api/docs', app, document);
 
   // Start server
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger documentation: http://localhost:${port}/api`);
+  console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
 }
 bootstrap();
