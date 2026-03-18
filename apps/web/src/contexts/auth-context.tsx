@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (email: string, password: string, name: string, companyId: string) => Promise<void>;
+  refreshUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +28,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 토큰이 있으면 사용자 정보를 가져옴
     const user = localStorage.getItem('user');
     if (user) {
       setUser(JSON.parse(user));
@@ -42,7 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('refreshToken', data.refresh_token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
-      router.push('/dashboard');
+
+      // 최초 로그인시 비밀번호 변경 페이지로 이동
+      if ((data.user as any).mustChangePassword) {
+        router.push('/profile');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       throw error;
     }
@@ -65,8 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = () => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

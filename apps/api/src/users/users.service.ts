@@ -3,6 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 
+const USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+  team: true,
+  position: true,
+  phone: true,
+  mustChangePassword: true,
+  companyId: true,
+  company: { select: { id: true, name: true, type: true, code: true } },
+  createdAt: true,
+  updatedAt: true,
+};
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -10,16 +25,7 @@ export class UsersService {
   async findAll() {
     return this.prisma.user.findMany({
       where: { deletedAt: null },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        companyId: true,
-        company: { select: { id: true, name: true, type: true, code: true } },
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -27,16 +33,7 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        companyId: true,
-        company: { select: { id: true, name: true, type: true, code: true } },
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
     });
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다');
     return user;
@@ -48,11 +45,14 @@ export class UsersService {
     name: string;
     role: Role;
     companyId?: string;
+    team?: string;
+    position?: string;
+    phone?: string;
   }) {
     const existing = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
-    if (existing) throw new ConflictException('이미 존재하는 이메일입니다');
+    if (existing) throw new ConflictException('이미 존재하는 아이디입니다');
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
     return this.prisma.user.create({
@@ -62,16 +62,12 @@ export class UsersService {
         name: data.name,
         role: data.role,
         companyId: data.companyId || null,
+        team: data.team || null,
+        position: data.position || null,
+        phone: data.phone || null,
+        mustChangePassword: true,
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        companyId: true,
-        company: { select: { id: true, name: true, type: true, code: true } },
-        createdAt: true,
-      },
+      select: USER_SELECT,
     });
   }
 
@@ -80,6 +76,10 @@ export class UsersService {
     role?: Role;
     companyId?: string;
     password?: string;
+    team?: string;
+    position?: string;
+    phone?: string;
+    mustChangePassword?: boolean;
   }) {
     const user = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
@@ -87,24 +87,22 @@ export class UsersService {
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다');
 
     const updateData: any = {};
-    if (data.name) updateData.name = data.name;
-    if (data.role) updateData.role = data.role;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.role !== undefined) updateData.role = data.role;
     if (data.companyId !== undefined) updateData.companyId = data.companyId || null;
-    if (data.password) updateData.password = await bcrypt.hash(data.password, 10);
+    if (data.password) {
+      updateData.password = await bcrypt.hash(data.password, 10);
+      updateData.mustChangePassword = false;
+    }
+    if (data.team !== undefined) updateData.team = data.team || null;
+    if (data.position !== undefined) updateData.position = data.position || null;
+    if (data.phone !== undefined) updateData.phone = data.phone || null;
+    if (data.mustChangePassword !== undefined) updateData.mustChangePassword = data.mustChangePassword;
 
     return this.prisma.user.update({
       where: { id },
       data: updateData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        companyId: true,
-        company: { select: { id: true, name: true, type: true, code: true } },
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_SELECT,
     });
   }
 

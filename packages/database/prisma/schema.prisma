@@ -10,10 +10,14 @@ datasource db {
 // 사용자 모델
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
+  email         String    @unique  // 로그인 아이디
   name          String
   password      String
   role          Role      @default(TIER2_EDITOR)
+  team          String?   // 팀/부서
+  position      String?   // 직급
+  phone         String?   // 전화번호
+  mustChangePassword Boolean @default(true) // 최초 로그인 비밀번호 변경 필요
   companyId     String?
   company       Company?  @relation(fields: [companyId], references: [id])
   createdAt     DateTime  @default(now())

@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Param, Body, UseGuards,
+  Param, Body, Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -22,6 +22,24 @@ export class UsersController {
     return this.usersService.findCompanies();
   }
 
+  // 내 프로필 조회 (모든 역할 가능)
+  @Get('me')
+  getMyProfile(@Req() req: any) {
+    return this.usersService.findOne(req.user.sub);
+  }
+
+  // 내 프로필 수정 (모든 역할 - 비밀번호, 이름, 팀, 직급, 전화번호)
+  @Patch('me')
+  updateMyProfile(@Req() req: any, @Body() body: {
+    name?: string;
+    password?: string;
+    team?: string;
+    position?: string;
+    phone?: string;
+  }) {
+    return this.usersService.update(req.user.sub, body);
+  }
+
   @Get(':id')
   @Roles(Role.ADMIN)
   findOne(@Param('id') id: string) {
@@ -36,6 +54,9 @@ export class UsersController {
     name: string;
     role: Role;
     companyId?: string;
+    team?: string;
+    position?: string;
+    phone?: string;
   }) {
     return this.usersService.create(body);
   }
@@ -47,6 +68,9 @@ export class UsersController {
     role?: Role;
     companyId?: string;
     password?: string;
+    team?: string;
+    position?: string;
+    phone?: string;
   }) {
     return this.usersService.update(id, body);
   }

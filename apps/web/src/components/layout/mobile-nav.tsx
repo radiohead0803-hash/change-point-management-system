@@ -13,24 +13,22 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
-  { name: '등록', href: '/change-events/new', icon: FileText },
-  { name: '내 요청', href: '/change-events/my', icon: ClipboardList },
-  { name: '승인함', href: '/change-events/approvals', icon: CheckSquare },
-  { name: '도움말', href: '/help', icon: HelpCircle },
+  { name: '대시보드', href: '/dashboard', icon: LayoutDashboard, roles: null },
+  { name: '등록', href: '/change-events/new', icon: FileText, roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
+  { name: '내 요청', href: '/change-events/my', icon: ClipboardList, roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
+  { name: '승인함', href: '/change-events/approvals', icon: CheckSquare, roles: ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'] },
+  { name: '도움말', href: '/help', icon: HelpCircle, roles: null },
 ];
 
 export default function MobileNav() {
   const { user } = useAuth();
   const pathname = usePathname();
 
-  const canSeeApprovals = ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'].includes(user?.role || '');
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="mx-auto flex max-w-lg justify-around px-1">
         {navigation.map((item) => {
-          if (item.href === '/change-events/approvals' && !canSeeApprovals) {
+          if (item.roles && !item.roles.includes(user?.role || '')) {
             return null;
           }
 

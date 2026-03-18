@@ -80,12 +80,16 @@ export const codeMasters = {
 export const users = {
   list: () => api.get<User[]>('/users'),
   get: (id: string) => api.get<User>(`/users/${id}`),
-  create: (data: { email: string; password: string; name: string; role: string; companyId?: string }) =>
+  create: (data: { email: string; password: string; name: string; role: string; companyId?: string; team?: string; position?: string; phone?: string }) =>
     api.post<User>('/users', data),
-  update: (id: string, data: { name?: string; role?: string; companyId?: string; password?: string }) =>
+  update: (id: string, data: { name?: string; role?: string; companyId?: string; password?: string; team?: string; position?: string; phone?: string }) =>
     api.patch<User>(`/users/${id}`, data),
   remove: (id: string) => api.delete(`/users/${id}`),
   companies: () => api.get<any[]>('/users/companies'),
+  // 내 프로필
+  getMyProfile: () => api.get<User>('/users/me'),
+  updateMyProfile: (data: { name?: string; password?: string; team?: string; position?: string; phone?: string }) =>
+    api.patch<User>('/users/me', data),
 };
 
 export const settings = {

@@ -16,15 +16,32 @@ import {
   LogOut,
 } from 'lucide-react';
 
+/* ── 역할별 라벨 ── */
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: '관리자',
+  TIER1_EDITOR: '1차사 담당자',
+  TIER1_REVIEWER: '1차사 검토자',
+  EXEC_APPROVER: '전담중역',
+  TIER2_EDITOR: '협력사 담당자',
+  CUSTOMER_VIEWER: '고객사 뷰어',
+};
+
+/*
+ * 권한 정책:
+ * - ADMIN: 모든 메뉴
+ * - TIER1_EDITOR, TIER1_REVIEWER, EXEC_APPROVER: 사용자관리 제외 전체
+ * - TIER2_EDITOR (협력사): 대시보드, 변동점 등록, 내 요청, 도움말
+ * - CUSTOMER_VIEWER: 대시보드, 도움말
+ */
 const navigation = [
-  { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
-  { name: '변동점 등록', href: '/change-events/new', icon: FileText },
-  { name: '내 요청', href: '/change-events/my', icon: ClipboardList },
-  { name: '승인함', href: '/change-events/approvals', icon: CheckSquare },
-  { name: '기초정보 관리', href: '/admin/master-data', icon: Database, adminOnly: true },
-  { name: '사용자 관리', href: '/admin/users', icon: Users, adminOnly: true },
-  { name: '정책 설정', href: '/admin/settings', icon: Settings, adminOnly: true },
-  { name: '도움말', href: '/help', icon: HelpCircle },
+  { name: '대시보드',       href: '/dashboard',               icon: LayoutDashboard, roles: null },           // 전체
+  { name: '변동점 등록',    href: '/change-events/new',       icon: FileText,        roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
+  { name: '내 요청',        href: '/change-events/my',        icon: ClipboardList,   roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
+  { name: '승인함',         href: '/change-events/approvals', icon: CheckSquare,     roles: ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'] },
+  { name: '기초정보 관리',  href: '/admin/master-data',       icon: Database,        roles: ['ADMIN'] },
+  { name: '사용자 관리',    href: '/admin/users',             icon: Users,           roles: ['ADMIN'] },
+  { name: '정책 설정',      href: '/admin/settings',          icon: Settings,        roles: ['ADMIN'] },
+  { name: '도움말',         href: '/help',                    icon: HelpCircle,      roles: null },           // 전체
 ];
 
 export default function Sidebar() {
@@ -49,7 +66,8 @@ export default function Sidebar() {
       {/* 네비게이션 */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
-          if (item.adminOnly && user?.role !== 'ADMIN') {
+          // roles가 null이면 전체 허용, 아니면 역할 체크
+          if (item.roles && !item.roles.includes(user?.role || '')) {
             return null;
           }
 
@@ -84,12 +102,12 @@ export default function Sidebar() {
       {/* 사용자 정보 */}
       <div className="border-t border-gray-200/60 p-3 dark:border-gray-800/60">
         <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+          <Link href="/profile" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary hover:ring-2 hover:ring-primary/30 transition-all">
             {user?.name?.charAt(0) || 'U'}
-          </div>
+          </Link>
           <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium">{user?.name}</p>
-            <p className="truncate text-[11px] text-muted-foreground">{user?.role}</p>
+            <Link href="/profile" className="truncate text-sm font-medium hover:text-primary transition-colors block">{user?.name}</Link>
+            <p className="truncate text-[11px] text-muted-foreground">{ROLE_LABELS[user?.role || ''] || user?.role}</p>
           </div>
           <button
             onClick={logout}
