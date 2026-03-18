@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && NODE_ENV=development pnpm install --no-frozen-lockfile && cd packages/database && npx prisma@5.22.0 generate && npx prisma@5.22.0 migrate deploy && cd ../.. && pnpm build"
+buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && NODE_ENV=development pnpm install --no-frozen-lockfile && cd packages/database && npx prisma@5.22.0 generate && npx prisma@5.22.0 migrate deploy && cd ../.. && pnpm --filter @cpms/database build && pnpm --filter @cpms/api build"
 
 [deploy]
 startCommand = "cd apps/api && node dist/main"
