@@ -1,13 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaClient, Prisma, ChangeEvent, Role } from '@prisma/client';
+import { Prisma, ChangeEvent, Role } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ChangeEventsService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: any, userId: string) {
     const { tags, ...eventData } = data;

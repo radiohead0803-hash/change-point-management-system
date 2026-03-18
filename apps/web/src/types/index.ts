@@ -104,3 +104,40 @@ export interface Attachment {
   mimetype: string;
   size: number;
 }
+
+export interface PolicySetting {
+  id: string;
+  key: string;
+  value: string;
+  scopeType: string;
+  scopeId?: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+export interface ChangeClass {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+}
+
+export interface ChangeCategory {
+  id: string;
+  classId: string;
+  parentId?: string;
+  code: string;
+  name: string;
+  depth: number;
+  class?: ChangeClass;
+  parent?: ChangeCategory;
+}
+
+export interface ChangeItem {
+  id: string;
+  categoryId: string;
+  code: string;
+  name: string;
+  description?: string;
+  category?: ChangeCategory;
+}

@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ChangeEventsModule } from './change-events/change-events.module';
 import { InspectionModule } from './inspection/inspection.module';
 import { ExcelModule } from './excel/excel.module';
 import { SettingsModule } from './settings/settings.module';
-import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
@@ -17,6 +19,7 @@ import { HealthController } from './health.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', '../../.env'],
     }),
     MulterModule.register({
       dest: './uploads',
@@ -24,6 +27,7 @@ import { HealthController } from './health.controller';
         fileSize: 5 * 1024 * 1024, // 5MB
       },
     }),
+    PrismaModule,
     AuthModule,
     ChangeEventsModule,
     InspectionModule,
@@ -33,6 +37,10 @@ import { HealthController } from './health.controller';
   controllers: [AppController, HealthController],
   providers: [
     AppService,
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

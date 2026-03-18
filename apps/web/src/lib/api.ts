@@ -26,14 +26,18 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await api.post('/auth/refresh', { refreshToken });
+        const response = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          {},
+          { headers: { Authorization: `Bearer ${refreshToken}` } },
+        );
         const { access_token } = response.data;
 
         localStorage.setItem('token', access_token);
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
 
         return api(originalRequest);
-      } catch (error) {
+      } catch (refreshError) {
         // Refresh token expired
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');

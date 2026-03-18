@@ -1,5 +1,5 @@
 import api from './api';
-import { User, ChangeEvent, InspectionTemplate, InspectionResult } from '@/types';
+import { User, ChangeEvent, InspectionTemplate, InspectionResult, ChangeClass, ChangeCategory, ChangeItem, PolicySetting } from '@/types';
 
 export const auth = {
   login: (email: string, password: string) =>
@@ -70,34 +70,34 @@ export const excel = {
 };
 
 export const codeMasters = {
-  findClasses: () => api.get('/change-events/codes/classes'),
+  findClasses: () => api.get<ChangeClass[]>('/change-events/codes/classes'),
   findCategories: (classCode?: string) =>
-    api.get('/change-events/codes/categories', { params: { classCode } }),
+    api.get<ChangeCategory[]>('/change-events/codes/categories', { params: { classCode } }),
   findItems: (categoryId?: string) =>
-    api.get('/change-events/codes/items', { params: { categoryId } }),
+    api.get<ChangeItem[]>('/change-events/codes/items', { params: { categoryId } }),
 };
 
 export const settings = {
   create: (data: {
     key: string;
-    value: any;
+    value: unknown;
     scopeType: string;
     scopeId?: string;
     effectiveFrom?: Date;
     effectiveTo?: Date;
-  }) => api.post('/settings', data),
+  }) => api.post<PolicySetting>('/settings', data),
 
-  findAll: () => api.get('/settings'),
+  findAll: () => api.get<PolicySetting[]>('/settings'),
 
-  findOne: (id: string) => api.get(`/settings/${id}`),
+  findOne: (id: string) => api.get<PolicySetting>(`/settings/${id}`),
 
   update: (id: string, data: {
-    value?: any;
+    value?: unknown;
     scopeType?: string;
     scopeId?: string;
     effectiveFrom?: Date;
     effectiveTo?: Date;
-  }) => api.patch(`/settings/${id}`, data),
+  }) => api.patch<PolicySetting>(`/settings/${id}`, data),
 
   remove: (id: string) => api.delete(`/settings/${id}`),
 };

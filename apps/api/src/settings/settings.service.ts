@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, ScopeType } from '@prisma/client';
+import { ScopeType } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SettingsService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
     return this.prisma.policySetting.findMany({

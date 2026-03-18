@@ -1,14 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient, ChangeEvent, InspectionResult } from '@prisma/client';
+import { ChangeEvent, InspectionResult } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ExcelService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async generateMonthlyReport(year: number, month: number): Promise<Buffer> {
     const events = await this.prisma.changeEvent.findMany({
