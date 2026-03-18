@@ -27,8 +27,8 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('변동점 관리 시스템 API')
-    .setDescription('변동점 관리 시스템의 REST API 문서')
+    .setTitle('(주)캠스 변동점 관리시스템 API')
+    .setDescription('(주)캠스 변동점 관리시스템 REST API 문서')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

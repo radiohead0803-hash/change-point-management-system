@@ -29,7 +29,7 @@ export default function Sidebar() {
     <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       {/* 로고 */}
       <div className="flex h-16 items-center border-b border-gray-200 px-4 dark:border-gray-800">
-        <h1 className="text-lg font-semibold">변동점 관리 시스템</h1>
+        <h1 className="text-lg font-semibold">(주)캠스 변동점 관리시스템</h1>
       </div>
 
       {/* 네비게이션 */}

@@ -49,7 +49,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            변동점 관리 시스템
+            (주)캠스 변동점 관리시스템
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             로그인하여 시작하세요

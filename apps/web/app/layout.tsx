@@ -6,8 +6,8 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '변동점 관리시스템 (CPMS)',
-  description: 'Change Point Management System',
+  title: '(주)캠스 변동점 관리시스템',
+  description: '(주)캠스 변동점 관리시스템',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

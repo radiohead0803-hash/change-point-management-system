@@ -1,7 +1,7 @@
 {
-  "name": "변동점 관리 시스템",
-  "short_name": "변동점 관리",
-  "description": "자동차 부품 변동점 관리 시스템",
+  "name": "(주)캠스 변동점 관리시스템",
+  "short_name": "캠스 변동점",
+  "description": "(주)캠스 변동점 관리시스템",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
