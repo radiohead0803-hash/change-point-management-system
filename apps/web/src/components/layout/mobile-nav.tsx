@@ -9,7 +9,7 @@ import {
   FileText,
   ClipboardList,
   CheckSquare,
-  User,
+  HelpCircle,
 } from 'lucide-react';
 
 const navigation = [
@@ -17,26 +17,24 @@ const navigation = [
   { name: '등록', href: '/change-events/new', icon: FileText },
   { name: '내 요청', href: '/change-events/my', icon: ClipboardList },
   { name: '승인함', href: '/change-events/approvals', icon: CheckSquare },
-  { name: '내 정보', href: '/profile', icon: User },
+  { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
 export default function MobileNav() {
   const { user } = useAuth();
   const pathname = usePathname();
 
-  // 승인함 메뉴는 특정 권한을 가진 사용자만 볼 수 있음
   const canSeeApprovals = ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'].includes(user?.role || '');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto flex max-w-md justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80">
+      <div className="mx-auto flex max-w-md justify-around px-2">
         {navigation.map((item) => {
-          // 승인함 메뉴 권한 체크
           if (item.href === '/change-events/approvals' && !canSeeApprovals) {
             return null;
           }
 
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
 
           return (
@@ -44,14 +42,19 @@ export default function MobileNav() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex flex-1 flex-col items-center justify-center py-4',
+                'flex flex-1 flex-col items-center justify-center py-2 transition-colors',
                 isActive
-                  ? 'text-blue-600 dark:text-blue-500'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
+                  ? 'text-primary'
+                  : 'text-muted-foreground/60 hover:text-foreground',
               )}
             >
-              <Icon className="h-6 w-6" />
-              <span className="mt-1 text-xs">{item.name}</span>
+              <div className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
+                isActive && 'bg-primary/10',
+              )}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <span className="mt-0.5 text-[10px] font-medium">{item.name}</span>
             </Link>
           );
         })}

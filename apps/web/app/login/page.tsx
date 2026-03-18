@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { Lock } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().min(1, '아이디를 입력해주세요.'),
@@ -45,57 +46,69 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 dark:bg-gray-900">
-      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-6 shadow-lg sm:space-y-8 sm:p-8 dark:bg-gray-800">
-        <div>
-          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:mt-6 sm:text-3xl dark:text-white">
-            (주)캠스 변동점 관리시스템
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            로그인하여 시작하세요
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100 px-4 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="w-full max-w-sm">
+        {/* Logo area */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            변동점 관리시스템
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            (주)캠스
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                아이디
-              </label>
-              <Input
-                id="email"
-                type="text"
-                autoComplete="username"
-                placeholder="admin"
-                {...register('email')}
-                error={errors.email?.message}
-              />
+        {/* Login card */}
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-xl shadow-gray-200/50 backdrop-blur-xl sm:p-8 dark:border-gray-800/60 dark:bg-gray-900/70 dark:shadow-none">
+          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  아이디
+                </label>
+                <Input
+                  id="email"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="admin"
+                  {...register('email')}
+                  error={errors.email?.message}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  비밀번호
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••"
+                  {...register('password')}
+                  error={errors.password?.message}
+                />
+              </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                비밀번호
-              </label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...register('password')}
-                error={errors.password?.message}
-              />
-            </div>
-          </div>
+            <Button type="submit" className="w-full" size="lg" loading={loading}>
+              로그인
+            </Button>
+          </form>
+        </div>
 
-          <Button type="submit" className="w-full" loading={loading}>
-            로그인
-          </Button>
-        </form>
+        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+          (주)캠스 변동점 관리시스템 v1.0
+        </p>
       </div>
     </div>
   );

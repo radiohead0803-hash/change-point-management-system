@@ -139,6 +139,12 @@ model ChangeEvent {
   description     String    // 변경 상세내용
   department      String    // 발생부서
   status          EventStatus @default(DRAFT)
+
+  // 조치 결과 (운영가이드 필수 작성항목)
+  actionDate      DateTime?  // 조치시점
+  actionPlan      String?    // 조치방안
+  actionResult    String?    // 조치결과
+  qualityVerification String? // 품질검증
   
   // 담당자 정보
   managerId       String    // 실무담당자

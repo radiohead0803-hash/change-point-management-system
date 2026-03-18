@@ -10,6 +10,8 @@ import {
   ClipboardList,
   CheckSquare,
   Settings,
+  Database,
+  HelpCircle,
   LogOut,
 } from 'lucide-react';
 
@@ -18,7 +20,9 @@ const navigation = [
   { name: '변동점 등록', href: '/change-events/new', icon: FileText },
   { name: '내 요청', href: '/change-events/my', icon: ClipboardList },
   { name: '승인함', href: '/change-events/approvals', icon: CheckSquare },
-  { name: '관리', href: '/admin', icon: Settings, adminOnly: true },
+  { name: '기초정보 관리', href: '/admin/master-data', icon: Database, adminOnly: true },
+  { name: '정책 설정', href: '/admin/settings', icon: Settings, adminOnly: true },
+  { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
 export default function Sidebar() {
@@ -26,21 +30,28 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div className="flex h-full w-[260px] flex-col border-r border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80">
       {/* 로고 */}
-      <div className="flex h-16 items-center border-b border-gray-200 px-4 dark:border-gray-800">
-        <h1 className="text-lg font-semibold">(주)캠스 변동점 관리시스템</h1>
+      <div className="flex h-16 items-center px-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+            <span className="text-sm font-bold text-primary">C</span>
+          </div>
+          <div>
+            <h1 className="text-sm font-bold tracking-tight">변동점 관리</h1>
+            <p className="text-[10px] text-muted-foreground">(주)캠스</p>
+          </div>
+        </div>
       </div>
 
       {/* 네비게이션 */}
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
-          // 관리자 전용 메뉴는 ADMIN 권한이 있는 경우에만 표시
           if (item.adminOnly && user?.role !== 'ADMIN') {
             return null;
           }
 
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
 
           return (
@@ -48,18 +59,18 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'group flex items-center rounded-lg px-3 py-2 text-sm font-medium',
+                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
+                  ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                  : 'text-muted-foreground hover:bg-gray-100/80 hover:text-foreground dark:hover:bg-gray-800/50',
               )}
             >
               <Icon
                 className={cn(
-                  'mr-3 h-5 w-5 flex-shrink-0',
+                  'h-[18px] w-[18px] flex-shrink-0 transition-colors',
                   isActive
-                    ? 'text-gray-500 dark:text-gray-300'
-                    : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-300',
+                    ? 'text-primary'
+                    : 'text-muted-foreground/70 group-hover:text-foreground',
                 )}
               />
               {item.name}
@@ -69,17 +80,20 @@ export default function Sidebar() {
       </nav>
 
       {/* 사용자 정보 */}
-      <div className="border-t border-gray-200 p-4 dark:border-gray-800">
-        <div className="flex items-center">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+      <div className="border-t border-gray-200/60 p-3 dark:border-gray-800/60">
+        <div className="flex items-center gap-3 rounded-xl px-3 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            {user?.name?.charAt(0) || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-medium">{user?.name}</p>
+            <p className="truncate text-[11px] text-muted-foreground">{user?.role}</p>
           </div>
           <button
             onClick={logout}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>
