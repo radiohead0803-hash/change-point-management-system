@@ -160,6 +160,9 @@ export default function DashboardPage() {
             <Download className="mr-1.5 h-4 w-4" />
             월간 리포트
           </Button>
+          <Button size="icon" variant="outline" onClick={handleExcelExport} className="h-9 w-9 sm:hidden">
+            <Download className="h-4 w-4" />
+          </Button>
           <Button size="sm" className="sm:hidden" onClick={() => router.push('/change-events/new')}>
             <Plus className="mr-1 h-4 w-4" />
             등록
@@ -194,10 +197,10 @@ export default function DashboardPage() {
       {/* 차트 영역 */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* 월별 추이 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-4 text-sm font-semibold">월별 변동점 발생 추이</h3>
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
+          <h3 className="mb-3 text-sm font-semibold sm:mb-4">월별 변동점 발생 추이</h3>
           {monthlyTrend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={180} className="sm:!h-[220px]">
               <BarChart data={monthlyTrend} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -220,18 +223,18 @@ export default function DashboardPage() {
         </div>
 
         {/* 상태 분포 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-4 text-sm font-semibold">상태별 분포</h3>
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
+          <h3 className="mb-3 text-sm font-semibold sm:mb-4">상태별 분포</h3>
           {statusPieData.length > 0 ? (
-            <div className="flex items-center">
-              <ResponsiveContainer width="50%" height={220}>
+            <div className="flex flex-col items-center sm:flex-row">
+              <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2 sm:!h-[220px]">
                 <PieChart>
                   <Pie
                     data={statusPieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={40}
+                    outerRadius={65}
                     paddingAngle={3}
                     dataKey="value"
                   >
@@ -242,15 +245,15 @@ export default function DashboardPage() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex-1 space-y-2">
+              <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
                 {statusPieData.map((d, idx) => (
                   <div key={d.status} className="flex items-center gap-2 text-xs">
                     <div
-                      className="h-2.5 w-2.5 rounded-full"
+                      className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
                       style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
                     />
                     <span className="text-muted-foreground">{d.name}</span>
-                    <span className="ml-auto font-semibold">{d.value}건</span>
+                    <span className="ml-auto font-semibold sm:ml-auto">{d.value}건</span>
                   </div>
                 ))}
               </div>
@@ -265,8 +268,8 @@ export default function DashboardPage() {
 
       {/* AI 인사이트 */}
       {insights.length > 0 && (
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-          <div className="mb-4 flex items-center gap-2">
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
+          <div className="mb-3 flex items-center gap-2 sm:mb-4">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-blue-500">
               <Lightbulb className="h-4 w-4 text-white" />
             </div>

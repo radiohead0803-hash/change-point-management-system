@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Settings,
   Database,
+  Users,
   HelpCircle,
   LogOut,
 } from 'lucide-react';
@@ -21,6 +22,7 @@ const navigation = [
   { name: '내 요청', href: '/change-events/my', icon: ClipboardList },
   { name: '승인함', href: '/change-events/approvals', icon: CheckSquare },
   { name: '기초정보 관리', href: '/admin/master-data', icon: Database, adminOnly: true },
+  { name: '사용자 관리', href: '/admin/users', icon: Users, adminOnly: true },
   { name: '정책 설정', href: '/admin/settings', icon: Settings, adminOnly: true },
   { name: '도움말', href: '/help', icon: HelpCircle },
 ];

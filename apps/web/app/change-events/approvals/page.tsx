@@ -75,11 +75,11 @@ export default function ApprovalsPage() {
           {pendingApprovals.map((event) => (
             <div
               key={event.id}
-              className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl transition-all duration-200 hover:shadow-md dark:border-gray-800/60 dark:bg-gray-900/70"
+              className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl transition-all duration-200 hover:shadow-md sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70"
             >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div
-                  className="flex-1 cursor-pointer"
+                  className="flex-1 cursor-pointer active:opacity-70"
                   onClick={() => router.push(`/change-events/${event.id}`)}
                 >
                   <div className="flex items-center gap-2">
@@ -99,18 +99,20 @@ export default function ApprovalsPage() {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="flex-1 sm:flex-none"
                     onClick={() => handleReturn(event.id)}
                   >
                     <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                     보완요청
                   </Button>
-                  <Button size="sm" onClick={() => handleApprove(event.id)}>
+                  <Button size="sm" className="flex-1 sm:flex-none" onClick={() => handleApprove(event.id)}>
                     <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                     {user?.role === 'TIER1_REVIEWER' ? '검토완료' : '승인'}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="hidden sm:inline-flex"
                     onClick={() => router.push(`/change-events/${event.id}`)}
                   >
                     <ArrowRight className="h-4 w-4" />

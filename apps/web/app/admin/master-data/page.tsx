@@ -151,12 +151,12 @@ export default function MasterDataPage() {
                         <div key={cat.id}>
                           <button
                             onClick={() => toggleCategory(cat.id)}
-                            className="flex w-full items-center gap-3 border-b border-gray-50 px-6 py-3 text-left transition-colors hover:bg-gray-50/60 dark:border-gray-800/50 dark:hover:bg-gray-800/30"
+                            className="flex w-full items-center gap-2.5 border-b border-gray-50 px-4 py-3 text-left transition-colors hover:bg-gray-50/60 sm:gap-3 sm:px-6 dark:border-gray-800/50 dark:hover:bg-gray-800/30"
                           >
-                            <FolderTree className="h-4 w-4 text-muted-foreground/50" />
-                            <div className="flex-1">
+                            <FolderTree className="h-4 w-4 flex-shrink-0 text-muted-foreground/50" />
+                            <div className="min-w-0 flex-1">
                               <span className="text-sm font-medium">{cat.name}</span>
-                              <span className="ml-2 text-xs text-muted-foreground">({cat.code})</span>
+                              <span className="ml-1.5 text-xs text-muted-foreground sm:ml-2">({cat.code})</span>
                             </div>
                             {expandedCategories.has(cat.id) ? (
                               <ChevronDown className="h-4 w-4 text-muted-foreground/50" />
@@ -172,11 +172,11 @@ export default function MasterDataPage() {
                               <div key={sub.id}>
                                 <button
                                   onClick={() => toggleCategory(sub.id)}
-                                  className="flex w-full items-center gap-3 border-b border-gray-50 px-10 py-2.5 text-left transition-colors hover:bg-gray-50/60 dark:border-gray-800/50 dark:hover:bg-gray-800/30"
+                                  className="flex w-full items-center gap-2 border-b border-gray-50 px-6 py-2.5 text-left transition-colors hover:bg-gray-50/60 sm:gap-3 sm:px-10 dark:border-gray-800/50 dark:hover:bg-gray-800/30"
                                 >
-                                  <Layers className="h-3.5 w-3.5 text-muted-foreground/40" />
-                                  <span className="text-sm">{sub.name}</span>
-                                  <span className="text-xs text-muted-foreground">({sub.code})</span>
+                                  <Layers className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
+                                  <span className="min-w-0 truncate text-sm">{sub.name}</span>
+                                  <span className="hidden text-xs text-muted-foreground sm:inline">({sub.code})</span>
                                   {expandedCategories.has(sub.id) ? (
                                     <ChevronDown className="ml-auto h-3.5 w-3.5 text-muted-foreground/40" />
                                   ) : (
@@ -188,11 +188,11 @@ export default function MasterDataPage() {
                                     {items.map((item) => (
                                       <div
                                         key={item.id}
-                                        className="flex items-center gap-3 border-b border-gray-50 px-14 py-2 dark:border-gray-800/50"
+                                        className="flex items-center gap-2 border-b border-gray-50 px-8 py-2 sm:gap-3 sm:px-14 dark:border-gray-800/50"
                                       >
-                                        <Tag className="h-3 w-3 text-primary/50" />
-                                        <span className="text-xs">{item.name}</span>
-                                        <span className="text-[10px] text-muted-foreground/50">
+                                        <Tag className="h-3 w-3 flex-shrink-0 text-primary/50" />
+                                        <span className="min-w-0 truncate text-xs">{item.name}</span>
+                                        <span className="hidden text-[10px] text-muted-foreground/50 sm:inline">
                                           {item.code}
                                         </span>
                                       </div>
@@ -208,11 +208,11 @@ export default function MasterDataPage() {
                             items.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center gap-3 border-b border-gray-50 bg-gray-50/30 px-10 py-2 dark:border-gray-800/50 dark:bg-gray-800/20"
+                                className="flex items-center gap-2 border-b border-gray-50 bg-gray-50/30 px-6 py-2 sm:gap-3 sm:px-10 dark:border-gray-800/50 dark:bg-gray-800/20"
                               >
-                                <Tag className="h-3 w-3 text-primary/50" />
-                                <span className="text-xs">{item.name}</span>
-                                <span className="text-[10px] text-muted-foreground/50">{item.code}</span>
+                                <Tag className="h-3 w-3 flex-shrink-0 text-primary/50" />
+                                <span className="min-w-0 truncate text-xs">{item.name}</span>
+                                <span className="hidden text-[10px] text-muted-foreground/50 sm:inline">{item.code}</span>
                               </div>
                             ))}
                         </div>

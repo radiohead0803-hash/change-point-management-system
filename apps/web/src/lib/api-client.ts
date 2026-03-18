@@ -77,6 +77,17 @@ export const codeMasters = {
     api.get<ChangeItem[]>('/change-events/codes/items', { params: { categoryId } }),
 };
 
+export const users = {
+  list: () => api.get<User[]>('/users'),
+  get: (id: string) => api.get<User>(`/users/${id}`),
+  create: (data: { email: string; password: string; name: string; role: string; companyId?: string }) =>
+    api.post<User>('/users', data),
+  update: (id: string, data: { name?: string; role?: string; companyId?: string; password?: string }) =>
+    api.patch<User>(`/users/${id}`, data),
+  remove: (id: string) => api.delete(`/users/${id}`),
+  companies: () => api.get<any[]>('/users/companies'),
+};
+
 export const settings = {
   create: (data: {
     key: string;

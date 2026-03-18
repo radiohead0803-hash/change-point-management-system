@@ -27,8 +27,8 @@ export default function MobileNav() {
   const canSeeApprovals = ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'].includes(user?.role || '');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80">
-      <div className="mx-auto flex max-w-md justify-around px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="mx-auto flex max-w-lg justify-around px-1">
         {navigation.map((item) => {
           if (item.href === '/change-events/approvals' && !canSeeApprovals) {
             return null;
@@ -42,19 +42,22 @@ export default function MobileNav() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex flex-1 flex-col items-center justify-center py-2 transition-colors',
+                'flex flex-1 flex-col items-center justify-center py-2.5 transition-colors',
                 isActive
                   ? 'text-primary'
                   : 'text-muted-foreground/60 hover:text-foreground',
               )}
             >
               <div className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
-                isActive && 'bg-primary/10',
+                'flex h-9 w-9 items-center justify-center rounded-xl transition-all',
+                isActive && 'bg-primary/10 scale-110',
               )}>
                 <Icon className="h-5 w-5" />
               </div>
-              <span className="mt-0.5 text-[10px] font-medium">{item.name}</span>
+              <span className={cn(
+                'mt-1 text-[10px] font-medium',
+                isActive && 'font-semibold',
+              )}>{item.name}</span>
             </Link>
           );
         })}

@@ -39,7 +39,11 @@ export default function MyChangeEventsPage() {
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">내 요청</h1>
           <p className="mt-1 text-sm text-muted-foreground">등록한 변동점 목록을 확인합니다</p>
         </div>
-        <Button onClick={() => router.push('/change-events/new')}>
+        <Button size="sm" className="sm:hidden" onClick={() => router.push('/change-events/new')}>
+          <Plus className="mr-1 h-4 w-4" />
+          등록
+        </Button>
+        <Button className="hidden sm:inline-flex" onClick={() => router.push('/change-events/new')}>
           <Plus className="mr-2 h-4 w-4" />
           변동점 등록
         </Button>
