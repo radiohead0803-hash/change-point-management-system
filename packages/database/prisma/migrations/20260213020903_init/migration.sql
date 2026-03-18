@@ -29,6 +29,7 @@ CREATE TABLE "users" (
     "deletedAt" TIMESTAMP(3),
     "createdById" TEXT,
     "updatedById" TEXT,
+    
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
