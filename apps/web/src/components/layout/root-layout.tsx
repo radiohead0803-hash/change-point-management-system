@@ -1,7 +1,8 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Sidebar from './sidebar';
 import MobileNav from './mobile-nav';
 
@@ -10,15 +11,17 @@ const publicPaths = ['/login', '/register'];
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   // 로딩 중이거나 공개 페이지인 경우 레이아웃 없이 렌더링
   if (loading || publicPaths.includes(pathname)) {
     return <>{children}</>;
   }
 
-  // 인증이 필요한 페이지에서 로그인되지 않은 경우
+  // 인증이 필요한 페이지에서 로그인되지 않은 경우 → 로그인 페이지로 리다이렉트
   if (!user && !publicPaths.includes(pathname)) {
-    return <div>Redirecting...</div>;
+    router.replace('/login');
+    return null;
   }
 
   return (
