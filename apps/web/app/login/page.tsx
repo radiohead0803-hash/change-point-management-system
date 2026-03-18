@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
 const loginSchema = z.object({
-  email: z.string().email('올바른 이메일 주소를 입력해주세요.'),
-  password: z.string().min(6, '비밀번호는 6자 이상이어야 합니다.'),
+  email: z.string().min(1, '아이디를 입력해주세요.'),
+  password: z.string().min(1, '비밀번호를 입력해주세요.'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -37,7 +37,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: '로그인 실패',
-        description: '이메일 또는 비밀번호를 확인해주세요.',
+        description: '아이디 또는 비밀번호를 확인해주세요.',
       });
     } finally {
       setLoading(false);
@@ -63,12 +63,13 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                이메일
+                아이디
               </label>
               <Input
                 id="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
+                placeholder="admin"
                 {...register('email')}
                 error={errors.email?.message}
               />

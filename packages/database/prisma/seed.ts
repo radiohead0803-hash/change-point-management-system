@@ -5,18 +5,18 @@ const prisma = new PrismaClient();
 
 async function main() {
   // 관리자 계정 생성
-  const adminPassword = await bcrypt.hash('admin1234!', 10);
+  const adminPassword = await bcrypt.hash('1234', 10);
   await prisma.user.upsert({
-    where: { email: 'admin@cams.co.kr' },
+    where: { email: 'admin' },
     update: {},
     create: {
-      email: 'admin@cams.co.kr',
+      email: 'admin',
       name: '시스템관리자',
       password: adminPassword,
       role: 'ADMIN',
     },
   });
-  console.log('Admin account created: admin@cams.co.kr / admin1234!');
+  console.log('Admin account created: admin / 1234');
 
   // 변경 분류 생성
   const cp96Class = await prisma.changeClass.create({
