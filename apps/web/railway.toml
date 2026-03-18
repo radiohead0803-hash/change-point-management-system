@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && NODE_ENV=development pnpm install --no-frozen-lockfile && cd packages/database && npx prisma@5.22.0 generate && cd ../.. && pnpm --filter @cpms/database build && pnpm --filter @cpms/web build"
+
+[deploy]
+startCommand = "cd apps/web && npx next start -H 0.0.0.0 -p $PORT"
+restartPolicyType = "on_failure"
+numReplicas = 1
