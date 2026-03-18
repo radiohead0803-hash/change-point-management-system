@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* 컨텐츠 영역 */}
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto px-3 py-3 pb-20 sm:px-4 sm:py-4 lg:pb-4">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>

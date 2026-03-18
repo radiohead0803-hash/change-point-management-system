@@ -14,6 +14,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
+import { BootstrapService } from './bootstrap.service';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { HealthController } from './health.controller';
   controllers: [AppController, HealthController],
   providers: [
     AppService,
+    BootstrapService,
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,

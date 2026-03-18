@@ -45,10 +45,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 dark:bg-gray-900">
+      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-6 shadow-lg sm:space-y-8 sm:p-8 dark:bg-gray-800">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:mt-6 sm:text-3xl dark:text-white">
             (주)캠스 변동점 관리시스템
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">

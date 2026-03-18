@@ -13,9 +13,11 @@
     "clean": "rimraf .turbo node_modules dist"
   },
   "dependencies": {
-    "@prisma/client": "^5.9.1"
+    "@prisma/client": "^5.9.1",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.11.16",
     "prisma": "^5.9.1",
     "rimraf": "^5.0.5",

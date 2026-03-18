@@ -106,13 +106,13 @@ export default function NewChangeEventPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">변동점 등록</h1>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">변동점 등록</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
           {/* 접수월 */}
           <div>
             <label
@@ -220,7 +220,7 @@ export default function NewChangeEventPage() {
           </div>
 
           {/* 변경 항목 태그 */}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               변경 항목
             </label>
@@ -262,18 +262,18 @@ export default function NewChangeEventPage() {
             id="description"
             {...register('description')}
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           />
           {errors.description && (
             <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
           )}
         </div>
 
-        <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={() => router.back()}>
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
             취소
           </Button>
-          <Button type="submit" loading={loading}>
+          <Button type="submit" className="w-full sm:w-auto" loading={loading}>
             등록
           </Button>
         </div>

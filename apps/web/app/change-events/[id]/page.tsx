@@ -41,31 +41,31 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
     (user?.role === 'EXEC_APPROVER' && event.status === 'REVIEWED');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">변동점 상세</h1>
-        <div className="flex space-x-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">변동점 상세</h1>
+        <div className="flex gap-2 sm:gap-4">
           {canEdit && (
-            <Button onClick={() => router.push(`/change-events/${event.id}/edit`)}>
-              <FileEdit className="mr-2 h-4 w-4" />
+            <Button size="sm" className="sm:size-default" onClick={() => router.push(`/change-events/${event.id}/edit`)}>
+              <FileEdit className="mr-1 h-4 w-4 sm:mr-2" />
               수정
             </Button>
           )}
           {event.status === 'APPROVED' && (
-            <Button variant="outline" onClick={() => window.open(`/api/excel/${event.id}`)}>
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
+            <Button size="sm" variant="outline" className="sm:size-default" onClick={() => window.open(`/api/excel/${event.id}`)}>
+              <Download className="mr-1 h-4 w-4 sm:mr-2" />
+              엑셀
             </Button>
           )}
         </div>
       </div>
 
       {/* 상태 정보 */}
-      <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">상태</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">상태</div>
             <div
               className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-${getStatusColor(
                 event.status,
@@ -75,85 +75,86 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
             </div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">등록자</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">등록자</div>
             <div className="mt-1 text-sm">{event.createdBy.name}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">등록일시</div>
-            <div className="mt-1 text-sm">{formatDateTime(event.createdAt)}</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">등록일시</div>
+            <div className="mt-1 text-xs sm:text-sm">{formatDateTime(event.createdAt)}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">수정일시</div>
-            <div className="mt-1 text-sm">{formatDateTime(event.updatedAt)}</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">수정일시</div>
+            <div className="mt-1 text-xs sm:text-sm">{formatDateTime(event.updatedAt)}</div>
           </div>
         </div>
       </div>
 
       {/* 기본 정보 */}
-      <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-        <h3 className="mb-4 text-lg font-medium">기본 정보</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+        <h3 className="mb-3 text-base font-medium sm:mb-4 sm:text-lg">기본 정보</h3>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">접수월</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">접수월</div>
             <div className="mt-1 text-sm">{event.receiptMonth}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">발생일</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">발생일</div>
             <div className="mt-1 text-sm">{formatDate(event.occurredDate)}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">고객사</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">고객사</div>
             <div className="mt-1 text-sm">{event.customer}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">프로젝트</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">프로젝트</div>
             <div className="mt-1 text-sm">{event.project}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">제품군</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">제품군</div>
             <div className="mt-1 text-sm">{event.productLine}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">부품번호</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">부품번호</div>
             <div className="mt-1 text-sm">{event.partNumber}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">공장</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">공장</div>
             <div className="mt-1 text-sm">{event.factory}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">라인</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">라인</div>
             <div className="mt-1 text-sm">{event.productionLine}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">협력사</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">협력사</div>
             <div className="mt-1 text-sm">{event.company.name}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">4M/4M외</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">4M/4M외</div>
             <div className="mt-1 text-sm">{event.changeType === 'FOUR_M' ? '4M' : '4M외'}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">대분류</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">대분류</div>
             <div className="mt-1 text-sm">{event.category}</div>
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">세부항목</div>
+            <div className="text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">세부항목</div>
             <div className="mt-1 text-sm">{event.subCategory}</div>
           </div>
         </div>
       </div>
 
       {/* 변경 상세내용 */}
-      <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-        <h3 className="mb-4 text-lg font-medium">변경 상세내용</h3>
+      <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+        <h3 className="mb-3 text-base font-medium sm:mb-4 sm:text-lg">변경 상세내용</h3>
         <div className="whitespace-pre-wrap text-sm">{event.description}</div>
       </div>
 
       {/* 점검 결과 */}
-      <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-        <h3 className="mb-4 text-lg font-medium">점검 결과</h3>
-        <div className="overflow-x-auto">
+      <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+        <h3 className="mb-3 text-base font-medium sm:mb-4 sm:text-lg">점검 결과</h3>
+        {/* 데스크톱: 테이블 */}
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50">
               <tr>
@@ -171,12 +172,21 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
             </tbody>
           </table>
         </div>
+        {/* 모바일: 리스트 */}
+        <div className="space-y-3 sm:hidden">
+          {event.inspectionResults.map((result) => (
+            <div key={result.id} className="rounded border p-3">
+              <div className="text-xs font-medium text-gray-500">{result.item.question}</div>
+              <div className="mt-1 text-sm">{result.value}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 첨부파일 */}
       {event.attachments.length > 0 && (
-        <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-          <h3 className="mb-4 text-lg font-medium">첨부파일</h3>
+        <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
+          <h3 className="mb-3 text-base font-medium sm:mb-4 sm:text-lg">첨부파일</h3>
           <div className="space-y-2">
             {event.attachments.map((attachment) => (
               <div key={attachment.id} className="flex items-center space-x-2">
@@ -196,9 +206,10 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
 
       {/* 승인 버튼 */}
       {canApprove && (
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
           <Button
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={async () => {
               try {
                 await changeEvents.update(event.id, {
@@ -220,6 +231,7 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
             보완 요청
           </Button>
           <Button
+            className="w-full sm:w-auto"
             onClick={async () => {
               try {
                 await changeEvents.update(event.id, {

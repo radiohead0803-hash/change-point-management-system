@@ -29,25 +29,29 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">대시보드</h1>
-        <Button onClick={() => router.push('/change-events/new')}>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">대시보드</h1>
+        <Button size="sm" className="sm:hidden" onClick={() => router.push('/change-events/new')}>
+          <Plus className="mr-1 h-4 w-4" />
+          등록
+        </Button>
+        <Button className="hidden sm:inline-flex" onClick={() => router.push('/change-events/new')}>
           <Plus className="mr-2 h-4 w-4" />
           변동점 등록
         </Button>
       </div>
 
       {/* 상태별 카드 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {['DRAFT', 'SUBMITTED', 'REVIEWED', 'APPROVED'].map((status) => (
           <div
             key={status}
-            className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
+            className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-6"
           >
             <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <h3 className="tracking-tight text-sm font-medium">{getStatusText(status)}</h3>
+              <h3 className="tracking-tight text-xs font-medium sm:text-sm">{getStatusText(status)}</h3>
               <div
                 className={`rounded-full px-2 py-1 text-xs font-semibold bg-${getStatusColor(
                   status,
@@ -62,10 +66,12 @@ export default function DashboardPage() {
 
       {/* 최근 변동점 목록 */}
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <h3 className="font-semibold tracking-tight">최근 변동점</h3>
         </div>
-        <div className="p-0">
+
+        {/* 데스크톱: 테이블 */}
+        <div className="hidden sm:block">
           <div className="relative w-full overflow-auto">
             <table className="w-full caption-bottom text-sm">
               <thead className="border-b bg-muted/50">
@@ -113,6 +119,30 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 모바일: 카드 리스트 */}
+        <div className="space-y-3 p-4 pt-0 sm:hidden">
+          {events.slice(0, 5).map((event) => (
+            <div
+              key={event.id}
+              className="rounded-lg border p-3 transition-colors hover:bg-muted/50"
+              onClick={() => router.push(`/change-events/${event.id}`)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{event.customer}</span>
+                <div
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold bg-${getStatusColor(
+                    event.status,
+                  )}-100 text-${getStatusColor(event.status)}-800`}
+                >
+                  {getStatusText(event.status)}
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{event.project} · {event.company.name}</p>
+              <p className="mt-0.5 text-xs text-gray-400">{event.receiptMonth} · {formatDate(event.occurredDate)}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

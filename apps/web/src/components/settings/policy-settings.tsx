@@ -55,10 +55,12 @@ export function PolicySettings() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">정책 설정</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-base font-medium sm:text-lg">정책 설정</h2>
         <Button
+          size="sm"
+          className="w-full sm:w-auto sm:size-default"
           onClick={() =>
             createMutation.mutate({
               ...newPolicy,
@@ -70,7 +72,8 @@ export function PolicySettings() {
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      {/* 데스크톱: 테이블 */}
+      <div className="hidden rounded-md border sm:block">
         <table className="w-full">
           <thead className="border-b bg-muted/50">
             <tr>
@@ -129,6 +132,51 @@ export function PolicySettings() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 모바일: 카드 리스트 */}
+      <div className="space-y-3 sm:hidden">
+        {policies.map((policy) => (
+          <div key={policy.id} className="rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{policy.key}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${JSON.parse(policy.value).enabled ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                {JSON.parse(policy.value).enabled ? '필수' : '선택'}
+              </span>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-500">
+              <div>범위: {policy.scopeType}</div>
+              <div>시작: {new Date(policy.effectiveFrom).toLocaleDateString()}</div>
+              <div>종료: {policy.effectiveTo ? new Date(policy.effectiveTo).toLocaleDateString() : '-'}</div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  updateMutation.mutate({
+                    id: policy.id,
+                    data: {
+                      value: {
+                        enabled: !JSON.parse(policy.value).enabled,
+                      },
+                    },
+                  })
+                }
+              >
+                {JSON.parse(policy.value).enabled ? '선택으로' : '필수로'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => deleteMutation.mutate(policy.id)}
+              >
+                삭제
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
