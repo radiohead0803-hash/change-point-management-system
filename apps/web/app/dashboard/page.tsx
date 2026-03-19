@@ -278,10 +278,10 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">변동점 현황을 한눈에 확인하세요</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => window.open(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`, '_blank')} className="hidden sm:inline-flex">
+          <Button size="sm" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="hidden sm:inline-flex">
             <Download className="mr-1.5 h-4 w-4" />월간 리포트
           </Button>
-          <Button size="icon" variant="outline" onClick={() => window.open(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`, '_blank')} className="h-9 w-9 sm:hidden">
+          <Button size="icon" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="h-9 w-9 sm:hidden">
             <Download className="h-4 w-4" />
           </Button>
           <Button size="sm" className="sm:hidden" onClick={() => router.push('/change-events/new')}>

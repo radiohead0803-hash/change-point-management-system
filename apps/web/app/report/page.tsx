@@ -70,7 +70,7 @@ function ReportContent() {
       {/* 프린트 헤더 */}
       <div className="print:hidden sticky top-0 z-50 flex items-center justify-between border-b bg-white px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => window.close()} className="rounded-lg p-1.5 hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => window.history.back()} className="rounded-lg p-1.5 hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
           <h1 className="text-lg font-bold">월간 리포트</h1>
         </div>
         <div className="flex items-center gap-3">
