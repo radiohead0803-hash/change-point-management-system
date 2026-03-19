@@ -161,6 +161,9 @@ export class ChangeEventsService {
             },
           },
         },
+        _count: {
+          select: { attachments: { where: { deletedAt: null } } },
+        },
       },
     });
   }

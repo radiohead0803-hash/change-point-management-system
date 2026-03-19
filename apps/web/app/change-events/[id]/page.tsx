@@ -22,6 +22,26 @@ const FLOW_STEPS = [
   { status: 'REVIEWED', nextStatus: 'APPROVED', btnLabel: '최종승인', roles: ['EXEC_APPROVER', 'ADMIN'] },
 ];
 
+/* ── 첨부파일 다운로드 헬퍼 ── */
+async function downloadAttachment(attachmentId: string, filename: string) {
+  try {
+    const res = await changeEvents.getAttachmentData(attachmentId);
+    const data = res.data?.data;
+    if (!data) { alert('파일 데이터를 불러올 수 없습니다.'); return; }
+    // base64 → blob → download
+    const base64 = data.includes(',') ? data.split(',')[1] : data;
+    const mime = data.includes(',') ? data.split(';')[0].split(':')[1] : 'application/octet-stream';
+    const byteChars = atob(base64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  } catch { alert('다운로드 실패'); }
+}
+
 /* ── 첨부파일 섹션 ── */
 function AttachmentSection({ eventId }: { eventId: string }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -70,7 +90,7 @@ function AttachmentSection({ eventId }: { eventId: string }) {
           </div>
         )}
 
-        {/* 일반 파일 목록 */}
+        {/* 일반 파일 목록 (다운로드 가능) */}
         {files.length > 0 && (
           <div>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
@@ -78,11 +98,12 @@ function AttachmentSection({ eventId }: { eventId: string }) {
             </p>
             <div className="space-y-1.5">
               {files.map((file: any) => (
-                <div key={file.id} className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-white/60 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-800/30">
-                  <Paperclip className="h-4 w-4 flex-shrink-0 text-muted-foreground/50" />
+                <button key={file.id} type="button" onClick={() => downloadAttachment(file.id, file.filename)}
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-gray-100 bg-white/60 px-4 py-2.5 text-left transition-colors hover:bg-blue-50/50 dark:border-gray-800 dark:bg-gray-800/30 dark:hover:bg-gray-800/50">
+                  <Download className="h-4 w-4 flex-shrink-0 text-primary/60" />
                   <span className="flex-1 truncate text-sm">{file.filename}</span>
                   <span className="flex-shrink-0 text-[10px] text-muted-foreground/50">{(file.size / 1024).toFixed(0)}KB</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -95,16 +116,22 @@ function AttachmentSection({ eventId }: { eventId: string }) {
           <button className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/40" onClick={() => setLightbox(null)}>
             <X className="h-6 w-6" />
           </button>
-          <ImagePreview attachmentId={lightbox} filename="" full />
+          <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <ImagePreview attachmentId={lightbox} filename="" full />
+            <button onClick={() => { const att = attachments.find((a: any) => a.id === lightbox); if (att) downloadAttachment(att.id, att.filename); }}
+              className="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30">
+              <Download className="h-4 w-4" />다운로드
+            </button>
+          </div>
         </div>
       )}
     </>
   );
 }
 
-/* ── 이미지 미리보기 (base64 로드) ── */
+/* ── 이미지 미리보기 (API를 통해 base64 로드) ── */
 function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; filename: string; full?: boolean }) {
-  const { data: attData } = useQuery({
+  const { data: attData, isLoading } = useQuery({
     queryKey: ['attachment-full', attachmentId],
     queryFn: async () => {
       try {
@@ -114,11 +141,12 @@ function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; 
         return null;
       }
     },
+    staleTime: 5 * 60 * 1000, // 5분 캐시
   });
 
   if (attData?.data) {
     return full ? (
-      <img src={attData.data} alt={filename} className="max-h-[80vh] max-w-[90vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
+      <img src={attData.data} alt={filename} className="max-h-[80vh] max-w-[90vw] rounded-xl object-contain" />
     ) : (
       <img src={attData.data} alt={filename} className="h-full w-full object-cover" />
     );
@@ -126,7 +154,11 @@ function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; 
 
   return (
     <div className={`flex items-center justify-center ${full ? 'h-40 w-40' : 'h-full w-full'} bg-gray-100 dark:bg-gray-800`}>
-      <Image className="h-8 w-8 text-muted-foreground/30 animate-pulse" />
+      {isLoading ? (
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      ) : (
+        <Image className="h-8 w-8 text-muted-foreground/30" />
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Filter, FileSpreadsheet, ArrowRight,
-  FileText, ChevronDown,
+  FileText, ChevronDown, Paperclip, Image as ImageIcon,
 } from 'lucide-react';
 
 /* ── Tooltip 셀 ── */
@@ -207,6 +207,7 @@ export default function MyChangeEventsPage() {
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-gray-500 border-r border-gray-200" colSpan={5}>기본정보</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-14">상태</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10">첨부</th>
                 </tr>
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
                   <th className="px-2 py-1.5 border-r border-gray-200"></th>
@@ -225,6 +226,7 @@ export default function MyChangeEventsPage() {
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
+                  <th className="px-2 py-1.5"></th>
                   <th className="px-2 py-1.5"></th>
                 </tr>
               </thead>
@@ -255,6 +257,16 @@ export default function MyChangeEventsPage() {
                       <TipCell tip={e.qualityVerification || ''} className={`max-w-[80px] truncate px-2 py-2.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2 text-center">
                         <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-center">
+                        {(e._count?.attachments > 0) ? (
+                          <span className="inline-flex items-center gap-0.5 text-primary" title={`첨부 ${e._count.attachments}건`}>
+                            <Paperclip className="h-3 w-3" />
+                            <span className="text-[9px] font-bold">{e._count.attachments}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-muted-foreground/30">-</span>
+                        )}
                       </td>
                     </tr>
                   );

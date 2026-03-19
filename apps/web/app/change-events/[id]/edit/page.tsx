@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
 import { getCodeOptions } from '@/lib/common-codes';
@@ -123,22 +123,33 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     },
   });
 
-  // Populate form when event loads + ensure dropdown options include saved values
+  // 폼 초기화 플래그 (1회만 실행)
+  const formInitialized = useRef(false);
+  const attsInitialized = useRef(false);
+
+  // Populate form when event loads (1회만 실행)
   useEffect(() => {
-    if (event) {
-      // 드롭다운에 기존 저장 값이 없으면 옵션에 추가
-      if (event.customer && !CUSTOMERS.includes(event.customer)) setCustomers((p) => [...p.filter(x => x !== '기타'), event.customer!, '기타']);
-      if (event.project && !PROJECTS.includes(event.project)) setProjects((p) => [...p.filter(x => x !== '기타'), event.project!, '기타']);
-      if (event.productLine && !PRODUCT_LINES.includes(event.productLine)) setProductLines((p) => [...p.filter(x => x !== '기타'), event.productLine!, '기타']);
-      if (event.factory && !FACTORIES.includes(event.factory)) setFactories((p) => [...p.filter(x => x !== '기타'), event.factory!, '기타']);
-      if (event.productionLine && !LINES.includes(event.productionLine)) setLines((p) => [...p.filter(x => x !== '기타'), event.productionLine!, '기타']);
-      if (event.department && !DEPTS.includes(event.department)) setDepts((p) => [...p.filter(x => x !== '기타'), event.department!, '기타']);
+    if (!event || formInitialized.current) return;
+    formInitialized.current = true;
 
-      // tags에서 PRIMARY 태그의 itemId를 primaryItemId로 설정
-      const tags = event.tags as any[] || [];
-      const primaryTag = tags.find((t) => t.tagType === 'PRIMARY');
-      const primaryItemId = event.primaryItemId || primaryTag?.itemId || primaryTag?.item?.id || '';
+    // 드롭다운에 기존 저장 값이 없으면 옵션에 추가
+    const addOpt = (val: string | undefined | null, opts: string[], setter: (fn: (p: string[]) => string[]) => void) => {
+      if (val && !opts.includes(val)) setter((p) => [...p.filter(x => x !== '기타'), val, '기타']);
+    };
+    addOpt(event.customer, CUSTOMERS, setCustomers);
+    addOpt(event.project, PROJECTS, setProjects);
+    addOpt(event.productLine, PRODUCT_LINES, setProductLines);
+    addOpt(event.factory, FACTORIES, setFactories);
+    addOpt(event.productionLine, LINES, setLines);
+    addOpt(event.department, DEPTS, setDepts);
 
+    // tags에서 PRIMARY 태그의 itemId를 primaryItemId로 설정
+    const tags = event.tags as any[] || [];
+    const primaryTag = tags.find((t) => t.tagType === 'PRIMARY');
+    const primaryItemId = event.primaryItemId || primaryTag?.itemId || primaryTag?.item?.id || '';
+
+    // 약간의 지연으로 옵션 상태 반영 후 reset
+    setTimeout(() => {
       reset({
         occurredDate: event.occurredDate ? new Date(event.occurredDate).toISOString().slice(0, 10) : '',
         department: event.department || '',
@@ -151,7 +162,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         productionLine: event.productionLine || '',
         companyId: event.companyId || '',
         primaryItemId,
-        tags: event.tags?.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })) || [],
+        tags: (event.tags as any[])?.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })) || [],
         description: event.description || '',
         actionDate: event.actionDate ? new Date(event.actionDate).toISOString().slice(0, 10) : '',
         actionPlan: event.actionPlan || '',
@@ -161,12 +172,13 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         reviewerId: event.reviewerId || '',
         executiveId: event.executiveId || '',
       });
-    }
-  }, [event, reset, user, CUSTOMERS, PROJECTS, PRODUCT_LINES, FACTORIES, LINES, DEPTS]);
+    }, 50);
+  }, [event]);
 
-  // Populate existing attachments
+  // Populate existing attachments (1회만 실행)
   useEffect(() => {
-    if (existingAtts.length > 0 && attachments.length === 0) {
+    if (existingAtts.length > 0 && !attsInitialized.current) {
+      attsInitialized.current = true;
       setAttachments(existingAtts.map((a: any) => ({
         id: a.id,
         filename: a.filename,
