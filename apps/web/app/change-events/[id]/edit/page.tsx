@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
 import { getCodeOptions } from '@/lib/common-codes';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,16 +13,15 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { TagSelector } from '@/components/change-events/tag-selector';
+import { ChangeEvent } from '@/types';
 import {
   ArrowLeft, Upload, X, Paperclip, Save, Send, UserCheck,
-  ChevronRight, CheckCircle2, FileText, Clipboard,
+  ChevronRight, CheckCircle2, FileText, Clipboard, Trash2,
 } from 'lucide-react';
 
 const schema = z.object({
-  // 발생내역
   occurredDate: z.string().min(1, '발생일을 입력해주세요'),
   department: z.string().optional(),
-  // 기본정보 (선택)
   customer: z.string().optional(),
   project: z.string().optional(),
   productLine: z.string().optional(),
@@ -34,12 +33,10 @@ const schema = z.object({
   primaryItemId: z.string().optional(),
   tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
   description: z.string().optional(),
-  // 조치결과
   actionDate: z.string().optional(),
   actionPlan: z.string().optional(),
   actionResult: z.string().optional(),
   qualityVerification: z.string().optional(),
-  // 담당자
   managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
@@ -47,7 +44,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-/* ── 선택 옵션 (기초정보 공통코드에서 로드) ── */
+interface Att { id?: string; filename: string; mimetype: string; size: number; data?: string; preview?: string; isExisting?: boolean }
 
 const STEPS = [
   { label: '접수·등록', desc: '협력사/담당자' },
@@ -56,17 +53,30 @@ const STEPS = [
   { label: '승인 완료', desc: '알림 발송' },
 ];
 
-interface Att { filename: string; mimetype: string; size: number; data: string; preview?: string }
-
-export default function NewChangeEventPage() {
+export default function EditChangeEventPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [attachments, setAttachments] = useState<Att[]>([]);
+  const [removedAttIds, setRemovedAttIds] = useState<string[]>([]);
 
-  // 공통코드에서 드롭다운 옵션 로드
+  // Load existing event
+  const { data: event, isLoading: eventLoading } = useQuery<ChangeEvent>({
+    queryKey: ['change-events', params.id],
+    queryFn: () => changeEvents.get(params.id).then((r) => r.data),
+  });
+
+  // Load existing attachments
+  const { data: existingAtts = [] } = useQuery<any[]>({
+    queryKey: ['attachments', params.id],
+    queryFn: () => changeEvents.getAttachments(params.id).then((r) => r.data),
+    enabled: !!params.id,
+  });
+
+  // Common code options
   const [CUSTOMERS, setCustomers] = useState<string[]>([]);
   const [PROJECTS, setProjects] = useState<string[]>([]);
   const [PRODUCT_LINES, setProductLines] = useState<string[]>([]);
@@ -76,7 +86,6 @@ export default function NewChangeEventPage() {
 
   useEffect(() => {
     setCustomers([...getCodeOptions('CUSTOMER'), '기타']);
-    // 프로젝트: 차종현황(localStorage)에서 로드
     try {
       const stored = localStorage.getItem('cpms_vehicles');
       if (stored) {
@@ -96,25 +105,65 @@ export default function NewChangeEventPage() {
   }, []);
 
   const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
-  const { data: companies = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });
+  const { data: companiesList = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });
 
   const reviewers = allUsers.filter((u: any) => ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'].includes(u.role));
   const executives = allUsers.filter((u: any) => ['EXEC_APPROVER', 'ADMIN'].includes(u.role));
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, watch, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      occurredDate: new Date().toISOString().slice(0, 10),
-      companyId: user?.companyId || '', customer: '', project: '', productLine: '',
+      occurredDate: '', companyId: '', customer: '', project: '', productLine: '',
       partNumber: '', productName: '', factory: '', productionLine: '',
-      description: '', department: '', managerId: user?.id || '',
+      description: '', department: '', managerId: '',
       actionDate: '', actionPlan: '', actionResult: '', qualityVerification: '',
       primaryItemId: '', tags: [], reviewerId: '', executiveId: '',
     },
   });
 
+  // Populate form when event loads
+  useEffect(() => {
+    if (event) {
+      reset({
+        occurredDate: event.occurredDate ? new Date(event.occurredDate).toISOString().slice(0, 10) : '',
+        department: event.department || '',
+        customer: event.customer || '',
+        project: event.project || '',
+        productLine: event.productLine || '',
+        partNumber: event.partNumber || '',
+        productName: event.productName || '',
+        factory: event.factory || '',
+        productionLine: event.productionLine || '',
+        companyId: event.companyId || '',
+        primaryItemId: event.primaryItemId || '',
+        tags: event.tags?.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })) || [],
+        description: event.description || '',
+        actionDate: event.actionDate ? new Date(event.actionDate).toISOString().slice(0, 10) : '',
+        actionPlan: event.actionPlan || '',
+        actionResult: event.actionResult || '',
+        qualityVerification: event.qualityVerification || '',
+        managerId: event.managerId || user?.id || '',
+        reviewerId: event.reviewerId || '',
+        executiveId: event.executiveId || '',
+      });
+    }
+  }, [event, reset, user]);
+
+  // Populate existing attachments
+  useEffect(() => {
+    if (existingAtts.length > 0 && attachments.length === 0) {
+      setAttachments(existingAtts.map((a: any) => ({
+        id: a.id,
+        filename: a.filename,
+        mimetype: a.mimetype,
+        size: a.size,
+        isExisting: true,
+      })));
+    }
+  }, [existingAtts]);
+
   const occurredDate = watch('occurredDate');
-  const receiptMonth = occurredDate ? occurredDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
+  const receiptMonth = occurredDate ? occurredDate.slice(0, 7) : '';
 
   /* ── 파일 처리 ── */
   const toBase64 = (file: File): Promise<string> => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(file); });
@@ -140,41 +189,71 @@ export default function NewChangeEventPage() {
     if (imgs.length) { e.preventDefault(); await addFiles(imgs); toast({ title: `${imgs.length}개 이미지 붙여넣기 완료` }); }
   }, [toast]);
 
+  const removeAtt = (index: number) => {
+    const att = attachments[index];
+    if (att.isExisting && att.id) {
+      setRemovedAttIds((p) => [...p, att.id!]);
+    }
+    setAttachments((p) => p.filter((_, j) => j !== index));
+  };
+
   /* ── 저장 ── */
   const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
     if (!user?.id) return;
-    if (status === 'SUBMITTED') {
-      if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
-      if (!data.primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
-      if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
-      if (!data.department) { toast({ variant: 'destructive', title: '발생부서를 선택해주세요.' }); return; }
-      if (!data.actionDate) { toast({ variant: 'destructive', title: '조치시점을 입력해주세요.' }); return; }
-      if (!data.actionPlan) { toast({ variant: 'destructive', title: '조치방안을 입력해주세요.' }); return; }
-      if (!data.actionResult) { toast({ variant: 'destructive', title: '조치결과를 입력해주세요.' }); return; }
-      if (!data.qualityVerification) { toast({ variant: 'destructive', title: '품질검증을 입력해주세요.' }); return; }
-    }
+    if (status === 'SUBMITTED' && !data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
+    if (status === 'SUBMITTED' && !data.primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
+    if (status === 'SUBMITTED' && !data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
+
     try {
       status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
       const { tags, ...rest } = data;
-      const result = await changeEvents.create({
-        ...rest, receiptMonth, status, changeType: 'FOUR_M', category: '', subCategory: '',
-        createdById: user.id, tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
+
+      // Update event
+      await changeEvents.update(params.id, {
+        ...rest as any,
+        receiptMonth: receiptMonth || rest.occurredDate?.slice(0, 7),
+        status,
+        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
-      if (attachments.length && result.data?.id) {
-        await Promise.all(attachments.map((a) => changeEvents.addAttachment(result.data.id, { filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data })));
+
+      // Remove deleted attachments
+      await Promise.all(removedAttIds.map((id) => changeEvents.removeAttachment(id)));
+
+      // Upload new attachments
+      const newAtts = attachments.filter((a) => !a.isExisting && a.data);
+      if (newAtts.length > 0) {
+        await Promise.all(newAtts.map((a) => changeEvents.addAttachment(params.id, {
+          filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data!,
+        })));
       }
+
+      queryClient.invalidateQueries({ queryKey: ['change-events'] });
       toast({ title: status === 'DRAFT' ? '임시 저장 완료' : '승인 요청 완료' });
-      router.push('/change-events/my');
-    } catch { toast({ variant: 'destructive', title: '등록 실패' }); }
-    finally { setDraftSaving(false); setLoading(false); }
+      router.push(`/change-events/${params.id}`);
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: '저장 실패', description: err?.response?.data?.message || '서버 오류' });
+    } finally { setDraftSaving(false); setLoading(false); }
   };
 
+  if (eventLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return <div className="flex flex-col items-center justify-center py-20"><p className="text-sm text-muted-foreground">데이터를 찾을 수 없습니다</p></div>;
+  }
+
+  const canSubmit = event.status === 'DRAFT' || event.status === 'REVIEW_RETURNED';
   const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '캠스 담당자', EXEC_APPROVER: '전담중역' };
 
   const Sel = ({ label, req, opts, err, ...p }: any) => (
     <div className="space-y-1.5">
       <label className="text-sm font-medium">{label} {req && <span className="text-red-400">*</span>}</label>
-      <select {...p} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+      <select {...p} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
         <option value="">{label} 선택</option>
         {opts.map((o: string) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -187,8 +266,10 @@ export default function NewChangeEventPage() {
       <div className="flex items-center gap-3">
         <button type="button" onClick={() => router.back()} className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800"><ArrowLeft className="h-5 w-5" /></button>
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">변동점 등록</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">접수·등록 → 1차 승인 → 최종 승인</p>
+          <h1 className="text-lg font-bold tracking-tight sm:text-2xl">변동점 수정</h1>
+          <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+            상태: <span className="font-medium">{event.status === 'DRAFT' ? '임시저장' : event.status === 'REVIEW_RETURNED' ? '보완요청' : event.status}</span>
+          </p>
         </div>
       </div>
 
@@ -209,7 +290,7 @@ export default function NewChangeEventPage() {
 
       <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
         {/* ① 변동점 발생항목 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
           </h2>
@@ -220,34 +301,28 @@ export default function NewChangeEventPage() {
             </div>
           </div>
           <p className="mb-3 text-xs text-muted-foreground">기초정보 분류 체계에서 발생 항목을 선택합니다</p>
-          <Controller name="tags" control={control} defaultValue={[]} render={({ field }) => <TagSelector value={field.value as any} onChange={field.onChange} required />} />
+          <Controller name="tags" control={control} defaultValue={[]} render={({ field }) => <TagSelector value={field.value as any} onChange={field.onChange} />} />
         </div>
 
         {/* ② 기본 정보 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <FileText className="h-4 w-4" /> 기본 정보
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <Sel label="고객사" opts={CUSTOMERS} {...register('customer')} />
             <Sel label="프로젝트" opts={PROJECTS} {...register('project')} />
             <Sel label="제품군" opts={PRODUCT_LINES} {...register('productLine')} />
             <Sel label="공장" opts={FACTORIES} {...register('factory')} />
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">품번</label>
-              <Input {...register('partNumber')} placeholder="품번 입력" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">품명</label>
-              <Input {...register('productName')} placeholder="품명 입력" />
-            </div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">품번</label><Input {...register('partNumber')} placeholder="품번 입력" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">품명</label><Input {...register('productName')} placeholder="품명 입력" /></div>
             <Sel label="라인" opts={LINES} {...register('productionLine')} />
-            <Sel label="발생부서" req opts={DEPTS} {...register('department')} err={errors.department?.message} />
+            <Sel label="발생부서" opts={DEPTS} {...register('department')} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
-              <select {...register('companyId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+              <select {...register('companyId')} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
                 <option value="">협력사 선택</option>
-                {companies.map((c: any) => <option key={c.id} value={c.id}>[{c.type}] {c.name}</option>)}
+                {companiesList.map((c: any) => <option key={c.id} value={c.id}>[{c.type}] {c.name}</option>)}
               </select>
               {errors.companyId && <p className="text-xs text-red-500">{errors.companyId.message}</p>}
             </div>
@@ -255,21 +330,21 @@ export default function NewChangeEventPage() {
         </div>
 
         {/* ③ 승인자 */}
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm sm:p-6 dark:border-blue-900/30 dark:bg-blue-900/10">
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 shadow-sm sm:p-6 dark:border-blue-900/30 dark:bg-blue-900/10">
           <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
             <UserCheck className="h-4 w-4" /> 승인자 지정
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">1차 검토자 <span className="text-red-400">*</span></label>
-              <select {...register('reviewerId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+              <select {...register('reviewerId')} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
                 <option value="">검토자 선택</option>
                 {reviewers.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">전담중역 <span className="text-xs text-muted-foreground">(선택)</span></label>
-              <select {...register('executiveId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+              <select {...register('executiveId')} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
                 <option value="">전담중역 선택</option>
                 {executives.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
               </select>
@@ -278,7 +353,7 @@ export default function NewChangeEventPage() {
         </div>
 
         {/* ④ 상세내용 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">변경 상세내용</h2>
           <textarea {...register('description')} rows={4} placeholder="변경 사항의 상세 내용을 입력해주세요"
             className="w-full rounded-xl border border-input bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40" />
@@ -286,38 +361,38 @@ export default function NewChangeEventPage() {
         </div>
 
         {/* ⑤ 조치결과 */}
-        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5 shadow-sm sm:p-6 dark:border-amber-900/30 dark:bg-amber-900/10">
-          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과 (필수)</h2>
-          <p className="mb-4 text-[11px] text-muted-foreground">운영가이드 필수 작성 항목입니다</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-4 shadow-sm sm:p-6 dark:border-amber-900/30 dark:bg-amber-900/10">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과</h2>
+          <p className="mb-4 text-[11px] text-muted-foreground">승인 요청 시 필수 작성 항목입니다</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치시점 <span className="text-red-400">*</span></label>
-              <Input type="date" {...register('actionDate')} error={errors.actionDate?.message} />
+              <label className="text-sm font-medium">조치시점</label>
+              <Input type="date" {...register('actionDate')} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치방안 <span className="text-red-400">*</span></label>
-              <Input {...register('actionPlan')} placeholder="조치방안 입력" error={errors.actionPlan?.message} />
+              <label className="text-sm font-medium">조치방안</label>
+              <Input {...register('actionPlan')} placeholder="조치방안 입력" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치결과 <span className="text-red-400">*</span></label>
-              <Input {...register('actionResult')} placeholder="조치결과 입력" error={errors.actionResult?.message} />
+              <label className="text-sm font-medium">조치결과</label>
+              <Input {...register('actionResult')} placeholder="조치결과 입력" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">품질검증 <span className="text-red-400">*</span></label>
-              <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" error={errors.qualityVerification?.message} />
+              <label className="text-sm font-medium">품질검증</label>
+              <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" />
             </div>
           </div>
         </div>
 
-        {/* ⑥ 첨부파일 (Ctrl+V 붙여넣기) */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+        {/* ⑥ 첨부파일 */}
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">첨부파일 및 사진</h2>
           <p className="mb-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Clipboard className="h-3 w-3" />
             캡처 후 <kbd className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-mono font-bold dark:bg-gray-800">Ctrl+V</kbd>로 이미지 붙여넣기 가능
           </p>
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 px-6 py-6 hover:border-primary/40 hover:bg-primary/5 dark:border-gray-700 dark:bg-gray-800/30">
-            <Upload className="mb-2 h-7 w-7 text-muted-foreground/40" />
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 px-6 py-5 hover:border-primary/40 hover:bg-primary/5 dark:border-gray-700 dark:bg-gray-800/30">
+            <Upload className="mb-2 h-6 w-6 text-muted-foreground/40" />
             <span className="text-sm font-medium text-muted-foreground">파일 선택 또는 드래그 & 드롭</span>
             <span className="mt-1 text-xs text-muted-foreground/60">PNG, JPG, PDF, Excel (최대 10MB)</span>
             <input type="file" multiple accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
@@ -325,17 +400,24 @@ export default function NewChangeEventPage() {
           {attachments.length > 0 && (
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {attachments.map((att, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 px-3 py-2 dark:border-gray-800 dark:bg-gray-800/40">
+                <div key={att.id || i} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 px-3 py-2 dark:border-gray-800 dark:bg-gray-800/40">
                   {att.preview ? (
                     <img src={att.preview} alt="" className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700"><Paperclip className="h-5 w-5 text-muted-foreground/50" /></div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <Paperclip className="h-5 w-5 text-muted-foreground/50" />
+                    </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm">{att.filename}</p>
-                    <p className="text-[10px] text-muted-foreground/50">{(att.size / 1024).toFixed(0)}KB</p>
+                    <p className="text-[10px] text-muted-foreground/50">
+                      {(att.size / 1024).toFixed(0)}KB
+                      {att.isExisting && <span className="ml-1 text-primary">(기존)</span>}
+                    </p>
                   </div>
-                  <button type="button" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))} className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-red-50 hover:text-red-500"><X className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => removeAtt(i)} className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-red-50 hover:text-red-500">
+                    {att.isExisting ? <Trash2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                  </button>
                 </div>
               ))}
             </div>
@@ -348,9 +430,11 @@ export default function NewChangeEventPage() {
           <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => save(watch() as FormData, 'DRAFT')} disabled={draftSaving}>
             <Save className="mr-1.5 h-4 w-4" />{draftSaving ? '저장 중...' : '임시 저장'}
           </Button>
-          <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
-            <Send className="mr-1.5 h-4 w-4" />{loading ? '제출 중...' : '승인 요청'}
-          </Button>
+          {canSubmit && (
+            <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+              <Send className="mr-1.5 h-4 w-4" />{loading ? '제출 중...' : '승인 요청'}
+            </Button>
+          )}
         </div>
       </form>
     </div>

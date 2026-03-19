@@ -56,8 +56,8 @@ export class CreateChangeEventDto {
 
   @ApiProperty({ description: '주 분류 항목 ID' })
   @IsString()
-  @IsNotEmpty()
-  primaryItemId: string;
+  @IsOptional()
+  primaryItemId?: string;
 
   @ApiProperty({ description: '추가 분류 태그', type: [ChangeEventTagDto] })
   @IsArray()
@@ -68,8 +68,8 @@ export class CreateChangeEventDto {
 
   @ApiProperty({ description: '변경 상세내용' })
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @ApiProperty({ description: '발생부서' })
   @IsString()

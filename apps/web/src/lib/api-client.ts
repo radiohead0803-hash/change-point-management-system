@@ -42,6 +42,8 @@ export const changeEvents = {
     api.get<any[]>(`/change-events/${eventId}/attachments`),
   removeAttachment: (attachmentId: string) =>
     api.delete(`/change-events/attachments/${attachmentId}`),
+  getAttachmentData: (attachmentId: string) =>
+    api.get<any>(`/change-events/attachment-data/${attachmentId}`),
 };
 
 export const inspection = {

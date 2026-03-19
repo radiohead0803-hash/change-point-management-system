@@ -104,28 +104,12 @@ function AttachmentSection({ eventId }: { eventId: string }) {
 
 /* ── 이미지 미리보기 (base64 로드) ── */
 function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; filename: string; full?: boolean }) {
-  const { data } = useQuery({
-    queryKey: ['attachment-data', attachmentId],
-    queryFn: async () => {
-      const res = await changeEvents.getAttachments(attachmentId);
-      // The data is fetched via a separate endpoint that returns base64
-      // For now, use the list endpoint which doesn't include data
-      // We need a dedicated endpoint to get attachment with data
-      return null;
-    },
-    enabled: false, // disable for now - handled below
-  });
-
-  // Use direct API call to get attachment with data
   const { data: attData } = useQuery({
     queryKey: ['attachment-full', attachmentId],
     queryFn: async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/change-events/attachment-data/${attachmentId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        if (!res.ok) return null;
-        return res.json();
+        const res = await changeEvents.getAttachmentData(attachmentId);
+        return res.data;
       } catch {
         return null;
       }

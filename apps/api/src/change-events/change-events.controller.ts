@@ -29,7 +29,7 @@ export class ChangeEventsController {
   @Post()
   @ApiOperation({ summary: '변동점 등록' })
   @ApiResponse({ status: 201, description: '변동점이 등록되었습니다.' })
-  @Roles(Role.TIER1_EDITOR, Role.TIER2_EDITOR)
+  @Roles(Role.ADMIN, Role.TIER1_EDITOR, Role.TIER2_EDITOR)
   create(@Body() createChangeEventDto: CreateChangeEventDto, @Request() req) {
     return this.changeEventsService.create(createChangeEventDto, req.user.id);
   }
