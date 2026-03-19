@@ -25,21 +25,49 @@ const FLOW_STEPS = [
 /* ── 첨부파일 다운로드 헬퍼 ── */
 async function downloadAttachment(attachmentId: string, filename: string) {
   try {
-    const res = await changeEvents.getAttachmentData(attachmentId);
-    const data = res.data?.data;
-    if (!data) { alert('파일 데이터를 불러올 수 없습니다.'); return; }
-    // base64 → blob → download
-    const base64 = data.includes(',') ? data.split(',')[1] : data;
-    const mime = data.includes(',') ? data.split(';')[0].split(':')[1] : 'application/octet-stream';
-    const byteChars = atob(base64);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([byteArray], { type: mime });
-    const url = URL.createObjectURL(blob);
+    const token = localStorage.getItem('token');
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = `${baseUrl}/api/change-events/attachment-file/${attachmentId}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      // fallback: base64 방식
+      const attRes = await changeEvents.getAttachmentData(attachmentId);
+      const data = attRes.data?.data;
+      if (data) {
+        const a = document.createElement('a');
+        a.href = data;
+        a.download = filename;
+        a.click();
+        return;
+      }
+      alert('파일을 불러올 수 없습니다.');
+      return;
+    }
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  } catch { alert('다운로드 실패'); }
+    a.href = blobUrl;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error('Download error:', err);
+    // 최종 fallback: base64 다운로드
+    try {
+      const attRes = await changeEvents.getAttachmentData(attachmentId);
+      const data = attRes.data?.data;
+      if (data) {
+        const a = document.createElement('a');
+        a.href = data;
+        a.download = filename;
+        a.click();
+        return;
+      }
+    } catch { /* ignore */ }
+    alert('다운로드 실패');
+  }
 }
 
 /* ── 첨부파일 섹션 ── */
