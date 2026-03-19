@@ -305,4 +305,39 @@ export class ChangeEventsService {
       },
     });
   }
+
+  // ── Attachment CRUD ──
+
+  async addAttachment(eventId: string, data: { filename: string; mimetype: string; size: number; data: string }) {
+    return this.prisma.attachment.create({
+      data: {
+        eventId,
+        filename: data.filename,
+        mimetype: data.mimetype,
+        size: data.size,
+        data: data.data,
+      },
+    });
+  }
+
+  async getAttachments(eventId: string) {
+    return this.prisma.attachment.findMany({
+      where: { eventId, deletedAt: null },
+      select: { id: true, filename: true, mimetype: true, size: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async removeAttachment(attachmentId: string) {
+    return this.prisma.attachment.update({
+      where: { id: attachmentId },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async getAttachmentData(attachmentId: string) {
+    return this.prisma.attachment.findUnique({
+      where: { id: attachmentId },
+    });
+  }
 }

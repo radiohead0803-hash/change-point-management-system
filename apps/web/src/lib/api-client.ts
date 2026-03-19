@@ -34,6 +34,14 @@ export const changeEvents = {
 
   monthly: (year: number, month: number) =>
     api.get<ChangeEvent[]>(`/change-events/monthly/${year}/${month}`),
+
+  // Attachments
+  addAttachment: (eventId: string, data: { filename: string; mimetype: string; size: number; data: string }) =>
+    api.post(`/change-events/${eventId}/attachments`, data),
+  getAttachments: (eventId: string) =>
+    api.get<any[]>(`/change-events/${eventId}/attachments`),
+  removeAttachment: (attachmentId: string) =>
+    api.delete(`/change-events/attachments/${attachmentId}`),
 };
 
 export const inspection = {

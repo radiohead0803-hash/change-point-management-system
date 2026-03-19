@@ -145,6 +145,29 @@ export class ChangeEventsController {
     return this.changeEventsService.deleteItem(id);
   }
 
+  // ── Attachment CRUD ──
+
+  @Post(':eventId/attachments')
+  @ApiOperation({ summary: '첨부파일 업로드 (base64)' })
+  addAttachment(
+    @Param('eventId') eventId: string,
+    @Body() body: { filename: string; mimetype: string; size: number; data: string },
+  ) {
+    return this.changeEventsService.addAttachment(eventId, body);
+  }
+
+  @Get(':eventId/attachments')
+  @ApiOperation({ summary: '첨부파일 목록 조회' })
+  getAttachments(@Param('eventId') eventId: string) {
+    return this.changeEventsService.getAttachments(eventId);
+  }
+
+  @Delete('attachments/:attachmentId')
+  @ApiOperation({ summary: '첨부파일 삭제' })
+  removeAttachment(@Param('attachmentId') attachmentId: string) {
+    return this.changeEventsService.removeAttachment(attachmentId);
+  }
+
   // ── Change Event CRUD by ID (must come AFTER all literal routes) ──
 
   @Get(':id')

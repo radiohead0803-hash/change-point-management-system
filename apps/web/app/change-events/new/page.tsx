@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
 import { useQuery } from '@tanstack/react-query';
@@ -14,39 +14,46 @@ import { useRouter } from 'next/navigation';
 import { TagSelector } from '@/components/change-events/tag-selector';
 import {
   ArrowLeft, Upload, X, Paperclip, Save, Send, UserCheck,
-  ChevronRight, CheckCircle2, Clock, FileText,
+  ChevronRight, CheckCircle2, FileText, Clipboard,
 } from 'lucide-react';
 
-const changeEventSchema = z.object({
+const schema = z.object({
   occurredDate: z.string().min(1, '발생일을 입력해주세요'),
-  customer: z.string().min(1, '고객사를 입력해주세요'),
-  project: z.string().min(1, '프로젝트를 입력해주세요'),
-  productLine: z.string().min(1, '제품군을 입력해주세요'),
-  partNumber: z.string().min(1, '부품번호를 입력해주세요'),
-  factory: z.string().min(1, '공장을 입력해주세요'),
-  productionLine: z.string().min(1, '라인을 입력해주세요'),
+  customer: z.string().min(1, '고객사를 선택해주세요'),
+  project: z.string().min(1, '프로젝트를 선택해주세요'),
+  productLine: z.string().min(1, '제품군을 선택해주세요'),
+  partNumber: z.string().min(1, '품번을 입력해주세요'),
+  productName: z.string().optional(),
+  factory: z.string().min(1, '공장을 선택해주세요'),
+  productionLine: z.string().min(1, '라인을 선택해주세요'),
   companyId: z.string().min(1, '협력사를 선택해주세요'),
   primaryItemId: z.string().min(1, '주 분류 항목을 선택해주세요'),
-  tags: z.array(z.object({
-    itemId: z.string(),
-    tagType: z.enum(['PRIMARY', 'TAG']),
-  })).default([]),
+  tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
-  department: z.string().min(1, '발생부서를 입력해주세요'),
-  managerId: z.string().min(1, '실무담당자를 선택해주세요'),
+  department: z.string().min(1, '발생부서를 선택해주세요'),
+  managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
 });
 
-type ChangeEventForm = z.infer<typeof changeEventSchema>;
+type FormData = z.infer<typeof schema>;
 
-/* ── 승인 플로우 시각화 ── */
-const APPROVAL_STEPS = [
-  { key: 'register', label: '접수·등록', desc: '협력사/담당자' },
-  { key: 'review', label: '1차 검토', desc: '담당자 승인' },
-  { key: 'approve', label: '최종 승인', desc: '전담중역' },
-  { key: 'done', label: '승인 완료', desc: '알림 발송' },
+/* ── 선택 옵션 ── */
+const CUSTOMERS = ['현대자동차', '기아', '제네시스', 'HMG', '기타'];
+const PROJECTS = ['NE (아이오닉5)', 'MX5 (아이오닉6)', 'EN1 (EV9)', 'GN (GV60)', 'CV (카니발)', 'SV (스타리아)', 'NE1 (아이오닉5 F/L)', 'OE (차세대)', '기타'];
+const PRODUCT_LINES = ['전장', '내장', '외장', '샤시', '파워트레인', 'BMS', '모터', '배터리', '기타'];
+const FACTORIES = ['아산공장', '울산공장', '광주공장', '화성공장', '기타'];
+const LINES = ['1라인', '2라인', '3라인', 'A라인', 'B라인', '기타'];
+const DEPTS = ['품질관리팀', '품질보증팀', '생산기술팀', '구매팀', '설계팀', '공정기술팀', '기타'];
+
+const STEPS = [
+  { label: '접수·등록', desc: '협력사/담당자' },
+  { label: '1차 승인', desc: '캠스 담당자' },
+  { label: '최종 승인', desc: '전담중역' },
+  { label: '승인 완료', desc: '알림 발송' },
 ];
+
+interface Att { filename: string; mimetype: string; size: number; data: string; preview?: string }
 
 export default function NewChangeEventPage() {
   const { user } = useAuth();
@@ -54,373 +61,219 @@ export default function NewChangeEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<Att[]>([]);
 
-  const isTier2 = user?.role === 'TIER2_EDITOR'; // 협력사
-  const flowCase = isTier2 ? 'CASE01' : 'CASE02';
+  const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
+  const { data: companies = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });
 
-  // 사용자 목록 조회
-  const { data: allUsers = [] } = useQuery<any[]>({
-    queryKey: ['all-users'],
-    queryFn: async () => {
-      try {
-        const res = await users.list();
-        return res.data;
-      } catch {
-        return [];
-      }
-    },
-  });
+  const reviewers = allUsers.filter((u: any) => ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'].includes(u.role));
+  const executives = allUsers.filter((u: any) => ['EXEC_APPROVER', 'ADMIN'].includes(u.role));
 
-  // 회사 목록
-  const { data: companies = [] } = useQuery<any[]>({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      try {
-        const res = await users.companies();
-        return res.data;
-      } catch {
-        return [];
-      }
-    },
-  });
-
-  // 1차 검토자 (담당자 = TIER1_EDITOR, TIER1_REVIEWER, ADMIN)
-  const reviewers = allUsers.filter((u: any) =>
-    ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'].includes(u.role)
-  );
-  // 전담중역 (EXEC_APPROVER, ADMIN)
-  const executives = allUsers.filter((u: any) =>
-    ['EXEC_APPROVER', 'ADMIN'].includes(u.role)
-  );
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<ChangeEventForm>({
-    resolver: zodResolver(changeEventSchema),
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       occurredDate: new Date().toISOString().slice(0, 10),
-      companyId: user?.companyId || '',
-      customer: '',
-      project: '',
-      productLine: '',
-      partNumber: '',
-      factory: '',
-      productionLine: '',
-      description: '',
-      department: '',
-      managerId: user?.id || '',
-      primaryItemId: '',
-      tags: [],
-      reviewerId: '',
-      executiveId: '',
+      companyId: user?.companyId || '', customer: '', project: '', productLine: '',
+      partNumber: '', productName: '', factory: '', productionLine: '',
+      description: '', department: '', managerId: user?.id || '',
+      primaryItemId: '', tags: [], reviewerId: '', executiveId: '',
     },
   });
 
   const occurredDate = watch('occurredDate');
   const receiptMonth = occurredDate ? occurredDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+  /* ── 파일 처리 ── */
+  const toBase64 = (file: File): Promise<string> => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(file); });
+
+  const addFiles = async (files: FileList | File[]) => {
+    const items = await Promise.all(Array.from(files).map(async (f) => {
+      const data = await toBase64(f);
+      return { filename: f.name, mimetype: f.type, size: f.size, data, preview: f.type.startsWith('image/') ? data : undefined };
+    }));
+    setAttachments((p) => [...p, ...items]);
+  };
+
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imgs: File[] = [];
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        const f = item.getAsFile();
+        if (f) imgs.push(new File([f], `캡처_${Date.now()}.png`, { type: f.type }));
+      }
     }
-  };
+    if (imgs.length) { e.preventDefault(); await addFiles(imgs); toast({ title: `${imgs.length}개 이미지 붙여넣기 완료` }); }
+  }, [toast]);
 
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // 임시 저장
-  const handleDraftSave = async () => {
-    const data = watch();
+  /* ── 저장 ── */
+  const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
     if (!user?.id) return;
-
+    if (status === 'SUBMITTED' && !data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
     try {
-      setDraftSaving(true);
+      status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
       const { tags, ...rest } = data;
-      await changeEvents.create({
-        ...rest,
-        receiptMonth,
-        status: 'DRAFT',
-        changeType: 'FOUR_M',
-        category: '',
-        subCategory: '',
-        createdById: user.id,
-        tags: tags.map((tag: any) => ({ itemId: tag.itemId, tagType: tag.tagType })),
+      const result = await changeEvents.create({
+        ...rest, receiptMonth, status, changeType: 'FOUR_M', category: '', subCategory: '',
+        createdById: user.id, tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
-      toast({ title: '임시 저장되었습니다.', description: '내 요청에서 확인 가능합니다.' });
+      if (attachments.length && result.data?.id) {
+        await Promise.all(attachments.map((a) => changeEvents.addAttachment(result.data.id, { filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data })));
+      }
+      toast({ title: status === 'DRAFT' ? '임시 저장 완료' : '승인 요청 완료' });
       router.push('/change-events/my');
-    } catch (error) {
-      toast({ variant: 'destructive', title: '임시 저장 실패' });
-    } finally {
-      setDraftSaving(false);
-    }
+    } catch { toast({ variant: 'destructive', title: '등록 실패' }); }
+    finally { setDraftSaving(false); setLoading(false); }
   };
 
-  // 승인 요청 (제출)
-  const onSubmit = async (data: ChangeEventForm) => {
-    if (!user?.id) {
-      toast({ variant: 'destructive', title: '로그인이 필요합니다.' });
-      return;
-    }
+  const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '캠스 담당자', EXEC_APPROVER: '전담중역' };
 
-    // 검토자 필수 체크
-    if (!data.reviewerId) {
-      toast({ variant: 'destructive', title: '1차 검토자(담당자)를 지정해주세요.' });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { tags, ...rest } = data;
-      await changeEvents.create({
-        ...rest,
-        receiptMonth,
-        status: 'SUBMITTED',
-        changeType: 'FOUR_M',
-        category: '',
-        subCategory: '',
-        createdById: user.id,
-        tags: tags.map((tag: any) => ({ itemId: tag.itemId, tagType: tag.tagType })),
-      });
-      toast({
-        title: '승인 요청 완료',
-        description: '1차 검토자에게 승인 요청이 전송되었습니다.',
-      });
-      router.push('/change-events/my');
-    } catch (error) {
-      toast({ variant: 'destructive', title: '등록 실패', description: '다시 시도해주세요.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const ROLE_LABELS: Record<string, string> = {
-    ADMIN: '관리자',
-    TIER1_EDITOR: '캠스 담당자',
-    TIER1_REVIEWER: '캠스 담당자',
-    EXEC_APPROVER: '전담중역',
-  };
+  const Sel = ({ label, req, opts, err, ...p }: any) => (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium">{label} {req && <span className="text-red-400">*</span>}</label>
+      <select {...p} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+        <option value="">{label} 선택</option>
+        {opts.map((o: string) => <option key={o} value={o}>{o}</option>)}
+      </select>
+      {err && <p className="text-xs text-red-500">{err}</p>}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* 헤더 */}
+    <div className="space-y-5" onPaste={handlePaste}>
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <button type="button" onClick={() => router.back()} className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800"><ArrowLeft className="h-5 w-5" /></button>
         <div>
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">변동점 등록</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {flowCase === 'CASE01' ? '협력사 등록' : '담당자 등록'} → 승인요청 → 1차 검토 → 최종 승인
-          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground">접수·등록 → 1차 승인 → 최종 승인</p>
         </div>
       </div>
 
-      {/* 승인 플로우 시각화 */}
-      <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 p-3 shadow-sm backdrop-blur-xl sm:p-4 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10 dark:border-gray-800/60">
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {flowCase === 'CASE01' ? '승인 플로우 (협력사 등록)' : '승인 플로우 (담당자 등록)'}
-        </p>
+      {/* 플로우 */}
+      <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-purple-50/80 p-3 dark:from-blue-900/10 dark:to-purple-900/10 dark:border-gray-800/60">
         <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
-          {APPROVAL_STEPS.map((step, idx) => (
-            <div key={step.key} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              <div className={`rounded-lg px-2 py-1.5 shadow-sm text-center min-w-[60px] sm:min-w-[80px] ${
-                idx === 0 ? 'bg-emerald-100 ring-2 ring-emerald-300 dark:bg-emerald-900/30 dark:ring-emerald-700' : 'bg-white/80 dark:bg-gray-800/60'
-              }`}>
-                <span className={`text-[10px] sm:text-xs font-bold ${
-                  idx === 0 ? 'text-emerald-700 dark:text-emerald-400' :
-                  idx === 1 ? 'text-blue-700 dark:text-blue-400' :
-                  idx === 2 ? 'text-purple-700 dark:text-purple-400' :
-                  'text-green-700 dark:text-green-400'
-                }`}>{step.label}</span>
-                <span className="block text-[8px] sm:text-[9px] text-muted-foreground">{step.desc}</span>
+          {STEPS.map((s, i) => (
+            <div key={s.label} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              <div className={`rounded-lg px-2 py-1 text-center min-w-[55px] ${i === 0 ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-white/80 dark:bg-gray-800/60'}`}>
+                <span className="text-[10px] sm:text-xs font-bold">{s.label}</span>
+                <span className="block text-[8px] sm:text-[9px] text-muted-foreground">{s.desc}</span>
               </div>
-              {idx < APPROVAL_STEPS.length - 1 && (
-                <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 text-muted-foreground/40" />
-              )}
+              {i < STEPS.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
             </div>
           ))}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* 기본 정보 */}
+      <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
+        {/* ① 변동점 발생항목 */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <FileText className="h-4 w-4" />
-            기본 정보
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">발생일 <span className="text-red-400">*</span></label>
               <Input type="date" {...register('occurredDate')} error={errors.occurredDate?.message} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">접수월 (자동)</label>
-              <div className="flex h-11 items-center rounded-xl border border-input bg-gray-50 px-3 text-sm dark:bg-gray-800">
-                {receiptMonth}
-              </div>
+              <div className="flex h-11 items-center rounded-xl border border-input bg-gray-50 px-3 text-sm dark:bg-gray-800">{receiptMonth}</div>
+            </div>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">기초정보 분류 체계에서 발생 항목을 선택합니다</p>
+          <Controller name="tags" control={control} defaultValue={[]} render={({ field }) => <TagSelector value={field.value as any} onChange={field.onChange} required />} />
+        </div>
+
+        {/* ② 기본 정보 */}
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <FileText className="h-4 w-4" /> 기본 정보
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+            <Sel label="고객사" req opts={CUSTOMERS} {...register('customer')} err={errors.customer?.message} />
+            <Sel label="프로젝트" req opts={PROJECTS} {...register('project')} err={errors.project?.message} />
+            <Sel label="제품군" req opts={PRODUCT_LINES} {...register('productLine')} err={errors.productLine?.message} />
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">품번 <span className="text-red-400">*</span></label>
+              <Input {...register('partNumber')} placeholder="품번 입력" error={errors.partNumber?.message} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">고객사 <span className="text-red-400">*</span></label>
-              <Input {...register('customer')} placeholder="고객사명" error={errors.customer?.message} />
+              <label className="text-sm font-medium">품명</label>
+              <Input {...register('productName')} placeholder="품명 입력" />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">프로젝트 <span className="text-red-400">*</span></label>
-              <Input {...register('project')} placeholder="프로젝트명" error={errors.project?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">제품군 <span className="text-red-400">*</span></label>
-              <Input {...register('productLine')} placeholder="제품군" error={errors.productLine?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">부품번호 <span className="text-red-400">*</span></label>
-              <Input {...register('partNumber')} placeholder="부품번호" error={errors.partNumber?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">공장 <span className="text-red-400">*</span></label>
-              <Input {...register('factory')} placeholder="공장" error={errors.factory?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">라인 <span className="text-red-400">*</span></label>
-              <Input {...register('productionLine')} placeholder="생산라인" error={errors.productionLine?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">발생부서 <span className="text-red-400">*</span></label>
-              <Input {...register('department')} placeholder="발생부서" error={errors.department?.message} />
-            </div>
+            <Sel label="공장" req opts={FACTORIES} {...register('factory')} err={errors.factory?.message} />
+            <Sel label="라인" req opts={LINES} {...register('productionLine')} err={errors.productionLine?.message} />
+            <Sel label="발생부서" req opts={DEPTS} {...register('department')} err={errors.department?.message} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
-              <select
-                {...register('companyId')}
-                className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              >
+              <select {...register('companyId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
                 <option value="">협력사 선택</option>
-                {companies.map((c: any) => (
-                  <option key={c.id} value={c.id}>[{c.type}] {c.name}</option>
-                ))}
+                {companies.map((c: any) => <option key={c.id} value={c.id}>[{c.type}] {c.name}</option>)}
               </select>
               {errors.companyId && <p className="text-xs text-red-500">{errors.companyId.message}</p>}
             </div>
           </div>
         </div>
 
-        {/* 승인자 지정 */}
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-blue-900/30 dark:bg-blue-900/10">
+        {/* ③ 승인자 */}
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm sm:p-6 dark:border-blue-900/30 dark:bg-blue-900/10">
           <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-            <UserCheck className="h-4 w-4" />
-            승인자 지정
+            <UserCheck className="h-4 w-4" /> 승인자 지정
           </h2>
-
-          {/* 플로우 안내 */}
-          <div className="mb-4 rounded-xl bg-blue-100/50 p-3 text-xs text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-            <p className="font-semibold mb-1">
-              {flowCase === 'CASE01' ? '📋 CASE01: 협력사 등록 플로우' : '📋 CASE02: 담당자 등록 플로우'}
-            </p>
-            <p>등록 → <strong>1차 검토자(담당자)</strong> 지정 및 승인요청 → 1차 승인 시 <strong>전담중역</strong> 지정 → 최종승인 → 승인완료 알림</p>
-          </div>
-
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* 1차 검토자 - 등록 시 필수 지정 */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">
-                1차 검토자 (담당자) <span className="text-red-400">*</span>
-              </label>
-              <select
-                {...register('reviewerId')}
-                className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              >
-                <option value="">1차 검토자 선택</option>
-                {reviewers.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({ROLE_LABELS[u.role] || u.role}){u.company ? ` - ${u.company.name}` : ''}
-                  </option>
-                ))}
+              <label className="text-sm font-medium">1차 검토자 <span className="text-red-400">*</span></label>
+              <select {...register('reviewerId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+                <option value="">검토자 선택</option>
+                {reviewers.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
               </select>
-              <p className="text-[10px] text-muted-foreground">승인요청 시 1차 검토자에게 알림이 전송됩니다</p>
             </div>
-
-            {/* 전담중역 - 선택 지정 (1차 검토 시에도 지정 가능) */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">
-                전담중역 (최종승인) <span className="text-muted-foreground text-xs">(선택)</span>
-              </label>
-              <select
-                {...register('executiveId')}
-                className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              >
-                <option value="">전담중역 선택 (1차 검토 시 지정 가능)</option>
-                {executives.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({ROLE_LABELS[u.role] || u.role}){u.company ? ` - ${u.company.name}` : ''}
-                  </option>
-                ))}
+              <label className="text-sm font-medium">전담중역 <span className="text-xs text-muted-foreground">(선택)</span></label>
+              <select {...register('executiveId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+                <option value="">전담중역 선택</option>
+                {executives.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
               </select>
-              <p className="text-[10px] text-muted-foreground">미지정 시 1차 검토자가 승인 시 전담중역을 지정합니다</p>
             </div>
           </div>
         </div>
 
-        {/* 변경 항목 (기초정보 기준) */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" />
-            변경 항목
-          </h2>
-          <p className="mb-3 text-xs text-muted-foreground">기초정보에 등록된 분류 체계에서 변경 항목을 선택합니다</p>
-          <Controller
-            name="tags"
-            control={control}
-            defaultValue={[]}
-            render={({ field }) => (
-              <TagSelector value={field.value as any} onChange={field.onChange} required />
-            )}
-          />
-        </div>
-
-        {/* 변경 상세내용 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+        {/* ④ 상세내용 */}
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">변경 상세내용</h2>
-          <textarea
-            {...register('description')}
-            rows={4}
-            placeholder="변경 사항의 상세 내용을 입력해주세요"
-            className="w-full rounded-xl border border-input bg-background/60 px-4 py-3 text-sm backdrop-blur-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/40 transition-all"
-          />
+          <textarea {...register('description')} rows={4} placeholder="변경 사항의 상세 내용을 입력해주세요"
+            className="w-full rounded-xl border border-input bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40" />
           {errors.description && <p className="mt-1.5 text-xs text-red-500">{errors.description.message}</p>}
         </div>
 
-        {/* 첨부파일 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">첨부파일</h2>
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 px-6 py-8 transition-colors hover:border-primary/40 hover:bg-primary/5 dark:border-gray-700 dark:bg-gray-800/30">
-            <Upload className="mb-2 h-8 w-8 text-muted-foreground/40" />
-            <span className="text-sm font-medium text-muted-foreground">사진 또는 자료를 업로드하세요</span>
-            <span className="mt-1 text-xs text-muted-foreground/60">PNG, JPG, PDF, Excel 등 (최대 10MB)</span>
-            <input type="file" multiple accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileChange} />
+        {/* ⑤ 첨부파일 (Ctrl+V 붙여넣기) */}
+        <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">첨부파일 및 사진</h2>
+          <p className="mb-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Clipboard className="h-3 w-3" />
+            캡처 후 <kbd className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-mono font-bold dark:bg-gray-800">Ctrl+V</kbd>로 이미지 붙여넣기 가능
+          </p>
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 px-6 py-6 hover:border-primary/40 hover:bg-primary/5 dark:border-gray-700 dark:bg-gray-800/30">
+            <Upload className="mb-2 h-7 w-7 text-muted-foreground/40" />
+            <span className="text-sm font-medium text-muted-foreground">파일 선택 또는 드래그 & 드롭</span>
+            <span className="mt-1 text-xs text-muted-foreground/60">PNG, JPG, PDF, Excel (최대 10MB)</span>
+            <input type="file" multiple accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
           </label>
-          {files.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {files.map((file, index) => (
-                <div key={index} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white/80 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-800/40">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Paperclip className="h-4 w-4 flex-shrink-0 text-muted-foreground/50" />
-                    <span className="truncate text-sm">{file.name}</span>
-                    <span className="flex-shrink-0 text-xs text-muted-foreground/50">{(file.size / 1024).toFixed(0)}KB</span>
+          {attachments.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {attachments.map((att, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 px-3 py-2 dark:border-gray-800 dark:bg-gray-800/40">
+                  {att.preview ? (
+                    <img src={att.preview} alt="" className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700"><Paperclip className="h-5 w-5 text-muted-foreground/50" /></div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm">{att.filename}</p>
+                    <p className="text-[10px] text-muted-foreground/50">{(att.size / 1024).toFixed(0)}KB</p>
                   </div>
-                  <button type="button" onClick={() => removeFile(index)} className="flex-shrink-0 rounded-lg p-1 text-muted-foreground/50 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
-                    <X className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))} className="rounded-lg p-1.5 text-muted-foreground/50 hover:bg-red-50 hover:text-red-500"><X className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
@@ -428,17 +281,13 @@ export default function NewChangeEventPage() {
         </div>
 
         {/* 버튼 */}
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
-          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
-            취소
-          </Button>
-          <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleDraftSave} disabled={draftSaving}>
-            <Save className="mr-1.5 h-4 w-4" />
-            {draftSaving ? '저장 중...' : '임시 저장'}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>취소</Button>
+          <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => save(watch() as FormData, 'DRAFT')} disabled={draftSaving}>
+            <Save className="mr-1.5 h-4 w-4" />{draftSaving ? '저장 중...' : '임시 저장'}
           </Button>
           <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
-            <Send className="mr-1.5 h-4 w-4" />
-            {loading ? '제출 중...' : '승인 요청'}
+            <Send className="mr-1.5 h-4 w-4" />{loading ? '제출 중...' : '승인 요청'}
           </Button>
         </div>
       </form>
