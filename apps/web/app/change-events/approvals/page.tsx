@@ -155,8 +155,8 @@ export default function ApprovalsPage() {
               ? 'bg-blue-100 ring-2 ring-blue-300 dark:bg-blue-900/40 dark:ring-blue-700'
               : 'bg-white/80 dark:bg-gray-800/60'
           }`}>
-            <span className="font-bold text-blue-700 dark:text-blue-400">1차 검토</span>
-            <span className="block text-[9px] text-muted-foreground">담당자 승인</span>
+            <span className="font-bold text-blue-700 dark:text-blue-400">1차 승인</span>
+            <span className="block text-[9px] text-muted-foreground">캠스 담당자</span>
           </div>
           <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
           <div className="flex-shrink-0 rounded-lg bg-amber-50 px-2 py-1.5 shadow-sm dark:bg-amber-900/20">

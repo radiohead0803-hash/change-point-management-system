@@ -25,8 +25,8 @@ import {
 /* ── 역할별 라벨 ── */
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: '관리자',
-  TIER1_EDITOR: '1차사 담당자',
-  TIER1_REVIEWER: '1차사 검토자',
+  TIER1_EDITOR: '캠스 담당자',
+  TIER1_REVIEWER: '캠스 담당자',
   EXEC_APPROVER: '전담중역',
   TIER2_EDITOR: '협력사 담당자',
   CUSTOMER_VIEWER: '고객사 뷰어',

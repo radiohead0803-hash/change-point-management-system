@@ -14,26 +14,25 @@ import {
 
 /* ── 역할 정의 ── */
 const ROLE_MAP: Record<string, { label: string; shortLabel: string; group: string; level: number; desc: string; color: string; badgeColor: string }> = {
-  ADMIN:           { label: '관리자',       shortLabel: '관리자',   group: '관리자',     level: 0, desc: '시스템 전체 관리 / 전체 권한',          color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',         badgeColor: 'bg-red-500' },
-  TIER1_EDITOR:    { label: '담당자',       shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정 / 접수',               color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
-  TIER1_REVIEWER:  { label: '검토자',       shortLabel: '검토자',   group: '본사(캠스)', level: 2, desc: '변동점 검토 / 승인 1단계',              color: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', badgeColor: 'bg-indigo-500' },
-  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '중역',     group: '본사(캠스)', level: 3, desc: '변동점 최종 승인',                      color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
-  TIER2_EDITOR:    { label: '협력사 담당자', shortLabel: '담당자',  group: '협력사',     level: 1, desc: '자사 변동점 등록·수정 / 접수',          color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400', badgeColor: 'bg-green-500' },
-  CUSTOMER_VIEWER: { label: '고객사 뷰어',  shortLabel: '뷰어',    group: '협력사',     level: 0, desc: '열람 전용 (수정 불가)',                  color: 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400',       badgeColor: 'bg-gray-500' },
+  ADMIN:           { label: '관리자',       shortLabel: '관리자',   group: '관리자',     level: 0, desc: '시스템 전체 관리 / 전체 권한',               color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',         badgeColor: 'bg-red-500' },
+  TIER1_EDITOR:    { label: '캠스 담당자',  shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정·접수 / 1차 승인',           color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
+  TIER1_REVIEWER:  { label: '캠스 담당자',  shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정·접수 / 1차 승인',           color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
+  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '중역',     group: '본사(캠스)', level: 2, desc: '변동점 최종 승인',                           color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
+  TIER2_EDITOR:    { label: '협력사 담당자', shortLabel: '담당자',  group: '협력사',     level: 1, desc: '자사 변동점 등록·수정 / 접수',               color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400', badgeColor: 'bg-green-500' },
+  CUSTOMER_VIEWER: { label: '고객사 뷰어',  shortLabel: '뷰어',    group: '협력사',     level: 0, desc: '열람 전용 (수정 불가)',                       color: 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400',       badgeColor: 'bg-gray-500' },
 };
 
 /* ── 그룹 정의 ── */
 const ROLE_GROUPS = [
   { key: '관리자',     label: '관리자',     roles: ['ADMIN'], icon: Shield, accent: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
-  { key: '본사(캠스)', label: '본사(캠스)', roles: ['TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER'], icon: UserCog, accent: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
+  { key: '본사(캠스)', label: '본사(캠스)', roles: ['TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER'], icon: UserCog, accent: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', subLabels: { 'TIER1_EDITOR': '담당자', 'TIER1_REVIEWER': '담당자', 'EXEC_APPROVER': '중역' } },
   { key: '협력사',     label: '협력사',     roles: ['TIER2_EDITOR', 'CUSTOMER_VIEWER'], icon: Building2, accent: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800' },
 ];
 
 /* ── 승인 플로우 ── */
 const APPROVAL_FLOW = [
-  { role: 'TIER1_EDITOR',   step: '접수·등록', color: 'bg-blue-500', textColor: 'text-blue-700 dark:text-blue-400' },
-  { role: 'TIER1_REVIEWER',  step: '검토·승인', color: 'bg-indigo-500', textColor: 'text-indigo-700 dark:text-indigo-400' },
-  { role: 'EXEC_APPROVER',   step: '최종승인',  color: 'bg-purple-500', textColor: 'text-purple-700 dark:text-purple-400' },
+  { role: 'TIER1_EDITOR',   step: '접수·등록·1차승인', color: 'bg-blue-500', textColor: 'text-blue-700 dark:text-blue-400' },
+  { role: 'EXEC_APPROVER',   step: '최종승인',          color: 'bg-purple-500', textColor: 'text-purple-700 dark:text-purple-400' },
 ];
 
 interface FormData {
@@ -240,7 +239,38 @@ export default function UserManagementPage() {
               <GroupIcon className={`mx-auto mb-1 h-5 w-5 ${group.accent}`} />
               <p className="text-lg font-bold sm:text-xl">{count}</p>
               <p className="mt-0.5 text-[10px] font-medium text-muted-foreground sm:text-xs">{group.label}</p>
-              {group.roles.length > 1 && (
+              {group.key === '본사(캠스)' ? (
+                <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGroupFilter(group.key);
+                      setRoleFilter(roleFilter === 'TIER1_EDITOR' ? 'ALL' : 'TIER1_EDITOR');
+                    }}
+                    className={`cursor-pointer rounded-full px-1.5 py-0.5 text-[9px] font-medium transition-all ${
+                      roleFilter === 'TIER1_EDITOR' || roleFilter === 'TIER1_REVIEWER'
+                        ? ROLE_MAP.TIER1_EDITOR.color
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
+                    }`}
+                  >
+                    담당자 {userList.filter((u) => u.role === 'TIER1_EDITOR' || u.role === 'TIER1_REVIEWER').length}
+                  </span>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGroupFilter(group.key);
+                      setRoleFilter(roleFilter === 'EXEC_APPROVER' ? 'ALL' : 'EXEC_APPROVER');
+                    }}
+                    className={`cursor-pointer rounded-full px-1.5 py-0.5 text-[9px] font-medium transition-all ${
+                      roleFilter === 'EXEC_APPROVER'
+                        ? ROLE_MAP.EXEC_APPROVER.color
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
+                    }`}
+                  >
+                    중역 {userList.filter((u) => u.role === 'EXEC_APPROVER').length}
+                  </span>
+                </div>
+              ) : group.roles.length > 1 && (
                 <div className="mt-1.5 flex flex-wrap justify-center gap-1">
                   {group.roles.map((r) => {
                     const ri = ROLE_MAP[r];
@@ -341,18 +371,17 @@ export default function UserManagementPage() {
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
                 className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
               >
-                {ROLE_GROUPS.map((group) => (
-                  <optgroup key={group.key} label={`── ${group.label} ──`}>
-                    {group.roles.map((r) => {
-                      const ri = ROLE_MAP[r];
-                      return (
-                        <option key={r} value={r}>
-                          {ri.label} (Lv.{ri.level}) - {ri.desc}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
-                ))}
+                <optgroup label="── 관리자 ──">
+                  <option value="ADMIN">관리자 - 시스템 전체 관리</option>
+                </optgroup>
+                <optgroup label="── 본사(캠스) ──">
+                  <option value="TIER1_EDITOR">캠스 담당자 - 등록·접수·1차승인</option>
+                  <option value="EXEC_APPROVER">전담중역 - 최종승인</option>
+                </optgroup>
+                <optgroup label="── 협력사 ──">
+                  <option value="TIER2_EDITOR">협력사 담당자 - 변동점 등록·접수</option>
+                  <option value="CUSTOMER_VIEWER">고객사 뷰어 - 열람 전용</option>
+                </optgroup>
               </select>
             </div>
             <div>
