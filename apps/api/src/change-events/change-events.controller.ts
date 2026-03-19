@@ -60,31 +60,6 @@ export class ChangeEventsController {
     });
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: '변동점 상세 조회' })
-  @ApiResponse({ status: 200, description: '변동점 상세 정보를 반환합니다.' })
-  findOne(@Param('id') id: string) {
-    return this.changeEventsService.findOne(id);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: '변동점 수정' })
-  @ApiResponse({ status: 200, description: '변동점이 수정되었습니다.' })
-  update(
-    @Param('id') id: string,
-    @Body() updateChangeEventDto: UpdateChangeEventDto,
-    @Request() req: any,
-  ) {
-    return this.changeEventsService.update(id, updateChangeEventDto as any, req.user.id, req.user.role);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: '변동점 삭제' })
-  @ApiResponse({ status: 200, description: '변동점이 삭제되었습니다.' })
-  remove(@Param('id') id: string, @Request() req) {
-    return this.changeEventsService.remove(id, req.user.id, req.user.role);
-  }
-
   @Get('monthly/:year/:month')
   @ApiOperation({ summary: '월별 변동점 조회' })
   @ApiResponse({ status: 200, description: '월별 변동점 목록을 반환합니다.' })
@@ -168,5 +143,32 @@ export class ChangeEventsController {
   @Roles(Role.ADMIN)
   deleteItem(@Param('id') id: string) {
     return this.changeEventsService.deleteItem(id);
+  }
+
+  // ── Change Event CRUD by ID (must come AFTER all literal routes) ──
+
+  @Get(':id')
+  @ApiOperation({ summary: '변동점 상세 조회' })
+  @ApiResponse({ status: 200, description: '변동점 상세 정보를 반환합니다.' })
+  findOne(@Param('id') id: string) {
+    return this.changeEventsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: '변동점 수정' })
+  @ApiResponse({ status: 200, description: '변동점이 수정되었습니다.' })
+  update(
+    @Param('id') id: string,
+    @Body() updateChangeEventDto: UpdateChangeEventDto,
+    @Request() req: any,
+  ) {
+    return this.changeEventsService.update(id, updateChangeEventDto as any, req.user.id, req.user.role);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '변동점 삭제' })
+  @ApiResponse({ status: 200, description: '변동점이 삭제되었습니다.' })
+  remove(@Param('id') id: string, @Request() req: any) {
+    return this.changeEventsService.remove(id, req.user.id, req.user.role);
   }
 }
