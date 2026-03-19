@@ -45,7 +45,7 @@ export default function ApprovalsPage() {
     if (!step) return;
 
     try {
-      await changeEvents.update(eventId, { status: step.nextStatus });
+      await changeEvents.update(eventId, { status: step.nextStatus as any });
       queryClient.invalidateQueries({ queryKey: ['change-events'] });
       toast({ title: `${step.btnLabel} 처리되었습니다.` });
     } catch {
