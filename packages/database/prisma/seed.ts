@@ -543,8 +543,9 @@ async function main() {
       const company = mgr === tier2User ? company2 : mgr === tier2User2 ? company3 : company1;
       const item = pick(allItems);
 
-      const hasAction = ['REVIEWED', 'APPROVED', 'CLOSED'].includes(status);
+      const hasAction = !['DRAFT'].includes(status);
       const actionDate = hasAction ? new Date(occurredDate.getTime() + Math.random() * 7 * 86400000) : null;
+      const qualityVerifications = ['품질검증 완료', '초도품 검사 합격', 'SPC 관리도 적합', 'MSA 분석 완료', '공정감사 적합', '출하검사 합격', '신뢰성 시험 완료', 'Cpk 1.67 이상 확인'];
 
       await prisma.changeEvent.create({
         data: {
@@ -554,6 +555,7 @@ async function main() {
           project: pick(projects),
           productLine: pick(productLines),
           partNumber: `PT-${String(1000 + i).slice(1)}-${String(Math.floor(Math.random() * 900) + 100)}`,
+          productName: pick(['브레이크 패드', '엔진 커버', '와이어 하네스', '스티어링 휠', '도어 트림', 'ECU 모듈', '배터리 셀', '인버터 유닛', '센서 모듈', '커넥터 어셈블리']),
           factory: pick(factories),
           productionLine: pick(lines),
           companyId: company.id,
@@ -563,8 +565,8 @@ async function main() {
           status,
           actionDate,
           actionPlan: hasAction ? pick(actionPlans) : null,
-          actionResult: status === 'APPROVED' || status === 'CLOSED' ? pick(actionResults) : null,
-          qualityVerification: status === 'CLOSED' ? '품질검증 완료' : null,
+          actionResult: ['REVIEWED', 'APPROVED', 'CLOSED'].includes(status) ? pick(actionResults) : null,
+          qualityVerification: ['APPROVED', 'CLOSED'].includes(status) ? pick(qualityVerifications) : null,
           managerId: mgr.id,
           executiveId: ['APPROVED', 'CLOSED'].includes(status) ? executive.id : null,
           reviewerId: ['REVIEWED', 'APPROVED', 'CLOSED', 'REVIEW_RETURNED'].includes(status) ? reviewer.id : null,
