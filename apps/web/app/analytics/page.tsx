@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} domain={[0, 100]} unit="%" />
-              <Tooltip contentStyle={{ borderRadius: '12px' }} formatter={(v: any) => [`${v}%`, '완료율']} />
+              <Tooltip contentStyle={{ borderRadius: '12px' }} />
               <Area type="monotone" dataKey="rate" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.15} strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
