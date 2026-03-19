@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line,
+  PieChart, Pie, Cell, LineChart, Line, LabelList,
 } from 'recharts';
 import {
   Plus, FileEdit, Clock, Send, CheckCircle2, ShieldCheck,
@@ -306,7 +306,9 @@ export default function DashboardPage() {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="count" name="변동점" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="count" name="변동점" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                  <LabelList dataKey="count" position="top" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -358,7 +360,9 @@ export default function DashboardPage() {
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]}>
+                  <LabelList dataKey="count" position="right" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
