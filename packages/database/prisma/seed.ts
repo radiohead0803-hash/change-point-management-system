@@ -397,50 +397,50 @@ async function main() {
   const testPassword = await bcrypt.hash('1234', 10);
 
   const manager1 = await prisma.user.upsert({
-    where: { email: 'manager1@cpms.kr' },
+    where: { email: 'manager1' },
     update: {},
     create: {
-      email: 'manager1@cpms.kr', name: '김담당', password: testPassword,
+      email: 'manager1', name: '김담당', password: testPassword,
       role: 'TIER1_EDITOR', companyId: company1.id,
     },
   });
   const manager2 = await prisma.user.upsert({
-    where: { email: 'manager2@cpms.kr' },
+    where: { email: 'manager2' },
     update: {},
     create: {
-      email: 'manager2@cpms.kr', name: '이담당', password: testPassword,
+      email: 'manager2', name: '이담당', password: testPassword,
       role: 'TIER1_EDITOR', companyId: company1.id,
     },
   });
   const tier2User = await prisma.user.upsert({
-    where: { email: 'tier2@cpms.kr' },
+    where: { email: 'tier2' },
     update: {},
     create: {
-      email: 'tier2@cpms.kr', name: '박협력', password: testPassword,
+      email: 'tier2', name: '박협력', password: testPassword,
       role: 'TIER2_EDITOR', companyId: company2.id,
     },
   });
   const tier2User2 = await prisma.user.upsert({
-    where: { email: 'tier2b@cpms.kr' },
+    where: { email: 'tier2b' },
     update: {},
     create: {
-      email: 'tier2b@cpms.kr', name: '최협력', password: testPassword,
+      email: 'tier2b', name: '최협력', password: testPassword,
       role: 'TIER2_EDITOR', companyId: company3.id,
     },
   });
   const reviewer = await prisma.user.upsert({
-    where: { email: 'reviewer@cpms.kr' },
+    where: { email: 'reviewer' },
     update: {},
     create: {
-      email: 'reviewer@cpms.kr', name: '정검토', password: testPassword,
+      email: 'reviewer', name: '정검토', password: testPassword,
       role: 'TIER1_REVIEWER', companyId: company1.id,
     },
   });
   const executive = await prisma.user.upsert({
-    where: { email: 'exec@cpms.kr' },
+    where: { email: 'exec' },
     update: {},
     create: {
-      email: 'exec@cpms.kr', name: '한중역', password: testPassword,
+      email: 'exec', name: '한중역', password: testPassword,
       role: 'EXEC_APPROVER', companyId: company1.id,
     },
   });
