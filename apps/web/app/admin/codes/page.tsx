@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Plus, Pencil, Trash2, X, Check, Search, GripVertical,
-  Building2, Car, Package, Factory, Columns, Users,
+  Building2, Package, Factory, Columns, Users, Car,
 } from 'lucide-react';
 
 const GROUP_ICONS: Record<string, any> = {
   CUSTOMER: Building2,
-  PROJECT: Car,
   PRODUCT_LINE: Package,
   FACTORY: Factory,
   LINE: Columns,
@@ -21,7 +20,6 @@ const GROUP_ICONS: Record<string, any> = {
 
 const GROUP_COLORS: Record<string, string> = {
   CUSTOMER: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
-  PROJECT: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20',
   PRODUCT_LINE: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20',
   FACTORY: 'text-orange-600 bg-orange-50 dark:bg-orange-900/20',
   LINE: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-900/20',
@@ -93,8 +91,14 @@ export default function CommonCodesPage() {
         <p className="mt-1 text-sm text-muted-foreground">변동점 등록 시 사용되는 드롭다운 옵션을 관리합니다</p>
       </div>
 
+      {/* 프로젝트(차종) 안내 */}
+      <div className="flex items-center gap-2 rounded-xl border border-purple-100 bg-purple-50/50 px-4 py-2.5 text-xs text-purple-700 dark:border-purple-900/30 dark:bg-purple-900/10 dark:text-purple-400">
+        <Car className="h-4 w-4 flex-shrink-0" />
+        <span><strong>프로젝트(차종)</strong>은 <a href="/admin/vehicles" className="underline font-semibold hover:text-purple-900">기초정보 → 차종 현황</a>에서 관리됩니다.</span>
+      </div>
+
       {/* 그룹 탭 */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {codes.map((group) => {
           const Icon = GROUP_ICONS[group.key] || Package;
           const isActive = selectedGroup === group.key;

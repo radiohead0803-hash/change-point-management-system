@@ -11,9 +11,9 @@ export interface CodeGroup {
 
 const STORAGE_KEY = 'cpms_common_codes';
 
+// PROJECT는 기초정보 → 차종현황에서 관리 (cpms_vehicles localStorage)
 const DEFAULT_CODES: CodeGroup[] = [
   { key: 'CUSTOMER', label: '고객사', items: ['현대자동차', '기아', '제네시스', 'HMG'] },
-  { key: 'PROJECT', label: '프로젝트(차종)', items: ['NE (아이오닉5)', 'MX5 (아이오닉6)', 'EN1 (EV9)', 'GN (GV60)', 'CV (카니발)', 'SV (스타리아)', 'NE1 (아이오닉5 F/L)', 'OE (차세대)'] },
   { key: 'PRODUCT_LINE', label: '제품군', items: ['전장', '내장', '외장', '샤시', '파워트레인', 'BMS', '모터', '배터리'] },
   { key: 'FACTORY', label: '공장', items: ['아산공장', '울산공장', '광주공장', '화성공장'] },
   { key: 'LINE', label: '라인', items: ['1라인', '2라인', '3라인', 'A라인', 'B라인'] },
@@ -27,7 +27,9 @@ export function getCommonCodes(): CodeGroup[] {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CODES));
     return DEFAULT_CODES;
   }
-  return JSON.parse(stored);
+  // PROJECT는 차종현황에서 관리하므로 제외
+  const codes = JSON.parse(stored) as CodeGroup[];
+  return codes.filter((c) => c.key !== 'PROJECT');
 }
 
 export function saveCommonCodes(codes: CodeGroup[]) {
