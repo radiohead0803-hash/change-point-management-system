@@ -15,7 +15,7 @@ import {
 const navigation = [
   { name: '대시보드', href: '/dashboard', icon: LayoutDashboard, roles: null },
   { name: '등록', href: '/change-events/new', icon: FileText, roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
-  { name: '내 요청', href: '/change-events/my', icon: ClipboardList, roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
+  { name: '발생현황', href: '/change-events/my', icon: ClipboardList, roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
   { name: '승인함', href: '/change-events/approvals', icon: CheckSquare, roles: ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'] },
   { name: '도움말', href: '/help', icon: HelpCircle, roles: null },
 ];
