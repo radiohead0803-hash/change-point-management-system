@@ -1,14 +1,18 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { changeEvents } from '@/lib/api-client';
 import { useQuery } from '@tanstack/react-query';
 import { ChangeEvent } from '@/types';
 import { formatDate, getStatusText } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
-import { Printer, Download, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 
 export default function ReportPage() {
+  return <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}><ReportContent /></Suspense>;
+}
+
+function ReportContent() {
   const searchParams = useSearchParams();
   const yearParam = searchParams.get('year') || new Date().getFullYear().toString();
   const monthParam = searchParams.get('month') || (new Date().getMonth() + 1).toString();
