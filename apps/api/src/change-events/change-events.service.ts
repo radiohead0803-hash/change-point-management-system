@@ -142,8 +142,8 @@ export class ChangeEventsService {
     return this.prisma.changeEvent.findMany({
       skip,
       take,
-      where,
-      orderBy,
+      where: { ...where, deletedAt: null },
+      orderBy: orderBy || { createdAt: 'desc' },
       include: {
         company: true,
         manager: true,
