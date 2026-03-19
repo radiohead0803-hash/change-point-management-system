@@ -485,26 +485,30 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
   const handleExcelExport = async () => {
     setExporting(true);
     try {
-      // CSV 생성 (고객사 제출용)
-      const headers = ['NO', '발생일', '발생항목(고객사)', '프로젝트', '발생부서', '담당자', '조치시점', '조치방안', '조치결과', '품질검증', '상태', '협력사', '품번', '품명', '변경상세내용'];
+      // CSV 생성 (목록 테이블 구조와 동일)
+      const headers = ['NO', '발생일', '대분류', '중분류', '세부항목', '발생부서', '담당자', '고객사', '프로젝트', '공장', '품번', '협력사', '조치시점', '조치방안', '조치결과', '품질검증', '상태', '품명', '변경상세내용'];
       const rows = filtered.map((e, i) => {
         const ev = e as any;
         return [
           i + 1,
           formatDate(e.occurredDate),
-          e.customer || '-',
-          e.project || '-',
+          ev.primaryItem?.category?.class?.name || '-',
+          ev.primaryItem?.category?.name || '-',
+          ev.primaryItem?.name || '-',
           e.department || '-',
           ev.manager?.name || ev.createdBy?.name || '-',
+          e.customer || '-',
+          e.project || '-',
+          e.factory || '-',
+          e.partNumber || '-',
+          ev.company?.name || '-',
           ev.actionDate ? formatDate(ev.actionDate) : '미입력',
           ev.actionPlan || '미입력',
           ev.actionResult || '미입력',
           ev.qualityVerification || '미입력',
           getStatusText(e.status),
-          ev.company?.name || '-',
-          e.partNumber || '-',
           e.productName || '-',
-          (e.description || '').replace(/\n/g, ' ').slice(0, 100),
+          (e.description || '').replace(/\n/g, ' ').slice(0, 200),
         ].map((v) => `"${v}"`).join(',');
       });
       const bom = '\uFEFF';

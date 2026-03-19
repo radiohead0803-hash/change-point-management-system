@@ -77,16 +77,30 @@ export default function MyChangeEventsPage() {
   const handleExcelExport = () => {
     setExporting(true);
     try {
-      const headers = ['NO', '발생일', '발생항목(고객사)', '프로젝트', '발생부서', '담당자', '조치시점', '조치방안', '조치결과', '품질검증', '상태', '협력사', '품번', '품명', '변경상세내용'];
+      // 목록 테이블 구조와 동일하게 내보내기
+      const headers = ['NO', '발생일', '대분류', '중분류', '세부항목', '발생부서', '담당자', '고객사', '프로젝트', '공장', '품번', '협력사', '조치시점', '조치방안', '조치결과', '품질검증', '상태', '품명', '변경상세내용'];
       const rows = filtered.map((e, i) => {
         const ev = e as any;
         return [
-          i + 1, formatDate(e.occurredDate), e.customer || '-', e.project || '-', e.department || '-',
+          i + 1,
+          formatDate(e.occurredDate),
+          ev.primaryItem?.category?.class?.name || '-',
+          ev.primaryItem?.category?.name || '-',
+          ev.primaryItem?.name || '-',
+          e.department || '-',
           ev.manager?.name || ev.createdBy?.name || '-',
-          ev.actionDate ? formatDate(ev.actionDate) : '미입력', ev.actionPlan || '미입력',
-          ev.actionResult || '미입력', ev.qualityVerification || '미입력',
-          getStatusText(e.status), ev.company?.name || '-', e.partNumber || '-', e.productName || '-',
-          (e.description || '').replace(/\n/g, ' ').slice(0, 100),
+          e.customer || '-',
+          e.project || '-',
+          e.factory || '-',
+          e.partNumber || '-',
+          ev.company?.name || '-',
+          ev.actionDate ? formatDate(ev.actionDate) : '미입력',
+          ev.actionPlan || '미입력',
+          ev.actionResult || '미입력',
+          ev.qualityVerification || '미입력',
+          getStatusText(e.status),
+          e.productName || '-',
+          (e.description || '').replace(/\n/g, ' ').slice(0, 200),
         ].map((v) => `"${v}"`).join(',');
       });
       const bom = '\uFEFF';
