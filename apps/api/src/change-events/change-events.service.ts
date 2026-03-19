@@ -2,6 +2,10 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { Prisma, ChangeEvent, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 @Injectable()
 export class ChangeEventsService {
@@ -479,16 +483,39 @@ export class ChangeEventsService {
     });
   }
 
-  // ── Attachment CRUD ──
+  // ── Attachment CRUD (파일시스템 저장) ──
+
+  private ensureUploadDir(eventId: string): string {
+    const dir = path.join(UPLOAD_DIR, eventId);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  }
 
   async addAttachment(eventId: string, data: { filename: string; mimetype: string; size: number; data: string }) {
+    // base64 데이터를 파일로 저장
+    const dir = this.ensureUploadDir(eventId);
+    const ext = path.extname(data.filename) || '';
+    const uniqueName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
+    const filePath = path.join(dir, uniqueName);
+
+    // base64 데이터 디코딩 (data:image/png;base64,xxx 형식 처리)
+    let base64Data = data.data;
+    if (base64Data.includes(',')) {
+      base64Data = base64Data.split(',')[1];
+    }
+    const buffer = Buffer.from(base64Data, 'base64');
+    fs.writeFileSync(filePath, buffer);
+
+    // DB에는 경로만 저장 (base64 데이터 X)
     return this.prisma.attachment.create({
       data: {
         eventId,
         filename: data.filename,
         mimetype: data.mimetype,
-        size: data.size,
-        data: data.data,
+        size: buffer.length,
+        path: path.join(eventId, uniqueName), // 상대경로 저장
       },
     });
   }
@@ -496,21 +523,54 @@ export class ChangeEventsService {
   async getAttachments(eventId: string) {
     return this.prisma.attachment.findMany({
       where: { eventId, deletedAt: null },
-      select: { id: true, filename: true, mimetype: true, size: true, createdAt: true },
+      select: { id: true, filename: true, mimetype: true, size: true, path: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async removeAttachment(attachmentId: string) {
+    const att = await this.prisma.attachment.findUnique({ where: { id: attachmentId } });
+    // 파일시스템에서 파일 삭제
+    if (att?.path) {
+      const filePath = path.join(UPLOAD_DIR, att.path);
+      if (fs.existsSync(filePath)) {
+        try { fs.unlinkSync(filePath); } catch { /* ignore */ }
+      }
+    }
     return this.prisma.attachment.update({
       where: { id: attachmentId },
       data: { deletedAt: new Date() },
     });
   }
 
-  async getAttachmentData(attachmentId: string) {
+  async getAttachmentMeta(attachmentId: string) {
     return this.prisma.attachment.findUnique({
       where: { id: attachmentId },
+      select: { id: true, filename: true, mimetype: true, size: true, path: true },
     });
+  }
+
+  async getAttachmentData(attachmentId: string) {
+    const att = await this.prisma.attachment.findUnique({
+      where: { id: attachmentId },
+    });
+    if (!att) throw new NotFoundException('첨부파일을 찾을 수 없습니다.');
+
+    // 파일시스템에서 파일 읽기
+    if (att.path) {
+      const filePath = path.join(UPLOAD_DIR, att.path);
+      if (fs.existsSync(filePath)) {
+        const buffer = fs.readFileSync(filePath);
+        const base64 = `data:${att.mimetype};base64,${buffer.toString('base64')}`;
+        return { ...att, data: base64 };
+      }
+    }
+
+    // 기존 DB 저장 데이터 호환 (마이그레이션 전 데이터)
+    if (att.data) {
+      return att;
+    }
+
+    throw new NotFoundException('파일이 존재하지 않습니다.');
   }
 }

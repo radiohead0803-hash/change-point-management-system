@@ -165,10 +165,16 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
     );
   }
 
+  const isOwner = event.createdById === user?.id;
+  const isAdmin = user?.role === 'ADMIN';
+  const isDraft = event.status === 'DRAFT';
+  const isReturned = event.status === 'REVIEW_RETURNED';
   const canEdit =
-    user?.role === 'ADMIN' ||
-    (user?.role === 'TIER2_EDITOR' && event.createdById === user.id) ||
-    (user?.role === 'TIER1_EDITOR' && event.status === 'REVIEW_RETURNED');
+    isAdmin ||
+    (isOwner && (isDraft || isReturned)) ||
+    (user?.role === 'TIER1_EDITOR' && (isDraft || isReturned)) ||
+    (user?.role === 'TIER2_EDITOR' && isOwner && (isDraft || isReturned));
+  const canDelete = isAdmin || (isOwner && isDraft);
 
   const approvalStep = FLOW_STEPS.find(
     (s) => s.status === event.status && s.roles.includes(user?.role || '')
@@ -232,6 +238,19 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
           </div>
         </div>
         <div className="flex gap-2 pl-12 sm:pl-0">
+          {canDelete && (
+            <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50 hover:text-red-600"
+              onClick={async () => {
+                if (!confirm('정말 삭제하시겠습니까?')) return;
+                try {
+                  await changeEvents.delete(event.id);
+                  toast({ title: '삭제되었습니다.' });
+                  router.push('/change-events/my');
+                } catch { toast({ variant: 'destructive', title: '삭제 실패' }); }
+              }}>
+              <X className="mr-1 h-4 w-4" />삭제
+            </Button>
+          )}
           {canEdit && (
             <Button size="sm" onClick={() => router.push(`/change-events/${event.id}/edit`)}>
               <FileEdit className="mr-1.5 h-4 w-4" />수정
@@ -294,21 +313,23 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
       {/* 변동점 분류 */}
       <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-blue-900/30 dark:bg-blue-900/10">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">변동점 분류</h3>
-        {(event as any).primaryItem ? (
+        {((event as any).primaryItem || (event.tags && event.tags.length > 0)) ? (
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-md bg-blue-100 px-2 py-1 font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                {(event as any).primaryItem.category?.class?.name || '-'}
-              </span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-              <span className="rounded-md bg-blue-50 px-2 py-1 font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                {(event as any).primaryItem.category?.name || '-'}
-              </span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-              <span className="rounded-md bg-white px-2 py-1 font-medium ring-1 ring-blue-200 dark:bg-gray-800 dark:ring-blue-800">
-                {(event as any).primaryItem.name}
-              </span>
-            </div>
+            {(event as any).primaryItem && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-md bg-blue-100 px-2 py-1 font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                  {(event as any).primaryItem.category?.class?.name || '-'}
+                </span>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                <span className="rounded-md bg-blue-50 px-2 py-1 font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                  {(event as any).primaryItem.category?.name || '-'}
+                </span>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                <span className="rounded-md bg-white px-2 py-1 font-medium ring-1 ring-blue-200 dark:bg-gray-800 dark:ring-blue-800">
+                  {(event as any).primaryItem.name}
+                </span>
+              </div>
+            )}
             {event.tags && event.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {event.tags.map((tag: any) => (
@@ -327,10 +348,15 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-            <InfoCard icon={Tag} label="분류" value={event.changeType === 'FOUR_M' ? '4M' : '4M외'} />
-            <InfoCard icon={Tag} label="대분류" value={event.category || '-'} />
-            <InfoCard icon={Tag} label="세부항목" value={event.subCategory || '-'} />
+          <div className="flex flex-col items-center gap-2 py-4 text-center">
+            <Tag className="h-6 w-6 text-muted-foreground/30" />
+            <p className="text-xs text-muted-foreground">분류 항목이 지정되지 않았습니다</p>
+            {canEdit && (
+              <button onClick={() => router.push(`/change-events/${event.id}/edit`)}
+                className="mt-1 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">
+                수정하여 분류 지정하기
+              </button>
+            )}
           </div>
         )}
       </div>
