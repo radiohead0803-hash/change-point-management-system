@@ -15,7 +15,7 @@ import {
 import {
   Plus, FileEdit, Clock, Send, CheckCircle2, ShieldCheck,
   ArrowRight, Download, TrendingUp, TrendingDown, AlertTriangle,
-  Lightbulb, BarChart3, Building2, Calendar,
+  Lightbulb, BarChart3, Building2, Calendar, Filter, Search, FileSpreadsheet,
 } from 'lucide-react';
 
 const statusConfig = [
@@ -433,88 +433,198 @@ export default function DashboardPage() {
       )}
 
       {/* 최근 변동점 - 필수 작성 항목 테이블 */}
-      <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-        <div className="flex items-center justify-between p-4 sm:p-5">
-          <h3 className="text-sm font-semibold">최근 변동점 · 필수 작성 항목 (발생 & 조치결과)</h3>
+      <ChangeEventTable events={allEvents} isLoading={isLoading} router={router} />
+
+    </div>
+  );
+}
+
+/* ── 변동점 테이블 (필터 + 엑셀 내보내기) ── */
+function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]; isLoading: boolean; router: any }) {
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [customerFilter, setCustomerFilter] = useState('ALL');
+  const [searchText, setSearchText] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  const customers = useMemo(() => {
+    const set = new Set(events.map((e) => e.customer || '').filter(Boolean));
+    return Array.from(set).sort();
+  }, [events]);
+
+  const filtered = useMemo(() => {
+    return events.filter((e) => {
+      if (dateFrom && e.occurredDate < dateFrom) return false;
+      if (dateTo && e.occurredDate > dateTo + 'T23:59:59') return false;
+      if (statusFilter !== 'ALL' && e.status !== statusFilter) return false;
+      if (customerFilter !== 'ALL' && (e.customer || '') !== customerFilter) return false;
+      if (searchText) {
+        const s = searchText.toLowerCase();
+        return (e.customer || '').toLowerCase().includes(s) ||
+          (e.project || '').toLowerCase().includes(s) ||
+          (e.department || '').toLowerCase().includes(s) ||
+          (e.description || '').toLowerCase().includes(s);
+      }
+      return true;
+    });
+  }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText]);
+
+  const handleExcelExport = async () => {
+    setExporting(true);
+    try {
+      // CSV 생성 (고객사 제출용)
+      const headers = ['NO', '발생일', '발생항목(고객사)', '프로젝트', '발생부서', '담당자', '조치시점', '조치방안', '조치결과', '품질검증', '상태', '협력사', '품번', '품명', '변경상세내용'];
+      const rows = filtered.map((e, i) => {
+        const ev = e as any;
+        return [
+          i + 1,
+          formatDate(e.occurredDate),
+          e.customer || '-',
+          e.project || '-',
+          e.department || '-',
+          ev.manager?.name || ev.createdBy?.name || '-',
+          ev.actionDate ? formatDate(ev.actionDate) : '미입력',
+          ev.actionPlan || '미입력',
+          ev.actionResult || '미입력',
+          ev.qualityVerification || '미입력',
+          getStatusText(e.status),
+          ev.company?.name || '-',
+          e.partNumber || '-',
+          e.productName || '-',
+          (e.description || '').replace(/\n/g, ' ').slice(0, 100),
+        ].map((v) => `"${v}"`).join(',');
+      });
+      const bom = '\uFEFF';
+      const csv = bom + headers.join(',') + '\n' + rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `변동점_필수작성항목_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // fallback
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
+      {/* 헤더 */}
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <h3 className="text-sm font-semibold">필수 작성 항목 (발생 & 조치결과)</h3>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
+            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+            {exporting ? '내보내기...' : `엑셀 내보내기 (${filtered.length}건)`}
+          </Button>
           <button onClick={() => router.push('/change-events/my')} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80">
             전체보기 <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          </div>
-        ) : allEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <FileEdit className="mb-3 h-10 w-10 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">등록된 변동점이 없습니다</p>
-            <Button size="sm" className="mt-4" onClick={() => router.push('/change-events/new')}>
-              <Plus className="mr-1 h-4 w-4" /> 첫 변동점 등록
-            </Button>
-          </div>
-        ) : (
-          <div className="overflow-auto max-h-[500px] scrollbar-thin">
-            <table className="w-full min-w-[900px] text-xs border-collapse">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-10 border-r border-gray-200 dark:border-gray-700">NO</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>발생내역</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-16">상태</th>
-                </tr>
-                <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
-                  <th className="px-3 py-1.5 border-r border-gray-200 dark:border-gray-700"></th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 w-[85px]">발생일</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 w-[90px]">발생항목</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 w-[80px]">발생부서</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 w-[65px] border-r border-gray-200 dark:border-gray-700">담당자</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 w-[85px]">조치시점</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 w-[120px]">조치방안</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 w-[120px]">조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 w-[100px] border-r border-gray-200 dark:border-gray-700">품질검증</th>
-                  <th className="px-3 py-1.5"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-                {allEvents.slice(0, 15).map((event, idx) => {
-                  const e = event as any;
-                  return (
-                    <tr
-                      key={event.id}
-                      className={`cursor-pointer transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900/40' : 'bg-gray-50/30 dark:bg-gray-800/20'}`}
-                      onClick={() => router.push(`/change-events/${event.id}`)}
-                    >
-                      <td className="whitespace-nowrap px-3 py-3 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100 dark:border-gray-800">{idx + 1}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <td className="max-w-[90px] truncate px-3 py-3 text-center font-medium">{event.customer || '-'}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800">{e.manager?.name || e.createdBy?.name || '-'}</td>
-                      <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
-                        {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
-                      </td>
-                      <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>
-                        {e.actionPlan || '미입력'}
-                      </td>
-                      <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>
-                        {e.actionResult || '미입력'}
-                      </td>
-                      <td className={`max-w-[100px] truncate px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>
-                        {e.qualityVerification || '미입력'}
-                      </td>
-                      <td className="whitespace-nowrap px-2 py-2.5 text-center">
-                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>
-                          {getStatusText(event.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
+
+      {/* 필터 */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 bg-gray-50/30 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/20">
+        <Filter className="h-3.5 w-3.5 text-muted-foreground/50" />
+        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[120px]" />
+        <span className="text-[10px] text-muted-foreground">~</span>
+        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[120px]" />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
+          <option value="ALL">전체 상태</option>
+          <option value="DRAFT">임시저장</option>
+          <option value="SUBMITTED">제출됨</option>
+          <option value="REVIEW_RETURNED">보완요청</option>
+          <option value="REVIEWED">검토완료</option>
+          <option value="APPROVED">승인완료</option>
+          <option value="CLOSED">종결</option>
+        </select>
+        <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}
+          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
+          <option value="ALL">전체 고객사</option>
+          {customers.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
+          <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="검색..."
+            className="h-8 w-[100px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[140px]" />
+        </div>
+        {hasFilters && (
+          <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}
+            className="text-[10px] text-primary hover:underline">초기화</button>
+        )}
+        <span className="ml-auto text-[10px] text-muted-foreground">{filtered.length}건</span>
+      </div>
+
+      {/* 테이블 */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <FileEdit className="mb-3 h-10 w-10 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground">{hasFilters ? '조건에 맞는 데이터가 없습니다' : '등록된 변동점이 없습니다'}</p>
+        </div>
+      ) : (
+        <div className="overflow-auto max-h-[500px]">
+          <table className="w-full min-w-[950px] text-xs border-collapse">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
+                <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10 border-r border-gray-200 dark:border-gray-700">NO</th>
+                <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>발생내역</th>
+                <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>조치결과</th>
+                <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-16">상태</th>
+              </tr>
+              <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
+                <th className="px-3 py-1.5 border-r border-gray-200 dark:border-gray-700"></th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생항목</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200 dark:border-gray-700">담당자</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
+                <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200 dark:border-gray-700">품질검증</th>
+                <th className="px-3 py-1.5"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
+              {filtered.map((event, idx) => {
+                const e = event as any;
+                return (
+                  <tr key={event.id}
+                    className={`cursor-pointer transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900/40' : 'bg-gray-50/30 dark:bg-gray-800/20'}`}
+                    onClick={() => router.push(`/change-events/${event.id}`)}>
+                    <td className="whitespace-nowrap px-3 py-3 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100 dark:border-gray-800">{idx + 1}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
+                    <td className="max-w-[90px] truncate px-3 py-3 text-center font-medium">{event.customer || '-'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800">{e.manager?.name || e.createdBy?.name || '-'}</td>
+                    <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                      {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
+                    </td>
+                    <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
+                    <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
+                    <td className={`max-w-[100px] truncate px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                    <td className="whitespace-nowrap px-2 py-2.5 text-center">
+                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
