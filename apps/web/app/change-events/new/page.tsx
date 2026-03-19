@@ -173,8 +173,10 @@ export default function NewChangeEventPage() {
       }
       toast({ title: status === 'DRAFT' ? '임시 저장 완료' : '승인 요청 완료' });
       router.push('/change-events/my');
-    } catch { toast({ variant: 'destructive', title: '등록 실패' }); }
-    finally { setDraftSaving(false); setLoading(false); }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || '서버 오류';
+      toast({ variant: 'destructive', title: '등록 실패', description: typeof msg === 'string' ? msg : JSON.stringify(msg) });
+    } finally { setDraftSaving(false); setLoading(false); }
   };
 
   const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '캠스 담당자', EXEC_APPROVER: '전담중역' };

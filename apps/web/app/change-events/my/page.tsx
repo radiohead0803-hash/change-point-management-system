@@ -259,10 +259,10 @@ export default function MyChangeEventsPage() {
                         <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center">
-                        {(e._count?.attachments > 0) ? (
-                          <span className="inline-flex items-center gap-0.5 text-primary" title={`첨부 ${e._count.attachments}건`}>
+                        {(e.attachments?.length > 0) ? (
+                          <span className="inline-flex items-center gap-0.5 text-primary" title={`첨부 ${e.attachments.length}건`}>
                             <Paperclip className="h-3 w-3" />
-                            <span className="text-[9px] font-bold">{e._count.attachments}</span>
+                            <span className="text-[9px] font-bold">{e.attachments.length}</span>
                           </span>
                         ) : (
                           <span className="text-[9px] text-muted-foreground/30">-</span>

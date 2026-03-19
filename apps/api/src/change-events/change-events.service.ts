@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { Prisma, ChangeEvent, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -92,6 +92,18 @@ export class ChangeEventsService {
     // 태그 데이터 정제 (유효한 태그만)
     const validTags = (tags || []).filter((t: any) => t.itemId && t.itemId !== '' && !t.itemId.startsWith('custom_'));
 
+    // 필수 필드 검증
+    if (!eventData.receiptMonth) throw new BadRequestException('접수월(receiptMonth)은 필수입니다.');
+    if (!eventData.occurredDate) throw new BadRequestException('발생일(occurredDate)은 필수입니다.');
+    if (!eventData.companyId) throw new BadRequestException('협력사(companyId)는 필수입니다.');
+    if (!eventData.managerId) throw new BadRequestException('담당자(managerId)는 필수입니다.');
+
+    console.log('Creating ChangeEvent with data:', JSON.stringify({
+      ...eventData,
+      createdById: userId,
+      tagsCount: validTags.length,
+    }, null, 2));
+
     try {
       return await this.prisma.changeEvent.create({
         data: {
@@ -115,8 +127,12 @@ export class ChangeEventsService {
         },
       });
     } catch (error: any) {
-      console.error('ChangeEvent create error:', error?.message || error);
-      throw error;
+      console.error('ChangeEvent create FAILED:', error?.message || error);
+      console.error('Error code:', error?.code);
+      console.error('Error meta:', JSON.stringify(error?.meta));
+      // 클라이언트에 상세 에러 반환
+      const msg = error?.meta?.cause || error?.message || '알 수 없는 오류';
+      throw new InternalServerErrorException(`변동점 등록 실패: ${msg}`);
     }
   }
 
@@ -161,8 +177,9 @@ export class ChangeEventsService {
             },
           },
         },
-        _count: {
-          select: { attachments: { where: { deletedAt: null } } },
+        attachments: {
+          where: { deletedAt: null },
+          select: { id: true },
         },
       },
     });
