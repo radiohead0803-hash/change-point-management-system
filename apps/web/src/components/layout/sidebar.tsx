@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -20,6 +21,7 @@ import {
   Car,
   Building2,
   FolderTree,
+  ChevronDown,
 } from 'lucide-react';
 
 /* ── 역할별 라벨 ── */
@@ -57,6 +59,7 @@ const navigation = [
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['unread-notifications'],
@@ -92,40 +95,49 @@ export default function Sidebar() {
         {navigation.map((item: any) => {
           if (item.roles && !item.roles.includes(user?.role || '')) return null;
 
-          // 그룹 메뉴 (기초정보)
+          // 그룹 메뉴 (기초정보) - 클릭 토글
           if (item.isGroup && item.children) {
             const isGroupActive = item.children.some((c: any) => pathname === c.href || pathname.startsWith(c.href + '/'));
+            const isOpen = groupOpen[item.name] ?? isGroupActive;
             const Icon = item.icon;
             return (
               <div key={item.name}>
-                <div className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2 text-[11px] font-semibold uppercase tracking-wider',
-                  isGroupActive ? 'text-primary' : 'text-muted-foreground/60',
-                )}>
-                  <Icon className="h-[14px] w-[14px] flex-shrink-0" />
-                  {item.name}
-                </div>
-                <div className="ml-3 space-y-0.5 border-l border-gray-200/60 pl-3 dark:border-gray-700/40">
-                  {item.children.map((child: any) => {
-                    const isActive = pathname === child.href || pathname.startsWith(child.href + '/');
-                    const ChildIcon = child.icon;
-                    return (
-                      <Link
-                        key={child.name}
-                        href={child.href}
-                        className={cn(
-                          'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200',
-                          isActive
-                            ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                            : 'text-muted-foreground hover:bg-gray-100/80 hover:text-foreground dark:hover:bg-gray-800/50',
-                        )}
-                      >
-                        <ChildIcon className={cn('h-[15px] w-[15px] flex-shrink-0', isActive ? 'text-primary' : 'text-muted-foreground/60 group-hover:text-foreground')} />
-                        {child.name}
-                      </Link>
-                    );
-                  })}
-                </div>
+                <button
+                  onClick={() => setGroupOpen((prev) => ({ ...prev, [item.name]: !isOpen }))}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    isGroupActive
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:bg-gray-100/80 hover:text-foreground dark:hover:bg-gray-800/50',
+                  )}
+                >
+                  <Icon className={cn('h-[18px] w-[18px] flex-shrink-0', isGroupActive ? 'text-primary' : 'text-muted-foreground/70')} />
+                  <span className="flex-1 text-left">{item.name}</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground/40 transition-transform duration-200', isOpen && 'rotate-180')} />
+                </button>
+                {isOpen && (
+                  <div className="ml-5 mt-0.5 space-y-0.5 border-l border-gray-200/60 pl-3 dark:border-gray-700/40">
+                    {item.children.map((child: any) => {
+                      const isActive = pathname === child.href || pathname.startsWith(child.href + '/');
+                      const ChildIcon = child.icon;
+                      return (
+                        <Link
+                          key={child.name}
+                          href={child.href}
+                          className={cn(
+                            'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200',
+                            isActive
+                              ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                              : 'text-muted-foreground hover:bg-gray-100/80 hover:text-foreground dark:hover:bg-gray-800/50',
+                          )}
+                        >
+                          <ChildIcon className={cn('h-[15px] w-[15px] flex-shrink-0', isActive ? 'text-primary' : 'text-muted-foreground/60 group-hover:text-foreground')} />
+                          {child.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           }
