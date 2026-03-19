@@ -129,20 +129,20 @@ model ChangeEvent {
   id              String    @id @default(cuid())
   receiptMonth    String    // 접수월 (YYYY-MM)
   occurredDate    DateTime  // 발생일
-  customer        String    // 고객사
-  project         String    // 프로젝트
-  productLine     String    // 제품군
-  partNumber      String    // 품번
+  customer        String?   // 고객사
+  project         String?   // 프로젝트
+  productLine     String?   // 제품군
+  partNumber      String?   // 품번
   productName     String?   // 품명
-  factory         String    // 공장
-  productionLine  String    // 라인
+  factory         String?   // 공장
+  productionLine  String?   // 라인
   companyId       String    // 협력사 ID
   company         Company   @relation(fields: [companyId], references: [id])
   primaryItemId   String    // 주 분류 항목
   primaryItem     ChangeItem @relation("PrimaryClassification", fields: [primaryItemId], references: [id])
   tags            ChangeEventTag[] // 추가 분류 태그
   description     String    // 변경 상세내용
-  department      String    // 발생부서
+  department      String?   // 발생부서
   status          EventStatus @default(DRAFT)
 
   // 조치 결과 (운영가이드 필수 작성항목)

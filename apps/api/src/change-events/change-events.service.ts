@@ -11,7 +11,12 @@ export class ChangeEventsService {
   ) {}
 
   async create(data: any, userId: string) {
-    const { tags, ...eventData } = data;
+    const { tags, ...rawData } = data;
+    // 빈 문자열을 null로 변환 (optional 필드)
+    const eventData: any = {};
+    for (const [key, value] of Object.entries(rawData)) {
+      eventData[key] = value === '' ? null : value;
+    }
 
     // 정책 설정 확인
     const requireTag = await this.prisma.policySetting.findFirst({
