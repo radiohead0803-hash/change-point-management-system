@@ -171,14 +171,10 @@ export default function NewChangeEventPage() {
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
           </h2>
-          <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mb-4 max-w-xs">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">발생일 <span className="text-red-400">*</span></label>
               <Input type="date" {...register('occurredDate')} error={errors.occurredDate?.message} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">접수월 (자동)</label>
-              <div className="flex h-11 items-center rounded-xl border border-input bg-gray-50 px-3 text-sm dark:bg-gray-800">{receiptMonth}</div>
             </div>
           </div>
           <p className="mb-3 text-xs text-muted-foreground">기초정보 분류 체계에서 발생 항목을 선택합니다</p>
@@ -194,6 +190,7 @@ export default function NewChangeEventPage() {
             <Sel label="고객사" opts={CUSTOMERS} {...register('customer')} />
             <Sel label="프로젝트" opts={PROJECTS} {...register('project')} />
             <Sel label="제품군" opts={PRODUCT_LINES} {...register('productLine')} />
+            <Sel label="공장" opts={FACTORIES} {...register('factory')} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">품번</label>
               <Input {...register('partNumber')} placeholder="품번 입력" />
@@ -202,7 +199,6 @@ export default function NewChangeEventPage() {
               <label className="text-sm font-medium">품명</label>
               <Input {...register('productName')} placeholder="품명 입력" />
             </div>
-            <Sel label="공장" opts={FACTORIES} {...register('factory')} />
             <Sel label="라인" opts={LINES} {...register('productionLine')} />
             <Sel label="발생부서" opts={DEPTS} {...register('department')} />
             <div className="space-y-1.5">

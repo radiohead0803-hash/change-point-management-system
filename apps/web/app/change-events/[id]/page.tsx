@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents } from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,13 +13,139 @@ import {
   ArrowLeft, FileEdit, Download, Paperclip, CheckCircle2,
   RotateCcw, Calendar, Building2, Briefcase, MapPin, Tag,
   User as UserIcon, Clock, ChevronRight, AlertTriangle,
+  Image, FileText, X, ZoomIn,
 } from 'lucide-react';
 
 /* ── 승인 플로우 ── */
 const FLOW_STEPS = [
-  { status: 'SUBMITTED', nextStatus: 'REVIEWED', btnLabel: '검토완료', roles: ['TIER1_REVIEWER', 'ADMIN'] },
+  { status: 'SUBMITTED', nextStatus: 'REVIEWED', btnLabel: '1차 승인', roles: ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'] },
   { status: 'REVIEWED', nextStatus: 'APPROVED', btnLabel: '최종승인', roles: ['EXEC_APPROVER', 'ADMIN'] },
 ];
+
+/* ── 첨부파일 섹션 ── */
+function AttachmentSection({ eventId }: { eventId: string }) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const { data: attachments = [] } = useQuery<any[]>({
+    queryKey: ['attachments', eventId],
+    queryFn: () => changeEvents.getAttachments(eventId).then((r) => r.data),
+  });
+
+  if (attachments.length === 0) return null;
+
+  const images = attachments.filter((a: any) => a.mimetype?.startsWith('image/'));
+  const files = attachments.filter((a: any) => !a.mimetype?.startsWith('image/'));
+
+  return (
+    <>
+      <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
+        <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Paperclip className="h-3.5 w-3.5" />
+          첨부파일 및 사진 ({attachments.length})
+        </h3>
+
+        {/* 이미지 미리보기 그리드 */}
+        {images.length > 0 && (
+          <div className="mb-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <Image className="inline h-3 w-3 mr-1" />사진 ({images.length})
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {images.map((img: any) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setLightbox(img.id)}
+                  className="group relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition-all hover:ring-2 hover:ring-primary/40 dark:border-gray-800 dark:bg-gray-800/30"
+                >
+                  <ImagePreview attachmentId={img.id} filename={img.filename} />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/20">
+                    <ZoomIn className="h-6 w-6 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-1.5 pt-4">
+                    <p className="truncate text-[10px] font-medium text-white">{img.filename}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 일반 파일 목록 */}
+        {files.length > 0 && (
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <FileText className="inline h-3 w-3 mr-1" />파일 ({files.length})
+            </p>
+            <div className="space-y-1.5">
+              {files.map((file: any) => (
+                <div key={file.id} className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-white/60 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-800/30">
+                  <Paperclip className="h-4 w-4 flex-shrink-0 text-muted-foreground/50" />
+                  <span className="flex-1 truncate text-sm">{file.filename}</span>
+                  <span className="flex-shrink-0 text-[10px] text-muted-foreground/50">{(file.size / 1024).toFixed(0)}KB</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 라이트박스 */}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setLightbox(null)}>
+          <button className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/40" onClick={() => setLightbox(null)}>
+            <X className="h-6 w-6" />
+          </button>
+          <ImagePreview attachmentId={lightbox} filename="" full />
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ── 이미지 미리보기 (base64 로드) ── */
+function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; filename: string; full?: boolean }) {
+  const { data } = useQuery({
+    queryKey: ['attachment-data', attachmentId],
+    queryFn: async () => {
+      const res = await changeEvents.getAttachments(attachmentId);
+      // The data is fetched via a separate endpoint that returns base64
+      // For now, use the list endpoint which doesn't include data
+      // We need a dedicated endpoint to get attachment with data
+      return null;
+    },
+    enabled: false, // disable for now - handled below
+  });
+
+  // Use direct API call to get attachment with data
+  const { data: attData } = useQuery({
+    queryKey: ['attachment-full', attachmentId],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/change-events/attachment-data/${attachmentId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (!res.ok) return null;
+        return res.json();
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  if (attData?.data) {
+    return full ? (
+      <img src={attData.data} alt={filename} className="max-h-[80vh] max-w-[90vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
+    ) : (
+      <img src={attData.data} alt={filename} className="h-full w-full object-cover" />
+    );
+  }
+
+  return (
+    <div className={`flex items-center justify-center ${full ? 'h-40 w-40' : 'h-full w-full'} bg-gray-100 dark:bg-gray-800`}>
+      <Image className="h-8 w-8 text-muted-foreground/30 animate-pulse" />
+    </div>
+  );
+}
 
 const STATUS_FLOW = ['DRAFT', 'SUBMITTED', 'REVIEWED', 'APPROVED'];
 function getFlowStep(status: string) {
@@ -218,26 +345,8 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         </div>
       )}
 
-      {/* 첨부파일 */}
-      {event.attachments && event.attachments.length > 0 && (
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">첨부파일</h3>
-          <div className="space-y-2">
-            {event.attachments.map((attachment) => (
-              <a
-                key={attachment.id}
-                href={`/api/attachments/${attachment.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-white/60 px-4 py-3 transition-all hover:bg-primary/5 hover:border-primary/20 dark:border-gray-800 dark:bg-gray-800/30"
-              >
-                <Paperclip className="h-4 w-4 text-muted-foreground/50" />
-                <span className="text-sm font-medium text-primary">{attachment.filename}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* 첨부파일 및 사진 */}
+      <AttachmentSection eventId={event.id} />
 
       {/* 승인/반려 버튼 */}
       {approvalStep && (

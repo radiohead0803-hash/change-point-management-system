@@ -162,6 +162,12 @@ export class ChangeEventsController {
     return this.changeEventsService.getAttachments(eventId);
   }
 
+  @Get('attachment-data/:attachmentId')
+  @ApiOperation({ summary: '첨부파일 데이터 조회 (base64)' })
+  getAttachmentData(@Param('attachmentId') attachmentId: string) {
+    return this.changeEventsService.getAttachmentData(attachmentId);
+  }
+
   @Delete('attachments/:attachmentId')
   @ApiOperation({ summary: '첨부파일 삭제' })
   removeAttachment(@Param('attachmentId') attachmentId: string) {
