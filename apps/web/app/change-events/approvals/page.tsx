@@ -67,8 +67,8 @@ export default function ApprovalsPage() {
   const filtered = useMemo(() => {
     return pendingApprovals.filter((e) => {
       const matchSearch = !searchTerm ||
-        e.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.customer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.project || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         ((e as any).company?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.receiptMonth.includes(searchTerm);
       const matchStep = stepFilter === 'ALL' || e.status === stepFilter;

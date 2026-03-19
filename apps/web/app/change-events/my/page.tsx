@@ -78,8 +78,8 @@ export default function MyChangeEventsPage() {
   const filtered = useMemo(() => {
     return events.filter((e) => {
       const matchSearch = !search ||
-        e.customer.toLowerCase().includes(search.toLowerCase()) ||
-        e.project.toLowerCase().includes(search.toLowerCase()) ||
+        (e.customer || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.project || '').toLowerCase().includes(search.toLowerCase()) ||
         ((e as any).company?.name || '').toLowerCase().includes(search.toLowerCase()) ||
         (e.partNumber || '').toLowerCase().includes(search.toLowerCase()) ||
         e.receiptMonth.includes(search);

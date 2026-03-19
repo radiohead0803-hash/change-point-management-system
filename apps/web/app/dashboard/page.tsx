@@ -114,7 +114,8 @@ export default function DashboardPage() {
   const customerData = useMemo(() => {
     const counts: Record<string, number> = {};
     events.forEach((e) => {
-      counts[e.customer] = (counts[e.customer] || 0) + 1;
+      const cust = e.customer || '미지정';
+      counts[cust] = (counts[cust] || 0) + 1;
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
