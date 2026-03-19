@@ -14,20 +14,19 @@ import {
 
 /* ── 역할 정의 ── */
 const ROLE_MAP: Record<string, { label: string; shortLabel: string; group: string; level: number; desc: string; color: string; badgeColor: string }> = {
-  ADMIN:           { label: '관리자',       shortLabel: '관리자',   group: '관리자',   level: 0, desc: '시스템 전체 관리 / 전체 권한',          color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',         badgeColor: 'bg-red-500' },
-  TIER1_EDITOR:    { label: '1차사 담당자', shortLabel: '담당자',   group: '1차사',    level: 1, desc: '변동점 등록·수정 / 접수',               color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
-  TIER1_REVIEWER:  { label: '1차사 검토자', shortLabel: '검토자',   group: '1차사',    level: 2, desc: '변동점 검토 / 승인 1단계',              color: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', badgeColor: 'bg-indigo-500' },
-  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '중역',     group: '1차사',    level: 3, desc: '변동점 최종 승인',                      color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
-  TIER2_EDITOR:    { label: '협력사 담당자', shortLabel: '담당자',  group: '협력사',   level: 1, desc: '자사 변동점 등록·수정 / 접수',          color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400', badgeColor: 'bg-green-500' },
-  CUSTOMER_VIEWER: { label: '고객사 뷰어',  shortLabel: '뷰어',    group: '고객사',   level: 0, desc: '열람 전용 (수정 불가)',                  color: 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400',       badgeColor: 'bg-gray-500' },
+  ADMIN:           { label: '관리자',       shortLabel: '관리자',   group: '관리자',     level: 0, desc: '시스템 전체 관리 / 전체 권한',          color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',         badgeColor: 'bg-red-500' },
+  TIER1_EDITOR:    { label: '담당자',       shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정 / 접수',               color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
+  TIER1_REVIEWER:  { label: '검토자',       shortLabel: '검토자',   group: '본사(캠스)', level: 2, desc: '변동점 검토 / 승인 1단계',              color: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', badgeColor: 'bg-indigo-500' },
+  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '중역',     group: '본사(캠스)', level: 3, desc: '변동점 최종 승인',                      color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
+  TIER2_EDITOR:    { label: '협력사 담당자', shortLabel: '담당자',  group: '협력사',     level: 1, desc: '자사 변동점 등록·수정 / 접수',          color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400', badgeColor: 'bg-green-500' },
+  CUSTOMER_VIEWER: { label: '고객사 뷰어',  shortLabel: '뷰어',    group: '협력사',     level: 0, desc: '열람 전용 (수정 불가)',                  color: 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400',       badgeColor: 'bg-gray-500' },
 };
 
 /* ── 그룹 정의 ── */
 const ROLE_GROUPS = [
-  { key: '관리자', label: '관리자', roles: ['ADMIN'], icon: Shield, accent: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
-  { key: '1차사',  label: '1차사',  roles: ['TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER'], icon: UserCog, accent: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
-  { key: '협력사', label: '협력사', roles: ['TIER2_EDITOR'], icon: Building2, accent: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800' },
-  { key: '고객사', label: '고객사', roles: ['CUSTOMER_VIEWER'], icon: Eye, accent: 'text-gray-600 dark:text-gray-400', border: 'border-gray-200 dark:border-gray-700' },
+  { key: '관리자',     label: '관리자',     roles: ['ADMIN'], icon: Shield, accent: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
+  { key: '본사(캠스)', label: '본사(캠스)', roles: ['TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER'], icon: UserCog, accent: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
+  { key: '협력사',     label: '협력사',     roles: ['TIER2_EDITOR', 'CUSTOMER_VIEWER'], icon: Building2, accent: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800' },
 ];
 
 /* ── 승인 플로우 ── */
@@ -172,7 +171,7 @@ export default function UserManagementPage() {
 
   const getLevelBadge = (role: string) => {
     const info = ROLE_MAP[role];
-    if (!info || info.group !== '1차사') return null;
+    if (!info || info.group !== '본사(캠스)') return null;
     return (
       <span className="ml-1 inline-flex items-center rounded bg-gray-100 px-1 text-[9px] font-bold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
         Lv.{info.level}
