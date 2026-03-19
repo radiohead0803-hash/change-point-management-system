@@ -299,8 +299,9 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
           <InfoCard icon={Building2} label="고객사" value={event.customer} />
           <InfoCard icon={Briefcase} label="프로젝트" value={event.project} />
           <InfoCard icon={Tag} label="제품군" value={event.productLine} />
-          <InfoCard icon={Tag} label="부품번호" value={event.partNumber} mono />
           <InfoCard icon={MapPin} label="공장" value={event.factory} />
+          <InfoCard icon={Tag} label="품번" value={event.partNumber} mono />
+          <InfoCard icon={Tag} label="품명" value={event.productName || '-'} />
           <InfoCard icon={MapPin} label="라인" value={event.productionLine} />
           <InfoCard icon={Building2} label="협력사" value={event.company.name} />
           <InfoCard icon={Tag} label="분류" value={event.changeType === 'FOUR_M' ? '4M' : '4M외'} />
@@ -329,14 +330,14 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
       </div>
 
       {/* 조치결과 */}
-      {((event as any).actionDate || (event as any).actionPlan || (event as any).actionResult || (event as any).qualityVerification) && (
+      {(event.actionDate || event.actionPlan || event.actionResult || event.qualityVerification) && (
         <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-amber-900/30 dark:bg-amber-900/10">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과</h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            <InfoCard icon={Calendar} label="조치시점" value={(event as any).actionDate ? formatDate((event as any).actionDate) : '-'} />
-            <InfoCard icon={Tag} label="조치방안" value={(event as any).actionPlan || '-'} />
-            <InfoCard icon={Tag} label="조치결과" value={(event as any).actionResult || '-'} />
-            <InfoCard icon={Tag} label="품질검증" value={(event as any).qualityVerification || '-'} />
+            <InfoCard icon={Calendar} label="조치시점" value={event.actionDate ? formatDate(event.actionDate) : '-'} />
+            <InfoCard icon={Tag} label="조치방안" value={event.actionPlan || '-'} />
+            <InfoCard icon={Tag} label="조치결과" value={event.actionResult || '-'} />
+            <InfoCard icon={Tag} label="품질검증" value={event.qualityVerification || '-'} />
           </div>
         </div>
       )}

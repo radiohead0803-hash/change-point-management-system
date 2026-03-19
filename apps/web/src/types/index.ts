@@ -43,6 +43,7 @@ export interface ChangeEvent {
   project: string;
   productLine: string;
   partNumber: string;
+  productName?: string;
   factory: string;
   productionLine: string;
   companyId: string;
@@ -53,6 +54,12 @@ export interface ChangeEvent {
   description: string;
   department: string;
   status: EventStatus;
+  // 조치결과
+  actionDate?: string;
+  actionPlan?: string;
+  actionResult?: string;
+  qualityVerification?: string;
+  // 담당자
   managerId: string;
   manager: User;
   executiveId?: string;
@@ -60,7 +67,7 @@ export interface ChangeEvent {
   reviewerId?: string;
   reviewer?: User;
   primaryItemId?: string;
-  tags?: Array<{ itemId: string; tagType: 'PRIMARY' | 'TAG' }>;
+  tags?: Array<{ itemId: string; tagType: 'PRIMARY' | 'TAG'; customName?: string }>;
   inspectionResults: InspectionResult[];
   attachments: Attachment[];
   createdAt: string;
@@ -100,9 +107,10 @@ export interface Attachment {
   id: string;
   eventId: string;
   filename: string;
-  path: string;
+  path?: string;
   mimetype: string;
   size: number;
+  data?: string;
 }
 
 export interface PolicySetting {

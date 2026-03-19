@@ -19,7 +19,10 @@ import {
 } from 'lucide-react';
 
 const schema = z.object({
+  // 발생내역 (필수)
   occurredDate: z.string().min(1, '발생일을 입력해주세요'),
+  department: z.string().min(1, '발생부서를 선택해주세요'),
+  // 기본정보 (선택)
   customer: z.string().optional(),
   project: z.string().optional(),
   productLine: z.string().optional(),
@@ -31,11 +34,12 @@ const schema = z.object({
   primaryItemId: z.string().min(1, '주 분류 항목을 선택해주세요'),
   tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
-  department: z.string().optional(),
-  actionDate: z.string().optional(),
-  actionPlan: z.string().optional(),
-  actionResult: z.string().optional(),
-  qualityVerification: z.string().optional(),
+  // 조치결과 (필수)
+  actionDate: z.string().min(1, '조치시점을 입력해주세요'),
+  actionPlan: z.string().min(1, '조치방안을 입력해주세요'),
+  actionResult: z.string().min(1, '조치결과를 입력해주세요'),
+  qualityVerification: z.string().min(1, '품질검증을 입력해주세요'),
+  // 담당자
   managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
@@ -217,7 +221,7 @@ export default function NewChangeEventPage() {
               <Input {...register('productName')} placeholder="품명 입력" />
             </div>
             <Sel label="라인" opts={LINES} {...register('productionLine')} />
-            <Sel label="발생부서" opts={DEPTS} {...register('department')} />
+            <Sel label="발생부서" req opts={DEPTS} {...register('department')} err={errors.department?.message} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
               <select {...register('companyId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
@@ -262,24 +266,24 @@ export default function NewChangeEventPage() {
 
         {/* ⑤ 조치결과 */}
         <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5 shadow-sm sm:p-6 dark:border-amber-900/30 dark:bg-amber-900/10">
-          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과</h2>
-          <p className="mb-4 text-[11px] text-muted-foreground">조치 내용은 등록 후에도 수정 가능합니다</p>
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과 (필수)</h2>
+          <p className="mb-4 text-[11px] text-muted-foreground">운영가이드 필수 작성 항목입니다</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치시점</label>
-              <Input type="date" {...register('actionDate')} />
+              <label className="text-sm font-medium">조치시점 <span className="text-red-400">*</span></label>
+              <Input type="date" {...register('actionDate')} error={errors.actionDate?.message} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치방안</label>
-              <Input {...register('actionPlan')} placeholder="조치방안 입력" />
+              <label className="text-sm font-medium">조치방안 <span className="text-red-400">*</span></label>
+              <Input {...register('actionPlan')} placeholder="조치방안 입력" error={errors.actionPlan?.message} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">조치결과</label>
-              <Input {...register('actionResult')} placeholder="조치결과 입력" />
+              <label className="text-sm font-medium">조치결과 <span className="text-red-400">*</span></label>
+              <Input {...register('actionResult')} placeholder="조치결과 입력" error={errors.actionResult?.message} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">품질검증</label>
-              <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" />
+              <label className="text-sm font-medium">품질검증 <span className="text-red-400">*</span></label>
+              <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" error={errors.qualityVerification?.message} />
             </div>
           </div>
         </div>

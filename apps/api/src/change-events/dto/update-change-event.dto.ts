@@ -30,10 +30,15 @@ export class UpdateChangeEventDto {
   @IsOptional()
   productLine?: string;
 
-  @ApiProperty({ description: '부품번호', required: false })
+  @ApiProperty({ description: '품번', required: false })
   @IsString()
   @IsOptional()
   partNumber?: string;
+
+  @ApiProperty({ description: '품명', required: false })
+  @IsString()
+  @IsOptional()
+  productName?: string;
 
   @ApiProperty({ description: '공장', required: false })
   @IsString()
@@ -91,4 +96,24 @@ export class UpdateChangeEventDto {
   @IsEnum(EventStatus)
   @IsOptional()
   status?: EventStatus;
+
+  // 조치결과
+  @ApiProperty({ description: '조치시점', required: false })
+  @IsOptional()
+  actionDate?: string;
+
+  @ApiProperty({ description: '조치방안', required: false })
+  @IsString()
+  @IsOptional()
+  actionPlan?: string;
+
+  @ApiProperty({ description: '조치결과', required: false })
+  @IsString()
+  @IsOptional()
+  actionResult?: string;
+
+  @ApiProperty({ description: '품질검증', required: false })
+  @IsString()
+  @IsOptional()
+  qualityVerification?: string;
 }

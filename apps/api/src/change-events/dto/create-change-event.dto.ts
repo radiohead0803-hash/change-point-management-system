@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChangeEventTagDto } from './change-event-tag.dto';
 
@@ -16,33 +16,38 @@ export class CreateChangeEventDto {
 
   @ApiProperty({ description: '고객사' })
   @IsString()
-  @IsNotEmpty()
-  customer: string;
+  @IsOptional()
+  customer?: string;
 
   @ApiProperty({ description: '프로젝트' })
   @IsString()
-  @IsNotEmpty()
-  project: string;
+  @IsOptional()
+  project?: string;
 
   @ApiProperty({ description: '제품군' })
   @IsString()
-  @IsNotEmpty()
-  productLine: string;
+  @IsOptional()
+  productLine?: string;
 
-  @ApiProperty({ description: '부품번호' })
+  @ApiProperty({ description: '품번' })
   @IsString()
-  @IsNotEmpty()
-  partNumber: string;
+  @IsOptional()
+  partNumber?: string;
+
+  @ApiProperty({ description: '품명' })
+  @IsString()
+  @IsOptional()
+  productName?: string;
 
   @ApiProperty({ description: '공장' })
   @IsString()
-  @IsNotEmpty()
-  factory: string;
+  @IsOptional()
+  factory?: string;
 
   @ApiProperty({ description: '라인' })
   @IsString()
-  @IsNotEmpty()
-  productionLine: string;
+  @IsOptional()
+  productionLine?: string;
 
   @ApiProperty({ description: '협력사 ID' })
   @IsString()
@@ -68,16 +73,41 @@ export class CreateChangeEventDto {
 
   @ApiProperty({ description: '발생부서' })
   @IsString()
-  @IsNotEmpty()
-  department: string;
+  @IsOptional()
+  department?: string;
 
   @ApiProperty({ description: '실무담당자 ID' })
   @IsString()
   @IsNotEmpty()
   managerId: string;
 
+  @ApiProperty({ description: '검토자 ID' })
+  @IsString()
+  @IsOptional()
+  reviewerId?: string;
+
   @ApiProperty({ description: '전담중역 ID' })
   @IsString()
   @IsOptional()
   executiveId?: string;
+
+  // 조치결과
+  @ApiProperty({ description: '조치시점' })
+  @IsOptional()
+  actionDate?: string;
+
+  @ApiProperty({ description: '조치방안' })
+  @IsString()
+  @IsOptional()
+  actionPlan?: string;
+
+  @ApiProperty({ description: '조치결과' })
+  @IsString()
+  @IsOptional()
+  actionResult?: string;
+
+  @ApiProperty({ description: '품질검증' })
+  @IsString()
+  @IsOptional()
+  qualityVerification?: string;
 }
