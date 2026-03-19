@@ -75,6 +75,14 @@ export class ChangeEventsService {
         manager: true,
         executive: true,
         reviewer: true,
+        createdBy: true,
+        primaryItem: {
+          include: {
+            category: {
+              include: { class: true },
+            },
+          },
+        },
         inspectionResults: {
           include: {
             item: true,
@@ -82,7 +90,13 @@ export class ChangeEventsService {
         },
         tags: {
           include: {
-            item: true,
+            item: {
+              include: {
+                category: {
+                  include: { class: true },
+                },
+              },
+            },
           },
         },
       },

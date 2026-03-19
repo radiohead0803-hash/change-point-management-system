@@ -192,7 +192,7 @@ export default function ApprovalsPage() {
                   <th className="px-3 py-1.5 border-r border-gray-200"></th>
                   <th className="px-3 py-1.5"></th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">고객사</th>
+                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">분류</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
@@ -218,7 +218,7 @@ export default function ApprovalsPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <td className="max-w-[80px] truncate px-3 py-3 text-center font-medium">{event.customer || '-'}</td>
+                      <td className="max-w-[120px] truncate px-3 py-3 text-center font-medium" title={(event as any).primaryItem?.name || ''}>{(event as any).primaryItem?.category?.name || event.customer || '-'}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
                       <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700'}`}>
