@@ -190,7 +190,7 @@ export default function MyChangeEventsPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold leading-tight sm:text-[15px]">{event.customer} - {event.project}</h3>
+                        <h3 className="text-sm font-semibold leading-tight sm:text-[15px]">{event.customer || '-'} - {event.project || '-'}</h3>
                         <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(event.status)}`}>
                           {getStatusText(event.status)}
                         </span>

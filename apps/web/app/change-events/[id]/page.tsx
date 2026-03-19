@@ -237,13 +237,13 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{event.customer}</h1>
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{event.customer || '(미지정)'}</h1>
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(event.status)}`}>
                 {getStatusText(event.status)}
               </span>
             </div>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {event.project} · {event.company.name}
+              {event.project || '-'} · {event.company?.name || '-'}
             </p>
           </div>
         </div>
@@ -296,13 +296,13 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 sm:gap-3">
           <InfoCard icon={Calendar} label="접수월" value={event.receiptMonth} />
           <InfoCard icon={Calendar} label="발생일" value={formatDate(event.occurredDate)} />
-          <InfoCard icon={Building2} label="고객사" value={event.customer} />
-          <InfoCard icon={Briefcase} label="프로젝트" value={event.project} />
-          <InfoCard icon={Tag} label="제품군" value={event.productLine} />
-          <InfoCard icon={MapPin} label="공장" value={event.factory} />
-          <InfoCard icon={Tag} label="품번" value={event.partNumber} mono />
+          <InfoCard icon={Building2} label="고객사" value={event.customer || '-'} />
+          <InfoCard icon={Briefcase} label="프로젝트" value={event.project || '-'} />
+          <InfoCard icon={Tag} label="제품군" value={event.productLine || '-'} />
+          <InfoCard icon={MapPin} label="공장" value={event.factory || '-'} />
+          <InfoCard icon={Tag} label="품번" value={event.partNumber || '-'} mono />
           <InfoCard icon={Tag} label="품명" value={event.productName || '-'} />
-          <InfoCard icon={MapPin} label="라인" value={event.productionLine} />
+          <InfoCard icon={MapPin} label="라인" value={event.productionLine || '-'} />
           <InfoCard icon={Building2} label="협력사" value={event.company.name} />
           <InfoCard icon={Tag} label="분류" value={event.changeType === 'FOUR_M' ? '4M' : '4M외'} />
           <InfoCard icon={Tag} label="대분류" value={event.category} />
@@ -315,7 +315,7 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">담당자 정보</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           <InfoCard icon={UserIcon} label="등록자" value={event.createdBy?.name || '-'} />
-          <InfoCard icon={UserIcon} label="발생부서" value={event.department} />
+          <InfoCard icon={UserIcon} label="발생부서" value={event.department || '-'} />
           <InfoCard icon={Clock} label="등록일시" value={formatDateTime(event.createdAt)} />
           <InfoCard icon={Clock} label="수정일시" value={formatDateTime(event.updatedAt)} />
         </div>

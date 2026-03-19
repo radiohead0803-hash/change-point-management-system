@@ -52,7 +52,7 @@ export interface ChangeEvent {
   category: string;
   subCategory: string;
   description: string;
-  department: string;
+  department?: string;
   status: EventStatus;
   // 조치결과
   actionDate?: string;

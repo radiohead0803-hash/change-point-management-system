@@ -315,7 +315,7 @@ export default function ApprovalsPage() {
 
                     {/* 제목 */}
                     <h3 className="mt-2 text-sm font-semibold leading-tight sm:text-[15px]">
-                      {event.customer} - {event.project}
+                      {event.customer || '-'} - {event.project || '-'}
                     </h3>
 
                     {/* 메타 정보 */}
