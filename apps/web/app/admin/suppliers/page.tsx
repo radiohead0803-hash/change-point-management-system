@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { users } from '@/lib/api-client';
+import { companies as companiesApi } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import api from '@/lib/api';
 import {
   Plus, Pencil, Trash2, X, Check, Building2, Search,
   Factory, Truck, Users as UsersIcon,
@@ -33,26 +32,23 @@ export default function SuppliersPage() {
   // 회사 목록 + 사용자/이벤트 카운트
   const { data: companies = [], isLoading } = useQuery<Company[]>({
     queryKey: ['companies-admin'],
-    queryFn: async () => {
-      const res = await api.get('/users/companies');
-      return res.data;
-    },
+    queryFn: () => companiesApi.list().then((res) => res.data),
   });
 
   const createM = useMutation({
-    mutationFn: (data: any) => api.post('/users/companies', data),
+    mutationFn: (data: any) => companiesApi.create(data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['companies-admin'] }); toast({ title: '협력사가 추가되었습니다.' }); setAdding(false); resetForm(); },
     onError: () => toast({ variant: 'destructive', title: '추가 실패' }),
   });
 
   const updateM = useMutation({
-    mutationFn: ({ id, data }: any) => api.patch(`/users/companies/${id}`, data),
+    mutationFn: ({ id, data }: any) => companiesApi.update(id, data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['companies-admin'] }); toast({ title: '수정되었습니다.' }); setEditing(null); resetForm(); },
     onError: () => toast({ variant: 'destructive', title: '수정 실패' }),
   });
 
   const deleteM = useMutation({
-    mutationFn: (id: string) => api.delete(`/users/companies/${id}`),
+    mutationFn: (id: string) => companiesApi.remove(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['companies-admin'] }); toast({ title: '삭제되었습니다.' }); },
     onError: () => toast({ variant: 'destructive', title: '삭제 실패' }),
   });

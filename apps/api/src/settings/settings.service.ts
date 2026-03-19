@@ -50,7 +50,7 @@ export class SettingsService {
       where: { id },
       data: {
         ...data,
-        value: data.value ? JSON.stringify(data.value) : undefined,
+        value: data.value !== undefined ? JSON.stringify(data.value) : undefined,
       },
     });
   }

@@ -15,7 +15,6 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { HealthController } from './health.controller';
 import { BootstrapService } from './bootstrap.service';
 
 @Module({
@@ -39,7 +38,7 @@ import { BootstrapService } from './bootstrap.service';
     UsersModule,
     NotificationsModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController],
   providers: [
     AppService,
     BootstrapService,

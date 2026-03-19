@@ -49,6 +49,7 @@ export default function ProfilePage() {
     mutationFn: (data: any) => users.updateMyProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+      refreshUser(); // 사이드바 등 전역 사용자 정보 동기화
       toast({ title: '프로필이 수정되었습니다.' });
     },
     onError: () => {

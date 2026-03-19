@@ -133,6 +133,13 @@ export const settings = {
   remove: (id: string) => api.delete(`/settings/${id}`),
 };
 
+export const companies = {
+  list: () => api.get<any[]>('/users/companies'),
+  create: (data: { name: string; code: string; type: string }) => api.post('/users/companies', data),
+  update: (id: string, data: { name?: string; code?: string; type?: string }) => api.patch(`/users/companies/${id}`, data),
+  remove: (id: string) => api.delete(`/users/companies/${id}`),
+};
+
 export const notifications = {
   list: () => api.get<any[]>('/notifications'),
   unreadCount: () => api.get<number>('/notifications/unread-count'),

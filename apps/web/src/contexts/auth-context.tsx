@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/types';
-import { auth } from '@/lib/api-client';
+import { auth, users as usersApi } from '@/lib/api-client';
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (email: string, password: string, name: string, companyId: string) => Promise<void>;
-  refreshUser: () => void;
+  refreshUser: () => Promise<void> | void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,11 +28,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const user = localStorage.getItem('user');
-    if (user) {
-      setUser(JSON.parse(user));
+    // localStorage에서 임시 로드 후 API에서 최신 데이터 갱신
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      setUser(JSON.parse(stored));
     }
     setLoading(false);
+
+    // 백그라운드에서 최신 프로필 동기화
+    usersApi.getMyProfile().then(({ data }) => {
+      localStorage.setItem('user', JSON.stringify(data));
+      setUser(data as User);
+    }).catch(() => {});
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -71,10 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshUser = () => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      setUser(JSON.parse(stored));
+  const refreshUser = async () => {
+    try {
+      const { data } = await usersApi.getMyProfile();
+      const userData = data as User;
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    } catch {
+      const stored = localStorage.getItem('user');
+      if (stored) setUser(JSON.parse(stored));
     }
   };
 
