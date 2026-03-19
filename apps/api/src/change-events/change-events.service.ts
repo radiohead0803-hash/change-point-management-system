@@ -173,6 +173,31 @@ export class ChangeEventsService {
         manager: true,
         executive: true,
         reviewer: true,
+        createdBy: true,
+        primaryItem: {
+          include: {
+            category: {
+              include: {
+                class: true,
+              },
+            },
+          },
+        },
+        tags: {
+          include: {
+            item: {
+              include: {
+                category: {
+                  include: { class: true },
+                },
+              },
+            },
+          },
+        },
+        attachments: {
+          where: { deletedAt: null },
+          select: { id: true, filename: true, mimetype: true, size: true, createdAt: true },
+        },
         inspectionResults: {
           include: {
             item: true,

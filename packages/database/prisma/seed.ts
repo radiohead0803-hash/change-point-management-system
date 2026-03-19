@@ -530,10 +530,17 @@ async function main() {
     return arr[arr.length - 1];
   }
 
+  // 기존 이벤트 삭제 후 새로 생성
   const existingEvents = await prisma.changeEvent.count();
-  if (existingEvents >= 50) {
-    console.log(`Already ${existingEvents} events exist, skipping test data creation`);
-  } else {
+  if (existingEvents > 0) {
+    await prisma.changeEventTag.deleteMany({});
+    await prisma.inspectionResult.deleteMany({});
+    await prisma.attachment.deleteMany({});
+    await prisma.notification.deleteMany({});
+    await prisma.changeEvent.deleteMany({});
+    console.log(`기존 ${existingEvents}건 삭제 완료, 새 데이터 생성 시작`);
+  }
+  {
     for (let i = 0; i < 50; i++) {
       const month = Math.floor(Math.random() * 6);
       const occurredDate = new Date(2026, 2 - month, 1 + Math.floor(Math.random() * 28));
@@ -546,6 +553,10 @@ async function main() {
       const hasAction = !['DRAFT'].includes(status);
       const actionDate = hasAction ? new Date(occurredDate.getTime() + Math.random() * 7 * 86400000) : null;
       const qualityVerifications = ['품질검증 완료', '초도품 검사 합격', 'SPC 관리도 적합', 'MSA 분석 완료', '공정감사 적합', '출하검사 합격', '신뢰성 시험 완료', 'Cpk 1.67 이상 확인'];
+
+      // 추가 태그용 아이템 (주 분류와 다른 아이템)
+      const otherItems = allItems.filter((it) => it.id !== item.id);
+      const extraTag = otherItems.length > 0 ? pick(otherItems) : null;
 
       await prisma.changeEvent.create({
         data: {
@@ -560,6 +571,12 @@ async function main() {
           productionLine: pick(lines),
           companyId: company.id,
           primaryItemId: item.id,
+          tags: {
+            create: [
+              { itemId: item.id, tagType: 'PRIMARY' },
+              ...(extraTag ? [{ itemId: extraTag.id, tagType: 'TAG' as const }] : []),
+            ],
+          },
           description: pick(descriptions),
           department: pick(departments),
           status,

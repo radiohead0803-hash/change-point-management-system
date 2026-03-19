@@ -303,11 +303,52 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
           <InfoCard icon={Tag} label="품번" value={event.partNumber || '-'} mono />
           <InfoCard icon={Tag} label="품명" value={event.productName || '-'} />
           <InfoCard icon={MapPin} label="라인" value={event.productionLine || '-'} />
-          <InfoCard icon={Building2} label="협력사" value={event.company.name} />
-          <InfoCard icon={Tag} label="분류" value={event.changeType === 'FOUR_M' ? '4M' : '4M외'} />
-          <InfoCard icon={Tag} label="대분류" value={event.category} />
-          <InfoCard icon={Tag} label="세부항목" value={event.subCategory} />
+          <InfoCard icon={Building2} label="협력사" value={event.company?.name || '-'} />
         </div>
+      </div>
+
+      {/* 변동점 분류 */}
+      <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-blue-900/30 dark:bg-blue-900/10">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">변동점 분류</h3>
+        {(event as any).primaryItem ? (
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-md bg-blue-100 px-2 py-1 font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                {(event as any).primaryItem.category?.class?.name || '-'}
+              </span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+              <span className="rounded-md bg-blue-50 px-2 py-1 font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                {(event as any).primaryItem.category?.name || '-'}
+              </span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+              <span className="rounded-md bg-white px-2 py-1 font-medium ring-1 ring-blue-200 dark:bg-gray-800 dark:ring-blue-800">
+                {(event as any).primaryItem.name}
+              </span>
+            </div>
+            {event.tags && event.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {event.tags.map((tag: any) => (
+                  <span key={tag.id || tag.itemId} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                    tag.tagType === 'PRIMARY'
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                  }`}>
+                    <Tag className="h-2.5 w-2.5" />
+                    {tag.tagType === 'PRIMARY' && <span className="text-[9px] font-bold text-blue-600">주</span>}
+                    {tag.item?.name || tag.itemId}
+                    {tag.item?.category && <span className="text-[9px] text-muted-foreground/60 ml-0.5">({tag.item.category.name})</span>}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+            <InfoCard icon={Tag} label="분류" value={event.changeType === 'FOUR_M' ? '4M' : '4M외'} />
+            <InfoCard icon={Tag} label="대분류" value={event.category || '-'} />
+            <InfoCard icon={Tag} label="세부항목" value={event.subCategory || '-'} />
+          </div>
+        )}
       </div>
 
       {/* 담당자 정보 */}
