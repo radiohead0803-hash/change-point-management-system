@@ -115,6 +115,47 @@ export class ChangeEventsService {
     });
   }
 
+  // ── Master Data CRUD ──
+
+  async createClass(data: { code: string; name: string; description?: string }) {
+    return this.prisma.changeClass.create({ data });
+  }
+
+  async updateClass(id: string, data: { name?: string; description?: string }) {
+    return this.prisma.changeClass.update({ where: { id }, data });
+  }
+
+  async deleteClass(id: string) {
+    return this.prisma.changeClass.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async createCategory(data: { classId: string; code: string; name: string; parentId?: string; depth?: number; description?: string }) {
+    return this.prisma.changeCategory.create({
+      data: { ...data, depth: data.depth || (data.parentId ? 2 : 1) },
+      include: { class: true, parent: true },
+    });
+  }
+
+  async updateCategory(id: string, data: { name?: string; description?: string }) {
+    return this.prisma.changeCategory.update({ where: { id }, data, include: { class: true, parent: true } });
+  }
+
+  async deleteCategory(id: string) {
+    return this.prisma.changeCategory.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async createItem(data: { categoryId: string; code: string; name: string; description?: string }) {
+    return this.prisma.changeItem.create({ data, include: { category: true } });
+  }
+
+  async updateItem(id: string, data: { name?: string; description?: string }) {
+    return this.prisma.changeItem.update({ where: { id }, data, include: { category: true } });
+  }
+
+  async deleteItem(id: string) {
+    return this.prisma.changeItem.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
   async findOne(id: string) {
     const event = await this.prisma.changeEvent.findUnique({
       where: { id },

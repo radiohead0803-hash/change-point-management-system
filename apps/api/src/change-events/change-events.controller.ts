@@ -113,4 +113,60 @@ export class ChangeEventsController {
   findItems(@Query('categoryId') categoryId?: string) {
     return this.changeEventsService.findItems(categoryId);
   }
+
+  // ── Master Data CRUD (ADMIN only) ──
+
+  @Post('codes/classes')
+  @Roles(Role.ADMIN)
+  createClass(@Body() body: { code: string; name: string; description?: string }) {
+    return this.changeEventsService.createClass(body);
+  }
+
+  @Patch('codes/classes/:id')
+  @Roles(Role.ADMIN)
+  updateClass(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+    return this.changeEventsService.updateClass(id, body);
+  }
+
+  @Delete('codes/classes/:id')
+  @Roles(Role.ADMIN)
+  deleteClass(@Param('id') id: string) {
+    return this.changeEventsService.deleteClass(id);
+  }
+
+  @Post('codes/categories')
+  @Roles(Role.ADMIN)
+  createCategory(@Body() body: { classId: string; code: string; name: string; parentId?: string; depth?: number; description?: string }) {
+    return this.changeEventsService.createCategory(body);
+  }
+
+  @Patch('codes/categories/:id')
+  @Roles(Role.ADMIN)
+  updateCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+    return this.changeEventsService.updateCategory(id, body);
+  }
+
+  @Delete('codes/categories/:id')
+  @Roles(Role.ADMIN)
+  deleteCategory(@Param('id') id: string) {
+    return this.changeEventsService.deleteCategory(id);
+  }
+
+  @Post('codes/items')
+  @Roles(Role.ADMIN)
+  createItem(@Body() body: { categoryId: string; code: string; name: string; description?: string }) {
+    return this.changeEventsService.createItem(body);
+  }
+
+  @Patch('codes/items/:id')
+  @Roles(Role.ADMIN)
+  updateItem(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+    return this.changeEventsService.updateItem(id, body);
+  }
+
+  @Delete('codes/items/:id')
+  @Roles(Role.ADMIN)
+  deleteItem(@Param('id') id: string) {
+    return this.changeEventsService.deleteItem(id);
+  }
 }
