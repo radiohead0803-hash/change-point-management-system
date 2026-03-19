@@ -15,8 +15,10 @@ import { useRouter } from 'next/navigation';
 import { TagSelector } from '@/components/change-events/tag-selector';
 import {
   ArrowLeft, Upload, X, Paperclip, Save, Send, UserCheck,
-  ChevronRight, CheckCircle2, FileText, Clipboard,
+  ChevronRight, CheckCircle2, FileText, Clipboard, HelpCircle,
+  ChevronDown, Info, Search,
 } from 'lucide-react';
+import { ClassificationGuidePanel } from '@/components/change-events/classification-guide';
 
 const schema = z.object({
   // 발생내역
@@ -65,6 +67,7 @@ export default function NewChangeEventPage() {
   const [loading, setLoading] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [attachments, setAttachments] = useState<Att[]>([]);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // 공통코드에서 드롭다운 옵션 로드
   const [CUSTOMERS, setCustomers] = useState<string[]>([]);
@@ -210,9 +213,20 @@ export default function NewChangeEventPage() {
       <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
         {/* ① 변동점 발생항목 */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
-          </h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
+            </h2>
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-all hover:bg-blue-100 hover:shadow-sm dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">분류항목 가이드</span>
+              <span className="sm:hidden">가이드</span>
+            </button>
+          </div>
           <div className="mb-4 max-w-xs">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">발생일 <span className="text-red-400">*</span></label>
@@ -353,6 +367,9 @@ export default function NewChangeEventPage() {
           </Button>
         </div>
       </form>
+
+      {/* 분류항목 가이드 슬라이드 패널 */}
+      <ClassificationGuidePanel open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }

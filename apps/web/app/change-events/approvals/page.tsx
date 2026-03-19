@@ -192,30 +192,30 @@ export default function ApprovalsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-          <div className="overflow-auto max-h-[600px]">
-            <table className="w-full min-w-[1000px] text-xs border-collapse">
+          <div className="overflow-auto max-h-[calc(100vh-240px)]">
+            <table className="w-full min-w-[1100px] text-xs border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10 border-r border-gray-200">NO</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-16">단계</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={6}>발생내역</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-28">처리</th>
+                  <th className="whitespace-nowrap px-2 py-2 text-center text-[10px] font-bold uppercase text-muted-foreground w-9 border-r border-gray-200">NO</th>
+                  <th className="whitespace-nowrap px-2 py-2 text-center text-[10px] font-bold uppercase text-muted-foreground w-12">단계</th>
+                  <th className="whitespace-nowrap px-2 py-2 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={6}>발생내역</th>
+                  <th className="whitespace-nowrap px-2 py-2 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-2 text-center text-[10px] font-bold uppercase text-muted-foreground w-24">처리</th>
                 </tr>
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
-                  <th className="px-3 py-1.5 border-r border-gray-200"></th>
-                  <th className="px-3 py-1.5"></th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">대분류</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">중분류</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">세부항목</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
-                  <th className="px-3 py-1.5"></th>
+                  <th className="px-2 py-1 border-r border-gray-200"></th>
+                  <th className="px-2 py-1"></th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">대분류</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">중분류</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">세부항목</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
+                  <th className="px-2 py-1"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
@@ -227,32 +227,32 @@ export default function ApprovalsPage() {
                     <tr key={event.id}
                       className={`cursor-pointer transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900/40' : 'bg-gray-50/30 dark:bg-gray-800/20'}`}
                       onClick={() => router.push(`/change-events/${event.id}`)}>
-                      <td className="whitespace-nowrap px-3 py-3 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100">{idx + 1}</td>
-                      <td className="whitespace-nowrap px-2 py-3 text-center">
+                      <td className="whitespace-nowrap px-2 py-1.5 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100">{idx + 1}</td>
+                      <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
                         <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isSubmitted ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                           {isSubmitted ? '1차' : '최종'}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <TipCell tip={e.primaryItem?.category?.class?.name || ''} className="max-w-[70px] truncate px-3 py-3 text-center text-[10px]">{e.primaryItem?.category?.class?.name || '-'}</TipCell>
-                      <TipCell tip={e.primaryItem?.category?.name || ''} className="max-w-[70px] truncate px-3 py-3 text-center text-[10px] font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
-                      <TipCell tip={e.primaryItem?.name || ''} className="max-w-[80px] truncate px-3 py-3 text-center text-[10px]">{e.primaryItem?.name || '-'}</TipCell>
-                      <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
-                      <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700'}`}>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
+                      <TipCell tip={e.primaryItem?.category?.class?.name || ''} className="max-w-[70px] truncate px-2 py-1.5 text-center text-[10px]">{e.primaryItem?.category?.class?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.category?.name || ''} className="max-w-[70px] truncate px-2 py-1.5 text-center text-[10px] font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.name || ''} className="max-w-[80px] truncate px-2 py-1.5 text-center text-[10px]">{e.primaryItem?.name || '-'}</TipCell>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-center">{event.department || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
+                      <td className={`whitespace-nowrap px-2 py-1.5 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700'}`}>
                         {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
                       </td>
-                      <TipCell tip={e.actionPlan || ''} className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</TipCell>
-                      <TipCell tip={e.actionResult || ''} className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</TipCell>
-                      <TipCell tip={e.qualityVerification || ''} className={`max-w-[80px] truncate px-3 py-3 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
-                      <td className="whitespace-nowrap px-2 py-2 text-center">
+                      <TipCell tip={e.actionPlan || ''} className={`max-w-[90px] truncate px-2 py-1.5 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</TipCell>
+                      <TipCell tip={e.actionResult || ''} className={`max-w-[90px] truncate px-2 py-1.5 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</TipCell>
+                      <TipCell tip={e.qualityVerification || ''} className={`max-w-[70px] truncate px-2 py-1.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
+                      <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
                         <div className="flex gap-1 justify-center">
                           <button onClick={(ev) => handleReturn(event.id, ev)} disabled={processing === event.id}
-                            className="rounded-md border border-gray-200 px-2 py-1 text-[9px] font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
+                            className="rounded-md border border-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
                             보완
                           </button>
                           <button onClick={(ev) => handleApproveClick(event.id, ev)} disabled={processing === event.id}
-                            className={`rounded-md px-2 py-1 text-[9px] font-bold text-white disabled:opacity-50 ${isSubmitted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
+                            className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold text-white disabled:opacity-50 ${isSubmitted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
                             {processing === event.id ? '...' : step?.btnLabel || '승인'}
                           </button>
                         </div>

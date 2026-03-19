@@ -16,8 +16,9 @@ import { TagSelector } from '@/components/change-events/tag-selector';
 import { ChangeEvent } from '@/types';
 import {
   ArrowLeft, Upload, X, Paperclip, Save, Send, UserCheck,
-  ChevronRight, CheckCircle2, FileText, Clipboard, Trash2,
+  ChevronRight, CheckCircle2, FileText, Clipboard, Trash2, HelpCircle,
 } from 'lucide-react';
+import { ClassificationGuidePanel } from '@/components/change-events/classification-guide';
 
 const schema = z.object({
   occurredDate: z.string().min(1, '발생일을 입력해주세요'),
@@ -62,6 +63,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
   const [draftSaving, setDraftSaving] = useState(false);
   const [attachments, setAttachments] = useState<Att[]>([]);
   const [removedAttIds, setRemovedAttIds] = useState<string[]>([]);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // Load existing event
   const { data: event, isLoading: eventLoading } = useQuery<ChangeEvent>({
@@ -291,9 +293,15 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
       <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
         {/* ① 변동점 발생항목 */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
-          </h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4" /> 변동점 발생항목
+            </h2>
+            <button type="button" onClick={() => setGuideOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-all hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400">
+              <HelpCircle className="h-3.5 w-3.5" /><span className="hidden sm:inline">분류항목 가이드</span><span className="sm:hidden">가이드</span>
+            </button>
+          </div>
           <div className="mb-4 max-w-xs">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">발생일 <span className="text-red-400">*</span></label>
@@ -437,6 +445,8 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
           )}
         </div>
       </form>
+
+      <ClassificationGuidePanel open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
