@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
 import { getCodeOptions } from '@/lib/common-codes';
@@ -78,33 +78,35 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     enabled: !!params.id,
   });
 
-  // Common code options
-  const [CUSTOMERS, setCustomers] = useState<string[]>([]);
-  const [PROJECTS, setProjects] = useState<string[]>([]);
-  const [PRODUCT_LINES, setProductLines] = useState<string[]>([]);
-  const [FACTORIES, setFactories] = useState<string[]>([]);
-  const [LINES, setLines] = useState<string[]>([]);
-  const [DEPTS, setDepts] = useState<string[]>([]);
+  // Common code options - useMemo로 이벤트 데이터 포함하여 즉시 계산
+  const addIfMissing = (opts: string[], val?: string | null) => {
+    if (val && !opts.includes(val)) return [...opts.filter(x => x !== '기타'), val, '기타'];
+    return opts;
+  };
 
-  useEffect(() => {
-    setCustomers([...getCodeOptions('CUSTOMER'), '기타']);
+  const baseCustomers = useMemo(() => [...getCodeOptions('CUSTOMER'), '기타'], []);
+  const baseProjects = useMemo(() => {
     try {
-      const stored = localStorage.getItem('cpms_vehicles');
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('cpms_vehicles') : null;
       if (stored) {
         const vehicles = JSON.parse(stored) as Array<{ name: string; status: string }>;
-        const names = vehicles.filter((v) => v.status !== '단종').map((v) => v.name);
-        setProjects([...names, '기타']);
-      } else {
-        setProjects([...getCodeOptions('PROJECT'), '기타']);
+        return [...vehicles.filter((v) => v.status !== '단종').map((v) => v.name), '기타'];
       }
-    } catch {
-      setProjects([...getCodeOptions('PROJECT'), '기타']);
-    }
-    setProductLines([...getCodeOptions('PRODUCT_LINE'), '기타']);
-    setFactories([...getCodeOptions('FACTORY'), '기타']);
-    setLines([...getCodeOptions('LINE'), '기타']);
-    setDepts([...getCodeOptions('DEPARTMENT'), '기타']);
+    } catch { /* ignore */ }
+    return [...getCodeOptions('PROJECT'), '기타'];
   }, []);
+  const baseProductLines = useMemo(() => [...getCodeOptions('PRODUCT_LINE'), '기타'], []);
+  const baseFactories = useMemo(() => [...getCodeOptions('FACTORY'), '기타'], []);
+  const baseLines = useMemo(() => [...getCodeOptions('LINE'), '기타'], []);
+  const baseDepts = useMemo(() => [...getCodeOptions('DEPARTMENT'), '기타'], []);
+
+  // 이벤트 데이터의 저장된 값을 옵션에 포함
+  const CUSTOMERS = useMemo(() => addIfMissing(baseCustomers, event?.customer), [baseCustomers, event?.customer]);
+  const PROJECTS = useMemo(() => addIfMissing(baseProjects, event?.project), [baseProjects, event?.project]);
+  const PRODUCT_LINES = useMemo(() => addIfMissing(baseProductLines, event?.productLine), [baseProductLines, event?.productLine]);
+  const FACTORIES = useMemo(() => addIfMissing(baseFactories, event?.factory), [baseFactories, event?.factory]);
+  const LINES = useMemo(() => addIfMissing(baseLines, event?.productionLine), [baseLines, event?.productionLine]);
+  const DEPTS = useMemo(() => addIfMissing(baseDepts, event?.department), [baseDepts, event?.department]);
 
   const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
   const { data: companiesList = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });
@@ -123,68 +125,50 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     },
   });
 
-  // 폼 초기화 플래그 (1회만 실행)
-  const formInitialized = useRef(false);
-  const attsInitialized = useRef(false);
+  // 폼 초기화 - event 로드 완료 후 1회 실행
+  const formInitRef = useRef(false);
+  const eventIdRef = useRef('');
 
-  // Populate form when event loads (1회만 실행)
   useEffect(() => {
-    if (!event || formInitialized.current) return;
-    formInitialized.current = true;
+    if (!event || (formInitRef.current && eventIdRef.current === event.id)) return;
+    formInitRef.current = true;
+    eventIdRef.current = event.id;
 
-    // 드롭다운에 기존 저장 값이 없으면 옵션에 추가
-    const addOpt = (val: string | undefined | null, opts: string[], setter: (fn: (p: string[]) => string[]) => void) => {
-      if (val && !opts.includes(val)) setter((p) => [...p.filter(x => x !== '기타'), val, '기타']);
-    };
-    addOpt(event.customer, CUSTOMERS, setCustomers);
-    addOpt(event.project, PROJECTS, setProjects);
-    addOpt(event.productLine, PRODUCT_LINES, setProductLines);
-    addOpt(event.factory, FACTORIES, setFactories);
-    addOpt(event.productionLine, LINES, setLines);
-    addOpt(event.department, DEPTS, setDepts);
-
-    // tags에서 PRIMARY 태그의 itemId를 primaryItemId로 설정
     const tags = event.tags as any[] || [];
-    const primaryTag = tags.find((t) => t.tagType === 'PRIMARY');
+    const primaryTag = tags.find((t: any) => t.tagType === 'PRIMARY');
     const primaryItemId = event.primaryItemId || primaryTag?.itemId || primaryTag?.item?.id || '';
 
-    // 약간의 지연으로 옵션 상태 반영 후 reset
-    setTimeout(() => {
-      reset({
-        occurredDate: event.occurredDate ? new Date(event.occurredDate).toISOString().slice(0, 10) : '',
-        department: event.department || '',
-        customer: event.customer || '',
-        project: event.project || '',
-        productLine: event.productLine || '',
-        partNumber: event.partNumber || '',
-        productName: event.productName || '',
-        factory: event.factory || '',
-        productionLine: event.productionLine || '',
-        companyId: event.companyId || '',
-        primaryItemId,
-        tags: (event.tags as any[])?.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })) || [],
-        description: event.description || '',
-        actionDate: event.actionDate ? new Date(event.actionDate).toISOString().slice(0, 10) : '',
-        actionPlan: event.actionPlan || '',
-        actionResult: event.actionResult || '',
-        qualityVerification: event.qualityVerification || '',
-        managerId: event.managerId || user?.id || '',
-        reviewerId: event.reviewerId || '',
-        executiveId: event.executiveId || '',
-      });
-    }, 50);
-  }, [event]);
+    reset({
+      occurredDate: event.occurredDate ? new Date(event.occurredDate).toISOString().slice(0, 10) : '',
+      department: event.department || '',
+      customer: event.customer || '',
+      project: event.project || '',
+      productLine: event.productLine || '',
+      partNumber: event.partNumber || '',
+      productName: event.productName || '',
+      factory: event.factory || '',
+      productionLine: event.productionLine || '',
+      companyId: event.companyId || '',
+      primaryItemId,
+      tags: tags.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })),
+      description: event.description || '',
+      actionDate: event.actionDate ? new Date(event.actionDate).toISOString().slice(0, 10) : '',
+      actionPlan: event.actionPlan || '',
+      actionResult: event.actionResult || '',
+      qualityVerification: event.qualityVerification || '',
+      managerId: event.managerId || user?.id || '',
+      reviewerId: event.reviewerId || '',
+      executiveId: event.executiveId || '',
+    });
+  }, [event, reset, user]);
 
-  // Populate existing attachments (1회만 실행)
+  // Populate existing attachments
+  const attsInitRef = useRef(false);
   useEffect(() => {
-    if (existingAtts.length > 0 && !attsInitialized.current) {
-      attsInitialized.current = true;
+    if (existingAtts.length > 0 && !attsInitRef.current) {
+      attsInitRef.current = true;
       setAttachments(existingAtts.map((a: any) => ({
-        id: a.id,
-        filename: a.filename,
-        mimetype: a.mimetype,
-        size: a.size,
-        isExisting: true,
+        id: a.id, filename: a.filename, mimetype: a.mimetype, size: a.size, isExisting: true,
       })));
     }
   }, [existingAtts]);
