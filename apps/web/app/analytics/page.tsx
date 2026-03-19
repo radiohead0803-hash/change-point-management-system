@@ -54,9 +54,9 @@ export default function AnalyticsPage() {
   }, [filteredByTime, customerFilter, companyFilter, classFilter]);
 
   // 옵션 목록
-  const customers = useMemo(() => [...new Set(events.map((e) => e.customer || '').filter(Boolean))].sort(), [events]);
-  const companies = useMemo(() => [...new Set(events.map((e) => (e as any).company?.name || '').filter(Boolean))].sort(), [events]);
-  const classes = useMemo(() => [...new Set(events.map((e) => (e as any).primaryItem?.category?.class?.name || '').filter(Boolean))].sort(), [events]);
+  const customers = useMemo(() => Array.from(new Set(events.map((e) => e.customer || '').filter(Boolean))).sort(), [events]);
+  const companies = useMemo(() => Array.from(new Set(events.map((e) => (e as any).company?.name || '').filter(Boolean))).sort(), [events]);
+  const classes = useMemo(() => Array.from(new Set(events.map((e) => (e as any).primaryItem?.category?.class?.name || '').filter(Boolean))).sort(), [events]);
 
   // ── 통계 계산 ──
   const stats = useMemo(() => {
