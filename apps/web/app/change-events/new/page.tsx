@@ -146,9 +146,14 @@ export default function NewChangeEventPage() {
   /* ── 저장 ── */
   const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
     if (!user?.id) return;
+
+    // tags에서 primaryItemId 자동 추출
+    const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
+    const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
+
     if (status === 'SUBMITTED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
-      if (!data.primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
+      if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
       if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
       if (!data.department) { toast({ variant: 'destructive', title: '발생부서를 선택해주세요.' }); return; }
       if (!data.actionDate) { toast({ variant: 'destructive', title: '조치시점을 입력해주세요.' }); return; }
@@ -160,7 +165,7 @@ export default function NewChangeEventPage() {
       status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
       const { tags, ...rest } = data;
       const result = await changeEvents.create({
-        ...rest, receiptMonth, status,
+        ...rest, primaryItemId: primaryItemId || undefined, receiptMonth, status,
         tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
       if (attachments.length && result.data?.id) {

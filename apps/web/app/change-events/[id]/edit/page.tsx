@@ -123,9 +123,22 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     },
   });
 
-  // Populate form when event loads
+  // Populate form when event loads + ensure dropdown options include saved values
   useEffect(() => {
     if (event) {
+      // 드롭다운에 기존 저장 값이 없으면 옵션에 추가
+      if (event.customer && !CUSTOMERS.includes(event.customer)) setCustomers((p) => [...p.filter(x => x !== '기타'), event.customer!, '기타']);
+      if (event.project && !PROJECTS.includes(event.project)) setProjects((p) => [...p.filter(x => x !== '기타'), event.project!, '기타']);
+      if (event.productLine && !PRODUCT_LINES.includes(event.productLine)) setProductLines((p) => [...p.filter(x => x !== '기타'), event.productLine!, '기타']);
+      if (event.factory && !FACTORIES.includes(event.factory)) setFactories((p) => [...p.filter(x => x !== '기타'), event.factory!, '기타']);
+      if (event.productionLine && !LINES.includes(event.productionLine)) setLines((p) => [...p.filter(x => x !== '기타'), event.productionLine!, '기타']);
+      if (event.department && !DEPTS.includes(event.department)) setDepts((p) => [...p.filter(x => x !== '기타'), event.department!, '기타']);
+
+      // tags에서 PRIMARY 태그의 itemId를 primaryItemId로 설정
+      const tags = event.tags as any[] || [];
+      const primaryTag = tags.find((t) => t.tagType === 'PRIMARY');
+      const primaryItemId = event.primaryItemId || primaryTag?.itemId || primaryTag?.item?.id || '';
+
       reset({
         occurredDate: event.occurredDate ? new Date(event.occurredDate).toISOString().slice(0, 10) : '',
         department: event.department || '',
@@ -137,7 +150,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         factory: event.factory || '',
         productionLine: event.productionLine || '',
         companyId: event.companyId || '',
-        primaryItemId: event.primaryItemId || '',
+        primaryItemId,
         tags: event.tags?.map((t: any) => ({ itemId: t.itemId || t.item?.id, tagType: t.tagType })) || [],
         description: event.description || '',
         actionDate: event.actionDate ? new Date(event.actionDate).toISOString().slice(0, 10) : '',
@@ -149,7 +162,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         executiveId: event.executiveId || '',
       });
     }
-  }, [event, reset, user]);
+  }, [event, reset, user, CUSTOMERS, PROJECTS, PRODUCT_LINES, FACTORIES, LINES, DEPTS]);
 
   // Populate existing attachments
   useEffect(() => {
@@ -202,9 +215,16 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
   /* ── 저장 ── */
   const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
     if (!user?.id) return;
-    if (status === 'SUBMITTED' && !data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
-    if (status === 'SUBMITTED' && !data.primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
-    if (status === 'SUBMITTED' && !data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
+
+    // tags에서 primaryItemId 자동 추출
+    const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
+    const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
+
+    if (status === 'SUBMITTED') {
+      if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
+      if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
+      if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
+    }
 
     try {
       status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
@@ -213,6 +233,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
       // Update event
       await changeEvents.update(params.id, {
         ...rest as any,
+        primaryItemId: primaryItemId || undefined,
         receiptMonth: receiptMonth || rest.occurredDate?.slice(0, 7),
         status,
         tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
