@@ -3,14 +3,15 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents } from '@/lib/api-client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui/use-toast';
 import { ChangeEvent } from '@/types';
 import { formatDate, getStatusBadgeClass, getStatusText } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Filter, FileSpreadsheet, ArrowRight,
-  FileText, ChevronDown, Paperclip, Image as ImageIcon,
+  FileText, ChevronDown, Paperclip, Image as ImageIcon, Trash2, FileEdit,
 } from 'lucide-react';
 
 /* ── Tooltip 셀 ── */
@@ -31,12 +32,26 @@ function TipCell({ children, tip, className = '' }: { children: React.ReactNode;
 export default function MyChangeEventsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [searchText, setSearchText] = useState('');
   const [exporting, setExporting] = useState(false);
+
+  const handleDelete = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await changeEvents.delete(eventId);
+      queryClient.invalidateQueries({ queryKey: ['change-events'] });
+      toast({ title: '삭제되었습니다.' });
+    } catch {
+      toast({ variant: 'destructive', title: '삭제 실패' });
+    }
+  };
 
   const { data: events = [], isLoading } = useQuery<ChangeEvent[]>({
     queryKey: ['change-events'],
@@ -207,7 +222,8 @@ export default function MyChangeEventsPage() {
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-gray-500 border-r border-gray-200" colSpan={5}>기본정보</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-14">상태</th>
-                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10">첨부</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-8">첨부</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-16">관리</th>
                 </tr>
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
                   <th className="px-2 py-1.5 border-r border-gray-200"></th>
@@ -226,6 +242,7 @@ export default function MyChangeEventsPage() {
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
+                  <th className="px-2 py-1.5"></th>
                   <th className="px-2 py-1.5"></th>
                   <th className="px-2 py-1.5"></th>
                 </tr>
@@ -267,6 +284,22 @@ export default function MyChangeEventsPage() {
                         ) : (
                           <span className="text-[9px] text-muted-foreground/30">-</span>
                         )}
+                      </td>
+                      <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
+                        <div className="flex gap-1 justify-center">
+                          {(event.status === 'DRAFT' || event.status === 'REVIEW_RETURNED') && (user?.role === 'ADMIN' || event.createdById === user?.id) && (
+                            <button onClick={(ev) => { ev.stopPropagation(); router.push(`/change-events/${event.id}/edit`); }}
+                              className="rounded-md border border-gray-200 p-1 text-muted-foreground hover:bg-blue-50 hover:text-blue-600" title="수정">
+                              <FileEdit className="h-3 w-3" />
+                            </button>
+                          )}
+                          {event.status === 'DRAFT' && (user?.role === 'ADMIN' || event.createdById === user?.id) && (
+                            <button onClick={(ev) => handleDelete(event.id, ev)}
+                              className="rounded-md border border-gray-200 p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500" title="삭제">
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
