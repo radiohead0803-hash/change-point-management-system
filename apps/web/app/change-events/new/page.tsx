@@ -19,18 +19,18 @@ import {
 
 const schema = z.object({
   occurredDate: z.string().min(1, '발생일을 입력해주세요'),
-  customer: z.string().min(1, '고객사를 선택해주세요'),
-  project: z.string().min(1, '프로젝트를 선택해주세요'),
-  productLine: z.string().min(1, '제품군을 선택해주세요'),
-  partNumber: z.string().min(1, '품번을 입력해주세요'),
+  customer: z.string().optional(),
+  project: z.string().optional(),
+  productLine: z.string().optional(),
+  partNumber: z.string().optional(),
   productName: z.string().optional(),
-  factory: z.string().min(1, '공장을 선택해주세요'),
-  productionLine: z.string().min(1, '라인을 선택해주세요'),
+  factory: z.string().optional(),
+  productionLine: z.string().optional(),
   companyId: z.string().min(1, '협력사를 선택해주세요'),
   primaryItemId: z.string().min(1, '주 분류 항목을 선택해주세요'),
   tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
-  department: z.string().min(1, '발생부서를 선택해주세요'),
+  department: z.string().optional(),
   managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
@@ -191,20 +191,20 @@ export default function NewChangeEventPage() {
             <FileText className="h-4 w-4" /> 기본 정보
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-            <Sel label="고객사" req opts={CUSTOMERS} {...register('customer')} err={errors.customer?.message} />
-            <Sel label="프로젝트" req opts={PROJECTS} {...register('project')} err={errors.project?.message} />
-            <Sel label="제품군" req opts={PRODUCT_LINES} {...register('productLine')} err={errors.productLine?.message} />
+            <Sel label="고객사" opts={CUSTOMERS} {...register('customer')} />
+            <Sel label="프로젝트" opts={PROJECTS} {...register('project')} />
+            <Sel label="제품군" opts={PRODUCT_LINES} {...register('productLine')} />
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">품번 <span className="text-red-400">*</span></label>
-              <Input {...register('partNumber')} placeholder="품번 입력" error={errors.partNumber?.message} />
+              <label className="text-sm font-medium">품번</label>
+              <Input {...register('partNumber')} placeholder="품번 입력" />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">품명</label>
               <Input {...register('productName')} placeholder="품명 입력" />
             </div>
-            <Sel label="공장" req opts={FACTORIES} {...register('factory')} err={errors.factory?.message} />
-            <Sel label="라인" req opts={LINES} {...register('productionLine')} err={errors.productionLine?.message} />
-            <Sel label="발생부서" req opts={DEPTS} {...register('department')} err={errors.department?.message} />
+            <Sel label="공장" opts={FACTORIES} {...register('factory')} />
+            <Sel label="라인" opts={LINES} {...register('productionLine')} />
+            <Sel label="발생부서" opts={DEPTS} {...register('department')} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
               <select {...register('companyId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
