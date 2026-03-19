@@ -76,7 +76,19 @@ export default function NewChangeEventPage() {
 
   useEffect(() => {
     setCustomers([...getCodeOptions('CUSTOMER'), '기타']);
-    setProjects([...getCodeOptions('PROJECT'), '기타']);
+    // 프로젝트: 차종현황(localStorage)에서 로드
+    try {
+      const stored = localStorage.getItem('cpms_vehicles');
+      if (stored) {
+        const vehicles = JSON.parse(stored) as Array<{ name: string; status: string }>;
+        const names = vehicles.filter((v) => v.status !== '단종').map((v) => v.name);
+        setProjects([...names, '기타']);
+      } else {
+        setProjects([...getCodeOptions('PROJECT'), '기타']);
+      }
+    } catch {
+      setProjects([...getCodeOptions('PROJECT'), '기타']);
+    }
     setProductLines([...getCodeOptions('PRODUCT_LINE'), '기타']);
     setFactories([...getCodeOptions('FACTORY'), '기타']);
     setLines([...getCodeOptions('LINE'), '기타']);
