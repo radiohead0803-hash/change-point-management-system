@@ -431,10 +431,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 최근 변동점 */}
+      {/* 최근 변동점 - 필수 작성 항목 테이블 */}
       <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
         <div className="flex items-center justify-between p-4 sm:p-5">
-          <h3 className="text-sm font-semibold">최근 변동점</h3>
+          <h3 className="text-sm font-semibold">최근 변동점 · 필수 작성 항목 (발생 & 조치결과)</h3>
           <button onClick={() => router.push('/change-events/my')} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80">
             전체보기 <ArrowRight className="h-3.5 w-3.5" />
           </button>
@@ -453,25 +453,65 @@ export default function DashboardPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-2 p-3 pt-0 sm:p-4 sm:pt-0">
-            {allEvents.slice(0, 5).map((event) => (
-              <div
-                key={event.id}
-                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/60 p-3 cursor-pointer transition-all hover:bg-gray-50/80 active:scale-[0.99] dark:border-gray-800 dark:bg-gray-800/40"
-                onClick={() => router.push(`/change-events/${event.id}`)}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold truncate">{event.customer}</span>
-                    <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(event.status)}`}>
-                      {getStatusText(event.status)}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground truncate">{event.project} · {event.company?.name} · {event.receiptMonth}</p>
-                </div>
-                <ArrowRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/30" />
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/30">
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground w-10">NO</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground" colSpan={4}>발생내역</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground" colSpan={4}>조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground w-16">상태</th>
+                </tr>
+                <tr className="border-b border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/20">
+                  <th className="px-2 py-1.5"></th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">발생일</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">발생항목</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">발생부서</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">담당자</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">조치시점</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">조치방안</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-medium text-muted-foreground/70">품질검증</th>
+                  <th className="px-2 py-1.5"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                {allEvents.slice(0, 10).map((event, idx) => {
+                  const e = event as any;
+                  const hasAction = e.actionDate || e.actionPlan || e.actionResult || e.qualityVerification;
+                  return (
+                    <tr
+                      key={event.id}
+                      className="cursor-pointer transition-colors hover:bg-blue-50/30 dark:hover:bg-blue-900/5"
+                      onClick={() => router.push(`/change-events/${event.id}`)}
+                    >
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold text-muted-foreground/50">{idx + 1}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">{formatDate(event.occurredDate).slice(5)}</td>
+                      <td className="max-w-[80px] truncate px-2 py-2.5 text-center">{event.customer || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">{event.department || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">{e.manager?.name || e.createdBy?.name || '-'}</td>
+                      <td className={`whitespace-nowrap px-2 py-2.5 text-center ${!e.actionDate ? 'text-red-400' : ''}`}>
+                        {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
+                      </td>
+                      <td className={`max-w-[60px] truncate px-2 py-2.5 text-center ${!e.actionPlan ? 'text-red-400' : ''}`}>
+                        {e.actionPlan || '미입력'}
+                      </td>
+                      <td className={`max-w-[60px] truncate px-2 py-2.5 text-center ${!e.actionResult ? 'text-red-400' : ''}`}>
+                        {e.actionResult || '미입력'}
+                      </td>
+                      <td className={`max-w-[60px] truncate px-2 py-2.5 text-center ${!e.qualityVerification ? 'text-red-400' : ''}`}>
+                        {e.qualityVerification || '미입력'}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">
+                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>
+                          {getStatusText(event.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
