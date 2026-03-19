@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +11,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import {
   CheckCircle2, RotateCcw, ArrowRight, ChevronRight, Shield,
-  UserCheck, Clock, Send,
+  UserCheck, Clock, Search, Filter, Building2, Calendar,
+  FileText, ExternalLink,
 } from 'lucide-react';
 
 /* ── 승인 플로우 단계 ── */
@@ -24,6 +25,8 @@ function getApprovalStep(status: string, role: string) {
   return FLOW_STEPS.find((s) => s.status === status && s.allowedRoles.includes(role));
 }
 
+type StepFilter = 'ALL' | 'SUBMITTED' | 'REVIEWED';
+
 export default function ApprovalsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -32,13 +35,14 @@ export default function ApprovalsPage() {
   const [executiveModal, setExecutiveModal] = useState<{ eventId: string; open: boolean }>({ eventId: '', open: false });
   const [selectedExecutiveId, setSelectedExecutiveId] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [stepFilter, setStepFilter] = useState<StepFilter>('ALL');
 
   const { data: events = [], isLoading } = useQuery<ChangeEvent[]>({
     queryKey: ['change-events'],
     queryFn: () => changeEvents.list().then((res) => res.data),
   });
 
-  // 전담중역 목록
   const { data: executives = [] } = useQuery<any[]>({
     queryKey: ['executives'],
     queryFn: async () => {
@@ -52,27 +56,44 @@ export default function ApprovalsPage() {
   });
 
   // 내 역할에 맞는 승인 대기 건
-  const pendingApprovals = events.filter((e) => {
-    if (!user) return false;
-    return !!getApprovalStep(e.status, user.role);
-  });
+  const pendingApprovals = useMemo(() => {
+    return events.filter((e) => {
+      if (!user) return false;
+      return !!getApprovalStep(e.status, user.role);
+    });
+  }, [events, user]);
 
-  // 1차 승인 처리 (전담중역 지정 필요 여부 확인)
+  // 필터링
+  const filtered = useMemo(() => {
+    return pendingApprovals.filter((e) => {
+      const matchSearch = !searchTerm ||
+        e.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ((e as any).company?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.receiptMonth.includes(searchTerm);
+      const matchStep = stepFilter === 'ALL' || e.status === stepFilter;
+      return matchSearch && matchStep;
+    });
+  }, [pendingApprovals, searchTerm, stepFilter]);
+
+  // 단계별 카운트
+  const stepCounts = useMemo(() => ({
+    ALL: pendingApprovals.length,
+    SUBMITTED: pendingApprovals.filter((e) => e.status === 'SUBMITTED').length,
+    REVIEWED: pendingApprovals.filter((e) => e.status === 'REVIEWED').length,
+  }), [pendingApprovals]);
+
   const handleApproveClick = (eventId: string) => {
     if (!user) return;
     const event = events.find((e) => e.id === eventId);
     if (!event) return;
     const step = getApprovalStep(event.status, user.role);
     if (!step) return;
-
-    // 1차 승인 시 전담중역이 미지정이면 모달 표시
     if (step.needsExecutive && !event.executiveId) {
       setExecutiveModal({ eventId, open: true });
       setSelectedExecutiveId('');
       return;
     }
-
-    // 전담중역이 이미 지정되어 있으면 바로 승인
     handleApprove(eventId);
   };
 
@@ -82,13 +103,10 @@ export default function ApprovalsPage() {
     if (!event) return;
     const step = getApprovalStep(event.status, user.role);
     if (!step) return;
-
     try {
       setProcessing(eventId);
       const updateData: any = { status: step.nextStatus };
-      if (executiveId) {
-        updateData.executiveId = executiveId;
-      }
+      if (executiveId) updateData.executiveId = executiveId;
       await changeEvents.update(eventId, updateData);
       queryClient.invalidateQueries({ queryKey: ['change-events'] });
       toast({ title: `${step.btnLabel} 처리되었습니다.` });
@@ -121,62 +139,87 @@ export default function ApprovalsPage() {
     handleApprove(executiveModal.eventId, selectedExecutiveId);
   };
 
-  const getStepInfo = (status: string) => {
-    if (status === 'SUBMITTED') return { step: '1단계', label: '1차 검토 대기', color: 'bg-blue-500', textColor: 'text-blue-700 dark:text-blue-400', icon: Clock };
-    if (status === 'REVIEWED') return { step: '2단계', label: '최종승인 대기', color: 'bg-purple-500', textColor: 'text-purple-700 dark:text-purple-400', icon: Shield };
-    return { step: '', label: '', color: 'bg-gray-500', textColor: '', icon: Clock };
-  };
-
-  const ROLE_LABELS: Record<string, string> = {
-    ADMIN: '관리자',
-    EXEC_APPROVER: '전담중역',
-  };
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">승인함</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          승인 대기 중인 변동점 {pendingApprovals.length}건
-        </p>
+    <div className="space-y-5">
+      {/* 헤더 + 승인 플로우 */}
+      <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-white/80 via-blue-50/40 to-purple-50/40 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:from-gray-900/80 dark:via-blue-900/10 dark:to-purple-900/10 dark:border-gray-800/60">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">승인함</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              승인 대기 <span className="font-bold text-primary">{pendingApprovals.length}</span>건
+            </p>
+          </div>
+          {/* 미니 플로우 */}
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs">
+            <div className="rounded-lg bg-emerald-100/80 px-2 py-1 dark:bg-emerald-900/30">
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">접수</span>
+            </div>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
+            <div className={`rounded-lg px-2 py-1 ${
+              user?.role === 'TIER1_EDITOR' || user?.role === 'TIER1_REVIEWER'
+                ? 'bg-blue-200/80 ring-1 ring-blue-400 dark:bg-blue-900/50'
+                : 'bg-blue-100/80 dark:bg-blue-900/20'
+            }`}>
+              <span className="font-bold text-blue-700 dark:text-blue-400">1차 승인</span>
+            </div>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
+            <div className={`rounded-lg px-2 py-1 ${
+              user?.role === 'EXEC_APPROVER'
+                ? 'bg-purple-200/80 ring-1 ring-purple-400 dark:bg-purple-900/50'
+                : 'bg-purple-100/80 dark:bg-purple-900/20'
+            }`}>
+              <span className="font-bold text-purple-700 dark:text-purple-400">최종승인</span>
+            </div>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
+            <div className="rounded-lg bg-green-100/80 px-2 py-1 dark:bg-green-900/20">
+              <span className="font-bold text-green-700 dark:text-green-400">완료</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 승인 플로우 안내 */}
-      <div className="rounded-2xl border border-white/60 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 p-3 shadow-sm backdrop-blur-xl sm:p-4 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 dark:border-gray-800/60">
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">승인 플로우</p>
-        <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs overflow-x-auto">
-          <div className="flex-shrink-0 rounded-lg bg-emerald-50 px-2 py-1.5 shadow-sm dark:bg-emerald-900/30">
-            <span className="font-bold text-emerald-700 dark:text-emerald-400">접수·등록</span>
-            <span className="block text-[9px] text-muted-foreground">협력사/담당자</span>
-          </div>
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
-          <div className={`flex-shrink-0 rounded-lg px-2 py-1.5 shadow-sm ${
-            user?.role === 'TIER1_REVIEWER' || user?.role === 'TIER1_EDITOR'
-              ? 'bg-blue-100 ring-2 ring-blue-300 dark:bg-blue-900/40 dark:ring-blue-700'
-              : 'bg-white/80 dark:bg-gray-800/60'
-          }`}>
-            <span className="font-bold text-blue-700 dark:text-blue-400">1차 승인</span>
-            <span className="block text-[9px] text-muted-foreground">캠스 담당자</span>
-          </div>
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
-          <div className="flex-shrink-0 rounded-lg bg-amber-50 px-2 py-1.5 shadow-sm dark:bg-amber-900/20">
-            <span className="font-bold text-amber-700 dark:text-amber-400">전담중역 지정</span>
-            <span className="block text-[9px] text-muted-foreground">1차 승인 시</span>
-          </div>
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
-          <div className={`flex-shrink-0 rounded-lg px-2 py-1.5 shadow-sm ${
-            user?.role === 'EXEC_APPROVER'
-              ? 'bg-purple-100 ring-2 ring-purple-300 dark:bg-purple-900/40 dark:ring-purple-700'
-              : 'bg-white/80 dark:bg-gray-800/60'
-          }`}>
-            <span className="font-bold text-purple-700 dark:text-purple-400">최종승인</span>
-            <span className="block text-[9px] text-muted-foreground">전담중역</span>
-          </div>
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
-          <div className="flex-shrink-0 rounded-lg bg-green-50 px-2 py-1.5 shadow-sm dark:bg-green-900/20">
-            <span className="font-bold text-green-700 dark:text-green-400">완료</span>
-            <span className="block text-[9px] text-muted-foreground">알림 발송</span>
-          </div>
+      {/* 필터 탭 + 검색 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* 단계 필터 탭 */}
+        <div className="flex gap-1.5 rounded-xl bg-gray-100/60 p-1 dark:bg-gray-800/40">
+          {([
+            { key: 'ALL' as StepFilter, label: '전체', color: '' },
+            { key: 'SUBMITTED' as StepFilter, label: '1차 승인', color: 'text-blue-700 dark:text-blue-400' },
+            { key: 'REVIEWED' as StepFilter, label: '최종 승인', color: 'text-purple-700 dark:text-purple-400' },
+          ]).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setStepFilter(tab.key)}
+              className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                stepFilter === tab.key
+                  ? 'bg-white text-foreground shadow-sm dark:bg-gray-700'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.label}
+              {stepCounts[tab.key] > 0 && (
+                <span className={`ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+                  stepFilter === tab.key
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                }`}>
+                  {stepCounts[tab.key]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* 검색 */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+          <input
+            className="h-9 w-full rounded-xl border border-input bg-white/60 pl-9 pr-3 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-ring/40 dark:bg-gray-900/60"
+            placeholder="고객사, 프로젝트, 협력사, 접수월 검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
@@ -199,117 +242,152 @@ export default function ApprovalsPage() {
               <option value="">전담중역 선택</option>
               {executives.map((u: any) => (
                 <option key={u.id} value={u.id}>
-                  {u.name} ({ROLE_LABELS[u.role] || u.role}){u.company ? ` - ${u.company.name}` : ''}
+                  {u.name}{u.company ? ` - ${u.company.name}` : ''}
                 </option>
               ))}
             </select>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setExecutiveModal({ eventId: '', open: false })}
-              >
+              <Button variant="outline" className="flex-1" onClick={() => setExecutiveModal({ eventId: '', open: false })}>
                 취소
               </Button>
-              <Button
-                className="flex-1"
-                onClick={handleExecutiveApprove}
-                disabled={!selectedExecutiveId || processing === executiveModal.eventId}
-              >
+              <Button className="flex-1" onClick={handleExecutiveApprove} disabled={!selectedExecutiveId || processing === executiveModal.eventId}>
                 <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                {processing === executiveModal.eventId ? '처리 중...' : '1차 승인 & 전담중역 지정'}
+                {processing === executiveModal.eventId ? '처리 중...' : '승인 & 지정'}
               </Button>
             </div>
           </div>
         </div>
       )}
 
+      {/* 승인 목록 */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      ) : pendingApprovals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/30 py-20 text-center dark:border-gray-800 dark:bg-gray-900/20">
           <CheckCircle2 className="mb-3 h-12 w-12 text-emerald-300" />
           <p className="text-sm font-medium text-muted-foreground">
-            승인 대기 건이 없습니다
+            {searchTerm || stepFilter !== 'ALL' ? '조건에 맞는 승인 건이 없습니다' : '승인 대기 건이 없습니다'}
           </p>
+          {(searchTerm || stepFilter !== 'ALL') && (
+            <button
+              onClick={() => { setSearchTerm(''); setStepFilter('ALL'); }}
+              className="mt-2 text-xs text-primary hover:underline"
+            >
+              필터 초기화
+            </button>
+          )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {pendingApprovals.map((event) => {
-            const stepInfo = getStepInfo(event.status);
+        <div className="space-y-2.5">
+          {filtered.map((event) => {
+            const isSubmitted = event.status === 'SUBMITTED';
             const step = user ? getApprovalStep(event.status, user.role) : null;
-            const StepIcon = stepInfo.icon;
+            const accentBorder = isSubmitted ? 'border-l-blue-500' : 'border-l-purple-500';
+            const accentBg = isSubmitted ? 'hover:bg-blue-50/30 dark:hover:bg-blue-900/5' : 'hover:bg-purple-50/30 dark:hover:bg-purple-900/5';
+
             return (
               <div
                 key={event.id}
-                className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl transition-all duration-200 hover:shadow-md sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70"
+                className={`group relative rounded-xl border border-l-[3px] ${accentBorder} border-white/60 bg-white/70 shadow-sm backdrop-blur-xl transition-all duration-200 ${accentBg} dark:border-gray-800/60 dark:bg-gray-900/70`}
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex flex-col sm:flex-row">
+                  {/* 메인 콘텐츠 */}
                   <div
-                    className="flex-1 cursor-pointer active:opacity-70"
+                    className="flex-1 cursor-pointer p-4 active:opacity-70 sm:p-5"
                     onClick={() => router.push(`/change-events/${event.id}`)}
                   >
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5">
-                        <StepIcon className={`h-3.5 w-3.5 ${stepInfo.textColor}`} />
-                        <span className={`text-[10px] font-bold ${stepInfo.textColor}`}>{stepInfo.step} {stepInfo.label}</span>
-                      </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(event.status)}`}>
+                    {/* 상단: 단계 + 상태 */}
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                        isSubmitted
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                      }`}>
+                        {isSubmitted ? <Clock className="h-2.5 w-2.5" /> : <Shield className="h-2.5 w-2.5" />}
+                        {isSubmitted ? '1차 승인 대기' : '최종승인 대기'}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(event.status)}`}>
                         {getStatusText(event.status)}
                       </span>
                     </div>
-                    <h3 className="mt-1.5 text-sm font-semibold">{event.customer} - {event.project}</h3>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {(event as any).company?.name} · {event.receiptMonth} · 발생일: {formatDate(event.occurredDate)}
-                    </p>
-                    {/* 승인자 정보 */}
-                    <div className="mt-1.5 flex flex-wrap gap-2 text-[10px]">
+
+                    {/* 제목 */}
+                    <h3 className="mt-2 text-sm font-semibold leading-tight sm:text-[15px]">
+                      {event.customer} - {event.project}
+                    </h3>
+
+                    {/* 메타 정보 */}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {(event as any).company?.name}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {event.receiptMonth}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        발생일 {formatDate(event.occurredDate)}
+                      </span>
+                    </div>
+
+                    {/* 승인자 태그 */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {(event as any).reviewer && (
-                        <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                          검토자: {(event as any).reviewer.name}
+                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-50/80 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                          <UserCheck className="h-2.5 w-2.5" />
+                          담당자: {(event as any).reviewer.name}
                         </span>
                       )}
-                      {(event as any).executive && (
-                        <span className="rounded-md bg-purple-50 px-1.5 py-0.5 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                      {(event as any).executive ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-purple-50/80 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                          <Shield className="h-2.5 w-2.5" />
                           전담중역: {(event as any).executive.name}
                         </span>
-                      )}
-                      {!event.executiveId && event.status === 'SUBMITTED' && (
-                        <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                      ) : isSubmitted && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50/80 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
                           ⚠ 전담중역 미지정
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+
+                  {/* 액션 영역 */}
+                  <div className="flex items-center gap-2 border-t border-gray-100 px-4 py-3 sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-4 sm:py-4 dark:border-gray-800/40">
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveClick(event.id)}
+                      disabled={processing === event.id}
+                      className={`flex-1 sm:flex-none sm:w-24 ${
+                        isSubmitted
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-purple-600 hover:bg-purple-700'
+                      }`}
+                    >
+                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                      {processing === event.id ? '...' : step?.btnLabel || '승인'}
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none sm:w-24"
                       onClick={() => handleReturn(event.id)}
                       disabled={processing === event.id}
                     >
-                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
                       보완요청
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 sm:flex-none"
-                      onClick={() => handleApproveClick(event.id)}
-                      disabled={processing === event.id}
-                    >
-                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                      {processing === event.id ? '처리 중...' : step?.btnLabel || '승인'}
-                    </Button>
-                    <Button
-                      size="sm"
                       variant="ghost"
-                      className="hidden sm:inline-flex"
+                      className="hidden sm:inline-flex sm:w-24"
                       onClick={() => router.push(`/change-events/${event.id}`)}
                     >
-                      <ArrowRight className="h-4 w-4" />
+                      <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                      상세
                     </Button>
                   </div>
                 </div>
