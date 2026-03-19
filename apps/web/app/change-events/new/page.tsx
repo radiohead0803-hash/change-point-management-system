@@ -104,7 +104,7 @@ export default function NewChangeEventPage() {
   const reviewers = allUsers.filter((u: any) => ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'].includes(u.role));
   const executives = allUsers.filter((u: any) => ['EXEC_APPROVER', 'ADMIN'].includes(u.role));
 
-  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, watch, setValue, getValues, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       occurredDate: new Date().toISOString().slice(0, 10),
@@ -162,6 +162,9 @@ export default function NewChangeEventPage() {
     // tags에서 primaryItemId 자동 추출
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
     const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
+
+    // 디버깅: 전송 데이터 확인
+    console.log('📤 Save data:', { customer: data.customer, project: data.project, factory: data.factory, department: data.department, companyId: data.companyId, managerId: data.managerId, status });
 
     if (status === 'SUBMITTED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
@@ -386,7 +389,7 @@ export default function NewChangeEventPage() {
         {/* 버튼 */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>취소</Button>
-          <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => save(watch() as FormData, 'DRAFT')} disabled={draftSaving}>
+          <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => save(getValues() as FormData, 'DRAFT')} disabled={draftSaving}>
             <Save className="mr-1.5 h-4 w-4" />{draftSaving ? '저장 중...' : '임시 저장'}
           </Button>
           <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
