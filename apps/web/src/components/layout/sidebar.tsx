@@ -17,6 +17,9 @@ import {
   Users,
   HelpCircle,
   LogOut,
+  Car,
+  Building2,
+  FolderTree,
 } from 'lucide-react';
 
 /* ── 역할별 라벨 ── */
@@ -37,15 +40,19 @@ const ROLE_LABELS: Record<string, string> = {
  * - CUSTOMER_VIEWER: 대시보드, 도움말
  */
 const navigation = [
-  { name: '대시보드',       href: '/dashboard',               icon: LayoutDashboard, roles: null },           // 전체
+  { name: '대시보드',       href: '/dashboard',               icon: LayoutDashboard, roles: null },
   { name: '변동점 등록',    href: '/change-events/new',       icon: FileText,        roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
   { name: '내 요청',        href: '/change-events/my',        icon: ClipboardList,   roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
-  { name: '승인함',         href: '/change-events/approvals', icon: CheckSquare,     roles: ['ADMIN', 'TIER1_REVIEWER', 'EXEC_APPROVER'] },
-  { name: '기초정보 관리',  href: '/admin/master-data',       icon: Database,        roles: ['ADMIN'] },
+  { name: '승인함',         href: '/change-events/approvals', icon: CheckSquare,     roles: ['ADMIN', 'TIER1_REVIEWER', 'TIER1_EDITOR', 'EXEC_APPROVER'] },
+  { name: '기초정보', href: '', icon: Database, roles: ['ADMIN'], isGroup: true, children: [
+    { name: '분류 체계',   href: '/admin/master-data', icon: FolderTree },
+    { name: '차종 현황',   href: '/admin/vehicles',    icon: Car },
+    { name: '협력사 현황', href: '/admin/suppliers',   icon: Building2 },
+  ]},
   { name: '사용자 관리',    href: '/admin/users',             icon: Users,           roles: ['ADMIN'] },
   { name: '정책 설정',      href: '/admin/settings',          icon: Settings,        roles: ['ADMIN'] },
-  { name: '도움말',         href: '/help',                    icon: HelpCircle,      roles: null },           // 전체
-];
+  { name: '도움말',         href: '/help',                    icon: HelpCircle,      roles: null },
+] as const;
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -82,15 +89,50 @@ export default function Sidebar() {
 
       {/* 네비게이션 */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
-          // roles가 null이면 전체 허용, 아니면 역할 체크
-          if (item.roles && !item.roles.includes(user?.role || '')) {
-            return null;
+        {navigation.map((item: any) => {
+          if (item.roles && !item.roles.includes(user?.role || '')) return null;
+
+          // 그룹 메뉴 (기초정보)
+          if (item.isGroup && item.children) {
+            const isGroupActive = item.children.some((c: any) => pathname === c.href || pathname.startsWith(c.href + '/'));
+            const Icon = item.icon;
+            return (
+              <div key={item.name}>
+                <div className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-2 text-[11px] font-semibold uppercase tracking-wider',
+                  isGroupActive ? 'text-primary' : 'text-muted-foreground/60',
+                )}>
+                  <Icon className="h-[14px] w-[14px] flex-shrink-0" />
+                  {item.name}
+                </div>
+                <div className="ml-3 space-y-0.5 border-l border-gray-200/60 pl-3 dark:border-gray-700/40">
+                  {item.children.map((child: any) => {
+                    const isActive = pathname === child.href || pathname.startsWith(child.href + '/');
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link
+                        key={child.name}
+                        href={child.href}
+                        className={cn(
+                          'group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200',
+                          isActive
+                            ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                            : 'text-muted-foreground hover:bg-gray-100/80 hover:text-foreground dark:hover:bg-gray-800/50',
+                        )}
+                      >
+                        <ChildIcon className={cn('h-[15px] w-[15px] flex-shrink-0', isActive ? 'text-primary' : 'text-muted-foreground/60 group-hover:text-foreground')} />
+                        {child.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
           }
 
+          // 일반 메뉴
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
-
           return (
             <Link
               key={item.name}

@@ -194,8 +194,8 @@ export class ChangeEventsService {
     // 상태 변경 권한 체크
     if (data.status) {
       const newStatus = data.status as string;
-      const canReview = [Role.TIER1_REVIEWER, Role.TIER1_EDITOR, Role.ADMIN].includes(userRole);
-      const canApprove = [Role.EXEC_APPROVER, Role.ADMIN].includes(userRole);
+      const canReview = ([Role.TIER1_REVIEWER, Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
+      const canApprove = ([Role.EXEC_APPROVER, Role.ADMIN] as Role[]).includes(userRole);
       if (
         (newStatus === 'REVIEWED' && !canReview) ||
         (newStatus === 'APPROVED' && !canApprove)

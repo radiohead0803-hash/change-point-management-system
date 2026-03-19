@@ -80,4 +80,24 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  // ── Company CRUD ──
+
+  @Post('companies')
+  @Roles(Role.ADMIN)
+  createCompany(@Body() body: { name: string; code: string; type: string }) {
+    return this.usersService.createCompany(body);
+  }
+
+  @Patch('companies/:id')
+  @Roles(Role.ADMIN)
+  updateCompany(@Param('id') id: string, @Body() body: { name?: string; code?: string; type?: string }) {
+    return this.usersService.updateCompany(id, body);
+  }
+
+  @Delete('companies/:id')
+  @Roles(Role.ADMIN)
+  deleteCompany(@Param('id') id: string) {
+    return this.usersService.deleteCompany(id);
+  }
 }

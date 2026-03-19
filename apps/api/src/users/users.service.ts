@@ -121,7 +121,32 @@ export class UsersService {
   async findCompanies() {
     return this.prisma.company.findMany({
       where: { deletedAt: null },
+      include: {
+        _count: { select: { users: true, events: true } },
+      },
       orderBy: { name: 'asc' },
+    });
+  }
+
+  async createCompany(data: { name: string; code: string; type: string }) {
+    return this.prisma.company.create({
+      data: data as any,
+      include: { _count: { select: { users: true, events: true } } },
+    });
+  }
+
+  async updateCompany(id: string, data: { name?: string; code?: string; type?: string }) {
+    return this.prisma.company.update({
+      where: { id },
+      data: data as any,
+      include: { _count: { select: { users: true, events: true } } },
+    });
+  }
+
+  async deleteCompany(id: string) {
+    return this.prisma.company.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 }
