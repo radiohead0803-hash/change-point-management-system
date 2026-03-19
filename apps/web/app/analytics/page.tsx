@@ -18,7 +18,7 @@ import {
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#6b7280'];
 const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4'];
 
-type TimeRange = 'month' | 'quarter' | 'half' | 'year' | 'all';
+type TimeRange = 'week' | 'month' | 'quarter' | 'half' | 'year' | 'all';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
@@ -35,6 +35,10 @@ export default function AnalyticsPage() {
   const filteredByTime = useMemo(() => {
     if (timeRange === 'all') return events;
     const now = new Date();
+    if (timeRange === 'week') {
+      const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return events.filter((e) => new Date(e.occurredDate) >= cutoff);
+    }
     const months = timeRange === 'month' ? 1 : timeRange === 'quarter' ? 3 : timeRange === 'half' ? 6 : 12;
     const cutoff = new Date(now.getFullYear(), now.getMonth() - months, 1);
     return events.filter((e) => new Date(e.occurredDate) >= cutoff);
@@ -170,7 +174,7 @@ export default function AnalyticsPage() {
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/30 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/20">
         <Filter className="h-3.5 w-3.5 text-muted-foreground/50" />
         <div className="flex gap-1 rounded-lg bg-gray-100/60 p-0.5 dark:bg-gray-800/40">
-          {([['month', '1개월'], ['quarter', '3개월'], ['half', '6개월'], ['year', '1년'], ['all', '전체']] as [TimeRange, string][]).map(([key, label]) => (
+          {([['week', '주간'], ['month', '1개월'], ['quarter', '3개월'], ['half', '6개월'], ['year', '1년'], ['all', '전체']] as [TimeRange, string][]).map(([key, label]) => (
             <button key={key} onClick={() => setTimeRange(key)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-all ${timeRange === key ? 'bg-white shadow-sm dark:bg-gray-700' : 'text-muted-foreground'}`}>
               {label}
