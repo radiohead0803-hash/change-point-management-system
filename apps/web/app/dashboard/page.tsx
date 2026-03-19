@@ -16,7 +16,30 @@ import {
   Plus, FileEdit, Clock, Send, CheckCircle2, ShieldCheck,
   ArrowRight, Download, TrendingUp, TrendingDown, AlertTriangle,
   Lightbulb, BarChart3, Building2, Calendar, Filter, Search, FileSpreadsheet,
+  ChevronDown,
 } from 'lucide-react';
+
+/* ── 접기/펼치기 섹션 ── */
+function CollapsibleSection({ title, icon: Icon, defaultOpen = true, children, className = '' }: {
+  title: string; icon?: any; defaultOpen?: boolean; children: React.ReactNode; className?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={`overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70 ${className}`}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between p-4 sm:p-5 text-left transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
+      >
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          {Icon && <Icon className="h-4 w-4 text-primary" />}
+          {title}
+        </h3>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="border-t border-gray-100 dark:border-gray-800">{children}</div>}
+    </div>
+  );
+}
 
 const statusConfig = [
   { key: 'DRAFT', label: '임시저장', icon: Clock },
@@ -295,11 +318,8 @@ export default function DashboardPage() {
       {/* 차트 영역 - 1행 */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* 발생 추이 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" />
-            발생 추이
-          </h3>
+        <CollapsibleSection title="발생 추이" icon={BarChart3}>
+          <div className="p-4 sm:p-5">
           {trendData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -315,11 +335,12 @@ export default function DashboardPage() {
           ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
           )}
-        </div>
+          </div>
+        </CollapsibleSection>
 
         {/* 상태 분포 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-3 text-sm font-semibold">상태별 분포</h3>
+        <CollapsibleSection title="상태별 분포">
+          <div className="p-4 sm:p-5">
           {statusPieData.length > 0 ? (
             <div className="flex flex-col items-center sm:flex-row">
               <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
@@ -343,17 +364,15 @@ export default function DashboardPage() {
           ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
           )}
-        </div>
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* 차트 영역 - 2행: 업체별 분석 */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* 협력사별 변동점 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-green-600" />
-            협력사별 변동점
-          </h3>
+        <CollapsibleSection title="협력사별 변동점" icon={Building2}>
+          <div className="p-4 sm:p-5">
           {companyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={companyData} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
@@ -369,14 +388,12 @@ export default function DashboardPage() {
           ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
           )}
-        </div>
+          </div>
+        </CollapsibleSection>
 
         {/* 고객사별 변동점 */}
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-blue-600" />
-            고객사별 변동점
-          </h3>
+        <CollapsibleSection title="고객사별 변동점" icon={Building2}>
+          <div className="p-4 sm:p-5">
           {customerData.length > 0 ? (
             <div className="flex flex-col items-center sm:flex-row">
               <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
@@ -400,20 +417,14 @@ export default function DashboardPage() {
           ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
           )}
-        </div>
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* AI 인사이트 */}
       {insights.length > 0 && (
-        <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-blue-500">
-              <Lightbulb className="h-4 w-4 text-white" />
-            </div>
-            <h3 className="text-sm font-semibold">AI 인사이트</h3>
-            <span className="text-[10px] text-muted-foreground">분석 기간: {timeRanges.find(t => t.key === timeRange)?.label}</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <CollapsibleSection title={`AI 인사이트 · ${timeRanges.find(t => t.key === timeRange)?.label}`} icon={Lightbulb} defaultOpen={false}>
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
             {insights.map((insight, idx) => {
               const Icon = insight.icon;
               return (
@@ -429,7 +440,7 @@ export default function DashboardPage() {
               );
             })}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {/* 최근 변동점 - 필수 작성 항목 테이블 */}
