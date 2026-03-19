@@ -357,7 +357,7 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
-                <Tooltip formatter={(v: any) => [`${v}건`, '변동점']} contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
                 <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -373,14 +373,25 @@ export default function DashboardPage() {
             고객사별 변동점
           </h3>
           {customerData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={customerData} cx="50%" cy="50%" outerRadius={70} paddingAngle={2} dataKey="count" nameKey="fullName" label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                  {customerData.map((_, idx) => (<Cell key={idx} fill={COMPANY_COLORS[idx % COMPANY_COLORS.length]} />))}
-                </Pie>
-                <Tooltip formatter={(v: any) => [`${v}건`, '변동점']} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex flex-col items-center sm:flex-row">
+              <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
+                <PieChart>
+                  <Pie data={customerData} cx="50%" cy="50%" outerRadius={65} paddingAngle={2} dataKey="count" nameKey="fullName">
+                    {customerData.map((_, idx) => (<Cell key={idx} fill={COMPANY_COLORS[idx % COMPANY_COLORS.length]} />))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
+                {customerData.map((d, idx) => (
+                  <div key={d.fullName} className="flex items-center gap-2 text-xs">
+                    <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: COMPANY_COLORS[idx % COMPANY_COLORS.length] }} />
+                    <span className="text-muted-foreground truncate">{d.fullName}</span>
+                    <span className="ml-auto font-semibold">{d.count}건</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
           )}
