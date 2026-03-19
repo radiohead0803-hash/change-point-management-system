@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Filter, FileSpreadsheet, ArrowRight,
-  FileText, ChevronDown, Paperclip, Image as ImageIcon, Trash2, FileEdit,
+  FileText, ChevronDown, ChevronUp, Paperclip, Image as ImageIcon, Trash2, FileEdit,
 } from 'lucide-react';
 
 /* ── Tooltip 셀 ── */
@@ -29,6 +29,23 @@ function TipCell({ children, tip, className = '' }: { children: React.ReactNode;
   );
 }
 
+/* ── 정렬 가능 헤더 ── */
+function SortTh({ label, sortKey: sk, currentKey, dir, onSort, className = '' }: {
+  label: string; sortKey: string; currentKey: string; dir: 'asc' | 'desc'; onSort: (key: string) => void; className?: string;
+}) {
+  const active = currentKey === sk;
+  return (
+    <th className={`whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold cursor-pointer select-none hover:bg-gray-100/50 transition-colors ${className}`}
+      onClick={() => onSort(sk)}>
+      <span className="inline-flex items-center gap-0.5">
+        {label}
+        {active ? (dir === 'asc' ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />) :
+          <ChevronDown className="h-2.5 w-2.5 opacity-20" />}
+      </span>
+    </th>
+  );
+}
+
 export default function MyChangeEventsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -40,6 +57,13 @@ export default function MyChangeEventsPage() {
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [searchText, setSearchText] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [sortKey, setSortKey] = useState<string>('occurredDate');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (key: string) => {
+    if (sortKey === key) { setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }
+    else { setSortKey(key); setSortDir('asc'); }
+  };
 
   const handleDelete = async (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,6 +110,30 @@ export default function MyChangeEventsPage() {
       return true;
     });
   }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const ea = a as any, eb = b as any;
+      let va: string = '', vb: string = '';
+      switch (sortKey) {
+        case 'occurredDate': va = a.occurredDate || ''; vb = b.occurredDate || ''; break;
+        case 'class': va = ea.primaryItem?.category?.class?.name || ''; vb = eb.primaryItem?.category?.class?.name || ''; break;
+        case 'category': va = ea.primaryItem?.category?.name || ''; vb = eb.primaryItem?.category?.name || ''; break;
+        case 'item': va = ea.primaryItem?.name || ''; vb = eb.primaryItem?.name || ''; break;
+        case 'department': va = a.department || ''; vb = b.department || ''; break;
+        case 'manager': va = ea.manager?.name || ea.createdBy?.name || ''; vb = eb.manager?.name || eb.createdBy?.name || ''; break;
+        case 'customer': va = a.customer || ''; vb = b.customer || ''; break;
+        case 'project': va = a.project || ''; vb = b.project || ''; break;
+        case 'factory': va = a.factory || ''; vb = b.factory || ''; break;
+        case 'company': va = ea.company?.name || ''; vb = eb.company?.name || ''; break;
+        case 'actionDate': va = ea.actionDate || ''; vb = eb.actionDate || ''; break;
+        case 'status': va = a.status; vb = b.status; break;
+        default: va = a.occurredDate || ''; vb = b.occurredDate || '';
+      }
+      const cmp = va.localeCompare(vb, 'ko');
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
 
   const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText;
 
@@ -227,28 +275,28 @@ export default function MyChangeEventsPage() {
                 </tr>
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
                   <th className="px-2 py-1.5 border-r border-gray-200"></th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">대분류</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">중분류</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">세부항목</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">고객사</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">프로젝트</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">공장</th>
+                  <SortTh label="발생일" sortKey="occurredDate" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80" />
+                  <SortTh label="대분류" sortKey="class" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80" />
+                  <SortTh label="중분류" sortKey="category" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80" />
+                  <SortTh label="세부항목" sortKey="item" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80" />
+                  <SortTh label="발생부서" sortKey="department" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80" />
+                  <SortTh label="담당자" sortKey="manager" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-blue-500/80 border-r border-gray-200" />
+                  <SortTh label="고객사" sortKey="customer" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-gray-400" />
+                  <SortTh label="프로젝트" sortKey="project" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-gray-400" />
+                  <SortTh label="공장" sortKey="factory" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-gray-400" />
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">품번</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400 border-r border-gray-200">협력사</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
+                  <SortTh label="협력사" sortKey="company" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-gray-400 border-r border-gray-200" />
+                  <SortTh label="조치시점" sortKey="actionDate" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-amber-500/80" />
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
-                  <th className="px-2 py-1.5"></th>
+                  <SortTh label="상태" sortKey="status" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-muted-foreground" />
                   <th className="px-2 py-1.5"></th>
                   <th className="px-2 py-1.5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-                {filtered.map((event, idx) => {
+                {sorted.map((event, idx) => {
                   const e = event as any;
                   return (
                     <tr key={event.id}
