@@ -183,11 +183,11 @@ export default function MyChangeEventsPage() {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
-            <table className="w-full min-w-[1400px] text-xs border-collapse">
+            <table className="w-full min-w-[1600px] text-xs border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-8 border-r border-gray-200">NO</th>
-                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={4}>발생내역</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={6}>발생내역</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-gray-500 border-r border-gray-200" colSpan={5}>기본정보</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-14">상태</th>
@@ -195,7 +195,9 @@ export default function MyChangeEventsPage() {
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
                   <th className="px-2 py-1.5 border-r border-gray-200"></th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">분류</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">대분류</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">중분류</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">세부항목</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">고객사</th>
@@ -219,7 +221,9 @@ export default function MyChangeEventsPage() {
                       onClick={() => router.push(`/change-events/${event.id}`)}>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100">{idx + 1}</td>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <TipCell tip={e.primaryItem ? `${e.primaryItem.category?.class?.name || ''} > ${e.primaryItem.category?.name || ''} > ${e.primaryItem.name}` : ''} className="max-w-[100px] truncate px-2 py-2.5 text-center font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.category?.class?.name || ''} className="max-w-[80px] truncate px-2 py-2.5 text-center text-[10px]">{e.primaryItem?.category?.class?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.category?.name || ''} className="max-w-[80px] truncate px-2 py-2.5 text-center text-[10px] font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.name || ''} className="max-w-[90px] truncate px-2 py-2.5 text-center text-[10px]">{e.primaryItem?.name || '-'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center">{event.department || '-'}</td>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
                       <TipCell tip={event.customer || ''} className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.customer || '-'}</TipCell>

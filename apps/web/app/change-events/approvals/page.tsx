@@ -198,7 +198,7 @@ export default function ApprovalsPage() {
                 <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
                   <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10 border-r border-gray-200">NO</th>
                   <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-16">단계</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={4}>발생내역</th>
+                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={6}>발생내역</th>
                   <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
                   <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-28">처리</th>
                 </tr>
@@ -206,7 +206,9 @@ export default function ApprovalsPage() {
                   <th className="px-3 py-1.5 border-r border-gray-200"></th>
                   <th className="px-3 py-1.5"></th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">분류</th>
+                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">대분류</th>
+                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">중분류</th>
+                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">세부항목</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
                   <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
@@ -232,7 +234,9 @@ export default function ApprovalsPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <TipCell tip={e.primaryItem ? `${e.primaryItem.category?.class?.name || ''} > ${e.primaryItem.category?.name || ''} > ${e.primaryItem.name}` : ''} className="max-w-[120px] truncate px-3 py-3 text-center font-medium">{e.primaryItem?.category?.name || event.customer || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.category?.class?.name || ''} className="max-w-[70px] truncate px-3 py-3 text-center text-[10px]">{e.primaryItem?.category?.class?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.category?.name || ''} className="max-w-[70px] truncate px-3 py-3 text-center text-[10px] font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
+                      <TipCell tip={e.primaryItem?.name || ''} className="max-w-[80px] truncate px-3 py-3 text-center text-[10px]">{e.primaryItem?.name || '-'}</TipCell>
                       <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
                       <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700'}`}>
