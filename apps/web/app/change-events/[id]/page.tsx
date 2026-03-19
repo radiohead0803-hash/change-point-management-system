@@ -328,6 +328,19 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         </div>
       </div>
 
+      {/* 조치결과 */}
+      {((event as any).actionDate || (event as any).actionPlan || (event as any).actionResult || (event as any).qualityVerification) && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-amber-900/30 dark:bg-amber-900/10">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과</h3>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+            <InfoCard icon={Calendar} label="조치시점" value={(event as any).actionDate ? formatDate((event as any).actionDate) : '-'} />
+            <InfoCard icon={Tag} label="조치방안" value={(event as any).actionPlan || '-'} />
+            <InfoCard icon={Tag} label="조치결과" value={(event as any).actionResult || '-'} />
+            <InfoCard icon={Tag} label="품질검증" value={(event as any).qualityVerification || '-'} />
+          </div>
+        </div>
+      )}
+
       {/* 점검 결과 */}
       {event.inspectionResults && event.inspectionResults.length > 0 && (
         <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">

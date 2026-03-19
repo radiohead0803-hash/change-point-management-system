@@ -247,6 +247,32 @@ export class ChangeEventsService {
         } else if (data.status === 'APPROVED') {
           // 승인완료시 등록자에게 알림
           await this.notificationsService.notifyApproved(id, eventTitle, updated.createdById);
+
+          // 직접입력 태그(custom_*) → 기타 카테고리 세부항목 DB 반영
+          try {
+            const eventTags = await this.prisma.changeEventTag.findMany({
+              where: { eventId: id },
+              include: { item: true },
+            });
+            // custom_ prefix를 가진 태그를 찾아서 기타 카테고리에 추가
+            // (프론트에서 customName을 description에 저장)
+            for (const tag of eventTags) {
+              if (tag.itemId.startsWith('custom_') || tag.item === null) {
+                // 기타 카테고리 찾기
+                const etcCategory = await this.prisma.changeCategory.findFirst({
+                  where: { name: '기타', deletedAt: null },
+                });
+                if (etcCategory) {
+                  const code = `ETC_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                  await this.prisma.changeItem.create({
+                    data: { categoryId: etcCategory.id, code, name: tag.itemId.replace('custom_', '') },
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Custom tag to DB failed:', e);
+          }
         } else if (data.status === 'REVIEW_RETURNED') {
           // 보완요청시 등록자에게 알림
           await this.notificationsService.notifyReturned(id, eventTitle, updated.createdById);

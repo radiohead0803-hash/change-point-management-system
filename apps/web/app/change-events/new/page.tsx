@@ -32,6 +32,10 @@ const schema = z.object({
   tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
   description: z.string().min(1, '변경 상세내용을 입력해주세요'),
   department: z.string().optional(),
+  actionDate: z.string().optional(),
+  actionPlan: z.string().optional(),
+  actionResult: z.string().optional(),
+  qualityVerification: z.string().optional(),
   managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
@@ -88,6 +92,7 @@ export default function NewChangeEventPage() {
       companyId: user?.companyId || '', customer: '', project: '', productLine: '',
       partNumber: '', productName: '', factory: '', productionLine: '',
       description: '', department: '', managerId: user?.id || '',
+      actionDate: '', actionPlan: '', actionResult: '', qualityVerification: '',
       primaryItemId: '', tags: [], reviewerId: '', executiveId: '',
     },
   });
@@ -255,7 +260,31 @@ export default function NewChangeEventPage() {
           {errors.description && <p className="mt-1.5 text-xs text-red-500">{errors.description.message}</p>}
         </div>
 
-        {/* ⑤ 첨부파일 (Ctrl+V 붙여넣기) */}
+        {/* ⑤ 조치결과 */}
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5 shadow-sm sm:p-6 dark:border-amber-900/30 dark:bg-amber-900/10">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">조치결과</h2>
+          <p className="mb-4 text-[11px] text-muted-foreground">조치 내용은 등록 후에도 수정 가능합니다</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">조치시점</label>
+              <Input type="date" {...register('actionDate')} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">조치방안</label>
+              <Input {...register('actionPlan')} placeholder="조치방안 입력" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">조치결과</label>
+              <Input {...register('actionResult')} placeholder="조치결과 입력" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">품질검증</label>
+              <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" />
+            </div>
+          </div>
+        </div>
+
+        {/* ⑥ 첨부파일 (Ctrl+V 붙여넣기) */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">첨부파일 및 사진</h2>
           <p className="mb-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
