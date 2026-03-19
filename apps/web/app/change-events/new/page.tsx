@@ -183,9 +183,6 @@ export default function NewChangeEventPage() {
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
     const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
 
-    // 디버깅: 전송 데이터 확인
-    console.log('📤 Save data:', { customer: data.customer, project: data.project, factory: data.factory, department: data.department, companyId: data.companyId, managerId: data.managerId, status });
-
     if (status === 'SUBMITTED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
       if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }

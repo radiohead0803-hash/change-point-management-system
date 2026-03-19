@@ -94,12 +94,6 @@ export class ChangeEventsService {
     if (!eventData.companyId) throw new BadRequestException('협력사(companyId)는 필수입니다.');
     if (!eventData.managerId) throw new BadRequestException('담당자(managerId)는 필수입니다.');
 
-    console.log('Creating ChangeEvent with data:', JSON.stringify({
-      ...eventData,
-      createdById: userId,
-      tagsCount: validTags.length,
-    }, null, 2));
-
     try {
       return await this.prisma.changeEvent.create({
         data: {
@@ -115,18 +109,10 @@ export class ChangeEventsService {
           } : {}),
         },
         include: {
-          tags: {
-            include: {
-              item: true,
-            },
-          },
+          tags: { include: { item: true } },
         },
       });
     } catch (error: any) {
-      console.error('ChangeEvent create FAILED:', error?.message || error);
-      console.error('Error code:', error?.code);
-      console.error('Error meta:', JSON.stringify(error?.meta));
-      // 클라이언트에 상세 에러 반환
       const msg = error?.meta?.cause || error?.message || '알 수 없는 오류';
       throw new InternalServerErrorException(`변동점 등록 실패: ${msg}`);
     }
