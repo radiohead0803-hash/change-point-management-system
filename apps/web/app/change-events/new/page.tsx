@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { changeEvents, users } from '@/lib/api-client';
+import { getCodeOptions } from '@/lib/common-codes';
 import { useQuery } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,13 +39,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-/* ── 선택 옵션 ── */
-const CUSTOMERS = ['현대자동차', '기아', '제네시스', 'HMG', '기타'];
-const PROJECTS = ['NE (아이오닉5)', 'MX5 (아이오닉6)', 'EN1 (EV9)', 'GN (GV60)', 'CV (카니발)', 'SV (스타리아)', 'NE1 (아이오닉5 F/L)', 'OE (차세대)', '기타'];
-const PRODUCT_LINES = ['전장', '내장', '외장', '샤시', '파워트레인', 'BMS', '모터', '배터리', '기타'];
-const FACTORIES = ['아산공장', '울산공장', '광주공장', '화성공장', '기타'];
-const LINES = ['1라인', '2라인', '3라인', 'A라인', 'B라인', '기타'];
-const DEPTS = ['품질관리팀', '품질보증팀', '생산기술팀', '구매팀', '설계팀', '공정기술팀', '기타'];
+/* ── 선택 옵션 (기초정보 공통코드에서 로드) ── */
 
 const STEPS = [
   { label: '접수·등록', desc: '협력사/담당자' },
@@ -62,6 +57,23 @@ export default function NewChangeEventPage() {
   const [loading, setLoading] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [attachments, setAttachments] = useState<Att[]>([]);
+
+  // 공통코드에서 드롭다운 옵션 로드
+  const [CUSTOMERS, setCustomers] = useState<string[]>([]);
+  const [PROJECTS, setProjects] = useState<string[]>([]);
+  const [PRODUCT_LINES, setProductLines] = useState<string[]>([]);
+  const [FACTORIES, setFactories] = useState<string[]>([]);
+  const [LINES, setLines] = useState<string[]>([]);
+  const [DEPTS, setDepts] = useState<string[]>([]);
+
+  useEffect(() => {
+    setCustomers([...getCodeOptions('CUSTOMER'), '기타']);
+    setProjects([...getCodeOptions('PROJECT'), '기타']);
+    setProductLines([...getCodeOptions('PRODUCT_LINE'), '기타']);
+    setFactories([...getCodeOptions('FACTORY'), '기타']);
+    setLines([...getCodeOptions('LINE'), '기타']);
+    setDepts([...getCodeOptions('DEPARTMENT'), '기타']);
+  }, []);
 
   const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
   const { data: companies = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });

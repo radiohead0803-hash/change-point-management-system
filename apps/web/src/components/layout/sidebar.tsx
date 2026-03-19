@@ -22,6 +22,7 @@ import {
   Building2,
   FolderTree,
   ChevronDown,
+  List,
 } from 'lucide-react';
 
 /* ── 역할별 라벨 ── */
@@ -48,6 +49,7 @@ const navigation = [
   { name: '승인함',         href: '/change-events/approvals', icon: CheckSquare,     roles: ['ADMIN', 'TIER1_REVIEWER', 'TIER1_EDITOR', 'EXEC_APPROVER'] },
   { name: '기초정보', href: '', icon: Database, roles: ['ADMIN'], isGroup: true, children: [
     { name: '분류 체계',   href: '/admin/master-data', icon: FolderTree },
+    { name: '공통코드',   href: '/admin/codes',       icon: List },
     { name: '차종 현황',   href: '/admin/vehicles',    icon: Car },
     { name: '협력사 현황', href: '/admin/suppliers',   icon: Building2 },
   ]},
