@@ -132,10 +132,30 @@ export default function NewChangeEventPage() {
   const receiptMonth = occurredDate ? occurredDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
 
   /* ── 파일 처리 ── */
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_TOTAL_SIZE = 30 * 1024 * 1024; // 전체 30MB
   const toBase64 = (file: File): Promise<string> => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(file); });
 
   const addFiles = async (files: FileList | File[]) => {
-    const items = await Promise.all(Array.from(files).map(async (f) => {
+    const validFiles: File[] = [];
+    const currentTotal = attachments.reduce((sum, a) => sum + a.size, 0);
+    let addedSize = 0;
+
+    for (const f of Array.from(files)) {
+      if (f.size > MAX_FILE_SIZE) {
+        toast({ variant: 'destructive', title: `파일 크기 초과`, description: `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB) - 최대 10MB` });
+        continue;
+      }
+      if (currentTotal + addedSize + f.size > MAX_TOTAL_SIZE) {
+        toast({ variant: 'destructive', title: '전체 첨부 용량 초과', description: `최대 30MB까지 첨부 가능합니다` });
+        break;
+      }
+      addedSize += f.size;
+      validFiles.push(f);
+    }
+
+    if (validFiles.length === 0) return;
+    const items = await Promise.all(validFiles.map(async (f) => {
       const data = await toBase64(f);
       return { filename: f.name, mimetype: f.type, size: f.size, data, preview: f.type.startsWith('image/') ? data : undefined };
     }));
