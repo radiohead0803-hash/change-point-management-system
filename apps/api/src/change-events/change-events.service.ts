@@ -194,9 +194,11 @@ export class ChangeEventsService {
     // 상태 변경 권한 체크
     if (data.status) {
       const newStatus = data.status as string;
+      const canReview = [Role.TIER1_REVIEWER, Role.TIER1_EDITOR, Role.ADMIN].includes(userRole);
+      const canApprove = [Role.EXEC_APPROVER, Role.ADMIN].includes(userRole);
       if (
-        (newStatus === 'REVIEWED' && userRole !== Role.TIER1_REVIEWER) ||
-        (newStatus === 'APPROVED' && userRole !== Role.EXEC_APPROVER)
+        (newStatus === 'REVIEWED' && !canReview) ||
+        (newStatus === 'APPROVED' && !canApprove)
       ) {
         throw new ForbiddenException('해당 상태로 변경할 권한이 없습니다.');
       }
