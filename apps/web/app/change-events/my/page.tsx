@@ -13,6 +13,21 @@ import {
   FileText, ChevronDown,
 } from 'lucide-react';
 
+/* ── Tooltip 셀 ── */
+function TipCell({ children, tip, className = '' }: { children: React.ReactNode; tip?: string; className?: string }) {
+  return (
+    <td className={`group/tip relative ${className}`}>
+      {children}
+      {tip && tip.length > 6 && (
+        <div className="pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 hidden -translate-x-1/2 whitespace-normal rounded-lg bg-gray-900 px-3 py-2 text-[10px] leading-relaxed text-white shadow-lg group-hover/tip:block max-w-[250px] text-left">
+          {tip}
+          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </div>
+      )}
+    </td>
+  );
+}
+
 export default function MyChangeEventsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -204,20 +219,20 @@ export default function MyChangeEventsPage() {
                       onClick={() => router.push(`/change-events/${event.id}`)}>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100">{idx + 1}</td>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <td className="max-w-[100px] truncate px-2 py-2.5 text-center font-medium" title={e.primaryItem?.name || ''}>{e.primaryItem?.category?.name || '-'}</td>
+                      <TipCell tip={e.primaryItem ? `${e.primaryItem.category?.class?.name || ''} > ${e.primaryItem.category?.name || ''} > ${e.primaryItem.name}` : ''} className="max-w-[100px] truncate px-2 py-2.5 text-center font-medium">{e.primaryItem?.category?.name || '-'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center">{event.department || '-'}</td>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
-                      <td className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.customer || '-'}</td>
-                      <td className="max-w-[80px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.project || '-'}</td>
+                      <TipCell tip={event.customer || ''} className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.customer || '-'}</TipCell>
+                      <TipCell tip={event.project || ''} className="max-w-[80px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.project || '-'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center text-muted-foreground">{event.factory || '-'}</td>
                       <td className="whitespace-nowrap px-2 py-2.5 text-center font-mono text-[10px] text-muted-foreground">{event.partNumber || '-'}</td>
-                      <td className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground border-r border-gray-100">{e.company?.name || '-'}</td>
+                      <TipCell tip={e.company?.name || ''} className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground border-r border-gray-100">{e.company?.name || '-'}</TipCell>
                       <td className={`whitespace-nowrap px-2 py-2.5 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
                         {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
                       </td>
-                      <td className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
-                      <td className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
-                      <td className={`max-w-[80px] truncate px-2 py-2.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                      <TipCell tip={e.actionPlan || ''} className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</TipCell>
+                      <TipCell tip={e.actionResult || ''} className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</TipCell>
+                      <TipCell tip={e.qualityVerification || ''} className={`max-w-[80px] truncate px-2 py-2.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2 text-center">
                         <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
                       </td>

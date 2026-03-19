@@ -84,22 +84,12 @@ export default function ProfilePage() {
     });
   };
 
-  const mustChange = (profile as any)?.mustChangePassword;
-
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-xl font-bold tracking-tight sm:text-2xl">내 프로필</h1>
         <p className="mt-1 text-sm text-muted-foreground">개인정보 및 비밀번호를 관리합니다.</p>
       </div>
-
-      {mustChange && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-400">
-            ⚠️ 최초 로그인입니다. 비밀번호를 변경해주세요.
-          </p>
-        </div>
-      )}
 
       {/* 계정 정보 (읽기 전용) */}
       <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
@@ -164,15 +154,10 @@ export default function ProfilePage() {
       </div>
 
       {/* 비밀번호 변경 */}
-      <div className={`rounded-2xl border p-5 shadow-sm backdrop-blur-xl ${
-        mustChange
-          ? 'border-amber-300 bg-amber-50/70 dark:border-amber-800 dark:bg-amber-900/20'
-          : 'border-white/60 bg-white/70 dark:border-gray-800/60 dark:bg-gray-900/70'
-      }`}>
+      <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
         <h3 className="mb-4 text-sm font-semibold flex items-center gap-2">
           <Lock className="h-4 w-4 text-primary" />
           비밀번호 변경
-          {mustChange && <span className="text-[10px] font-bold text-amber-600 bg-amber-100 rounded px-1.5 py-0.5 dark:bg-amber-900/40 dark:text-amber-400">필수</span>}
         </h3>
         <div className="space-y-3">
           <div>

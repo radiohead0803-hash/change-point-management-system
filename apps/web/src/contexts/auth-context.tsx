@@ -50,12 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
 
-      // 최초 로그인시 비밀번호 변경 페이지로 이동
-      if ((data.user as any).mustChangePassword) {
-        router.push('/profile');
-      } else {
-        router.push('/dashboard');
-      }
+      router.push('/dashboard');
     } catch (error) {
       throw error;
     }

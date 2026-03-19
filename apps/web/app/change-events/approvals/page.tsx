@@ -14,6 +14,20 @@ import {
   UserCheck, Clock, Search, Filter, FileSpreadsheet,
 } from 'lucide-react';
 
+function TipCell({ children, tip, className = '' }: { children: React.ReactNode; tip?: string; className?: string }) {
+  return (
+    <td className={`group/tip relative ${className}`}>
+      {children}
+      {tip && tip.length > 6 && (
+        <div className="pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 hidden -translate-x-1/2 whitespace-normal rounded-lg bg-gray-900 px-3 py-2 text-[10px] leading-relaxed text-white shadow-lg group-hover/tip:block max-w-[250px] text-left">
+          {tip}
+          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </div>
+      )}
+    </td>
+  );
+}
+
 const FLOW_STEPS = [
   { status: 'SUBMITTED', label: '접수완료', nextStatus: 'REVIEWED', btnLabel: '1차 승인', allowedRoles: ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'], needsExecutive: true },
   { status: 'REVIEWED', label: '검토완료', nextStatus: 'APPROVED', btnLabel: '최종승인', allowedRoles: ['EXEC_APPROVER', 'ADMIN'], needsExecutive: false },
@@ -218,15 +232,15 @@ export default function ApprovalsPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <td className="max-w-[120px] truncate px-3 py-3 text-center font-medium" title={(event as any).primaryItem?.name || ''}>{(event as any).primaryItem?.category?.name || event.customer || '-'}</td>
+                      <TipCell tip={e.primaryItem ? `${e.primaryItem.category?.class?.name || ''} > ${e.primaryItem.category?.name || ''} > ${e.primaryItem.name}` : ''} className="max-w-[120px] truncate px-3 py-3 text-center font-medium">{e.primaryItem?.category?.name || event.customer || '-'}</TipCell>
                       <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
                       <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700'}`}>
                         {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
                       </td>
-                      <td className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
-                      <td className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
-                      <td className={`max-w-[80px] truncate px-3 py-3 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                      <TipCell tip={e.actionPlan || ''} className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</TipCell>
+                      <TipCell tip={e.actionResult || ''} className={`max-w-[100px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</TipCell>
+                      <TipCell tip={e.qualityVerification || ''} className={`max-w-[80px] truncate px-3 py-3 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                       <td className="whitespace-nowrap px-2 py-2 text-center">
                         <div className="flex gap-1 justify-center">
                           <button onClick={(ev) => handleReturn(event.id, ev)} disabled={processing === event.id}

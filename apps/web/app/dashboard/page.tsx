@@ -20,6 +20,21 @@ import {
 } from 'lucide-react';
 
 /* ── 접기/펼치기 섹션 ── */
+/* ── Tooltip 셀 ── */
+function TipCell({ children, tip, className = '' }: { children: React.ReactNode; tip?: string; className?: string }) {
+  return (
+    <td className={`group/tip relative ${className}`}>
+      {children}
+      {tip && tip.length > 6 && (
+        <div className="pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 hidden -translate-x-1/2 whitespace-normal rounded-lg bg-gray-900 px-3 py-2 text-[10px] leading-relaxed text-white shadow-lg group-hover/tip:block max-w-[250px] text-left">
+          {tip}
+          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </div>
+      )}
+    </td>
+  );
+}
+
 function CollapsibleSection({ title, icon: Icon, defaultOpen = true, children, className = '' }: {
   title: string; icon?: any; defaultOpen?: boolean; children: React.ReactNode; className?: string;
 }) {
@@ -599,15 +614,15 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
                     onClick={() => router.push(`/change-events/${event.id}`)}>
                     <td className="whitespace-nowrap px-3 py-3 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100 dark:border-gray-800">{idx + 1}</td>
                     <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                    <td className="max-w-[120px] truncate px-3 py-3 text-center font-medium" title={e.primaryItem?.name || event.customer || '-'}>{e.primaryItem?.category?.name ? `${e.primaryItem.category.name}` : (event.customer || '-')}</td>
+                    <TipCell tip={e.primaryItem ? `${e.primaryItem.category?.class?.name || ''} > ${e.primaryItem.category?.name || ''} > ${e.primaryItem.name}` : (event.customer || '')} className="max-w-[120px] truncate px-3 py-3 text-center font-medium">{e.primaryItem?.category?.name || (event.customer || '-')}</TipCell>
                     <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
                     <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800">{e.manager?.name || e.createdBy?.name || '-'}</td>
                     <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
                       {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
                     </td>
-                    <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
-                    <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
-                    <td className={`max-w-[100px] truncate px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                    <TipCell tip={e.actionPlan || ''} className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</TipCell>
+                    <TipCell tip={e.actionResult || ''} className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</TipCell>
+                    <TipCell tip={e.qualityVerification || ''} className={`max-w-[100px] truncate px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                     <td className="whitespace-nowrap px-2 py-2.5 text-center">
                       <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
                     </td>
