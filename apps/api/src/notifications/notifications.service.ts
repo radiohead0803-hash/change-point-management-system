@@ -45,7 +45,7 @@ export class NotificationsService {
 
   // 승인 요청 알림 전송 (검토자·중역에게)
   async notifyApprovalRequest(eventId: string, eventTitle: string, reviewerId?: string, executiveId?: string) {
-    const notifications = [];
+    const notifications: Promise<any>[] = [];
     if (reviewerId) {
       notifications.push(this.create({
         userId: reviewerId,
