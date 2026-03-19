@@ -104,7 +104,7 @@ export default function NewChangeEventPage() {
   const reviewers = allUsers.filter((u: any) => ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'].includes(u.role));
   const executives = allUsers.filter((u: any) => ['EXEC_APPROVER', 'ADMIN'].includes(u.role));
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       occurredDate: new Date().toISOString().slice(0, 10),
@@ -115,6 +115,18 @@ export default function NewChangeEventPage() {
       primaryItemId: '', tags: [], reviewerId: '', executiveId: '',
     },
   });
+
+  // user 로드 후 managerId/companyId 자동 설정
+  useEffect(() => {
+    if (user?.id) {
+      const currentMgr = watch('managerId');
+      if (!currentMgr) setValue('managerId', user.id);
+      if (user.companyId) {
+        const currentCo = watch('companyId');
+        if (!currentCo) setValue('companyId', user.companyId);
+      }
+    }
+  }, [user, setValue, watch]);
 
   const occurredDate = watch('occurredDate');
   const receiptMonth = occurredDate ? occurredDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
@@ -165,7 +177,10 @@ export default function NewChangeEventPage() {
       status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
       const { tags, ...rest } = data;
       const result = await changeEvents.create({
-        ...rest, primaryItemId: primaryItemId || undefined, receiptMonth, status,
+        ...rest,
+        managerId: rest.managerId || user?.id,
+        primaryItemId: primaryItemId || undefined,
+        receiptMonth, status,
         tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
       if (attachments.length && result.data?.id) {
@@ -217,7 +232,12 @@ export default function NewChangeEventPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
+      <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'), (formErrors) => {
+        // zod 유효성 검사 실패 시 첫 번째 에러 표시
+        const firstError = Object.values(formErrors)[0];
+        const msg = firstError?.message || '필수 항목을 확인해주세요';
+        toast({ variant: 'destructive', title: '입력 오류', description: typeof msg === 'string' ? msg : '필수 항목을 확인해주세요' });
+      })} className="space-y-5">
         {/* ① 변동점 발생항목 */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <div className="mb-3 flex items-center justify-between">
