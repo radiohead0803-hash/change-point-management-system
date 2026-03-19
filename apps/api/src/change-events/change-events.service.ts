@@ -2,10 +2,6 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { Prisma, ChangeEvent, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import * as fs from 'fs';
-import * as path from 'path';
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
 @Injectable()
 export class ChangeEventsService {
@@ -317,16 +313,48 @@ export class ChangeEventsService {
       throw new ForbiddenException('본인이 등록한 변동점만 수정할 수 있습니다.');
     }
 
-    // 상태 변경 권한 체크
-    if (data.status) {
+    // 상태 변경 검증
+    if (data.status && data.status !== event.status) {
       const newStatus = data.status as string;
+      const currentStatus = event.status;
+
+      // 허용된 상태 전이 규칙
+      const allowedTransitions: Record<string, string[]> = {
+        'DRAFT': ['SUBMITTED', 'DRAFT'],
+        'SUBMITTED': ['REVIEWED', 'REVIEW_RETURNED'],
+        'REVIEW_RETURNED': ['SUBMITTED', 'DRAFT'],
+        'REVIEWED': ['APPROVED', 'REJECTED'],
+        'APPROVED': ['CLOSED'],
+        'CLOSED': [],
+        'REJECTED': ['DRAFT'],
+      };
+
+      const allowed = allowedTransitions[currentStatus] || [];
+      if (!allowed.includes(newStatus)) {
+        throw new ForbiddenException(`${currentStatus}에서 ${newStatus}로 변경할 수 없습니다.`);
+      }
+
+      // 역할 권한 체크
       const canReview = ([Role.TIER1_REVIEWER, Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
       const canApprove = ([Role.EXEC_APPROVER, Role.ADMIN] as Role[]).includes(userRole);
-      if (
-        (newStatus === 'REVIEWED' && !canReview) ||
-        (newStatus === 'APPROVED' && !canApprove)
-      ) {
-        throw new ForbiddenException('해당 상태로 변경할 권한이 없습니다.');
+      const isOwnerOrEditor = event.createdById === userId || ([Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
+
+      if (newStatus === 'SUBMITTED' && !isOwnerOrEditor) {
+        throw new ForbiddenException('제출 권한이 없습니다.');
+      }
+      if ((newStatus === 'REVIEWED' || newStatus === 'REVIEW_RETURNED') && !canReview) {
+        throw new ForbiddenException('검토 권한이 없습니다.');
+      }
+      if ((newStatus === 'APPROVED' || newStatus === 'REJECTED') && !canApprove) {
+        throw new ForbiddenException('승인 권한이 없습니다.');
+      }
+
+      // 결재선 필수 검증
+      if (newStatus === 'SUBMITTED' && !event.reviewerId && !data.reviewerId) {
+        throw new BadRequestException('제출하려면 1차 검토자를 지정해야 합니다.');
+      }
+      if (newStatus === 'APPROVED' && !event.executiveId && !data.executiveId) {
+        throw new BadRequestException('최종승인하려면 전담중역을 지정해야 합니다.');
       }
     }
 
@@ -503,39 +531,16 @@ export class ChangeEventsService {
     });
   }
 
-  // ── Attachment CRUD (파일시스템 저장) ──
-
-  private ensureUploadDir(eventId: string): string {
-    const dir = path.join(UPLOAD_DIR, eventId);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return dir;
-  }
+  // ── Attachment CRUD (DB base64 저장 - Railway 영속성 보장) ──
 
   async addAttachment(eventId: string, data: { filename: string; mimetype: string; size: number; data: string }) {
-    // base64 데이터를 파일로 저장
-    const dir = this.ensureUploadDir(eventId);
-    const ext = path.extname(data.filename) || '';
-    const uniqueName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
-    const filePath = path.join(dir, uniqueName);
-
-    // base64 데이터 디코딩 (data:image/png;base64,xxx 형식 처리)
-    let base64Data = data.data;
-    if (base64Data.includes(',')) {
-      base64Data = base64Data.split(',')[1];
-    }
-    const buffer = Buffer.from(base64Data, 'base64');
-    fs.writeFileSync(filePath, buffer);
-
-    // DB에는 경로만 저장 (base64 데이터 X)
     return this.prisma.attachment.create({
       data: {
         eventId,
         filename: data.filename,
         mimetype: data.mimetype,
-        size: buffer.length,
-        path: path.join(eventId, uniqueName), // 상대경로 저장
+        size: data.size,
+        data: data.data, // base64 데이터를 DB TEXT 컬럼에 저장
       },
     });
   }
@@ -543,20 +548,12 @@ export class ChangeEventsService {
   async getAttachments(eventId: string) {
     return this.prisma.attachment.findMany({
       where: { eventId, deletedAt: null },
-      select: { id: true, filename: true, mimetype: true, size: true, path: true, createdAt: true },
+      select: { id: true, filename: true, mimetype: true, size: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async removeAttachment(attachmentId: string) {
-    const att = await this.prisma.attachment.findUnique({ where: { id: attachmentId } });
-    // 파일시스템에서 파일 삭제
-    if (att?.path) {
-      const filePath = path.join(UPLOAD_DIR, att.path);
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch { /* ignore */ }
-      }
-    }
     return this.prisma.attachment.update({
       where: { id: attachmentId },
       data: { deletedAt: new Date() },
@@ -575,22 +572,7 @@ export class ChangeEventsService {
       where: { id: attachmentId },
     });
     if (!att) throw new NotFoundException('첨부파일을 찾을 수 없습니다.');
-
-    // 파일시스템에서 파일 읽기
-    if (att.path) {
-      const filePath = path.join(UPLOAD_DIR, att.path);
-      if (fs.existsSync(filePath)) {
-        const buffer = fs.readFileSync(filePath);
-        const base64 = `data:${att.mimetype};base64,${buffer.toString('base64')}`;
-        return { ...att, data: base64 };
-      }
-    }
-
-    // 기존 DB 저장 데이터 호환 (마이그레이션 전 데이터)
-    if (att.data) {
-      return att;
-    }
-
-    throw new NotFoundException('파일이 존재하지 않습니다.');
+    if (!att.data) throw new NotFoundException('파일 데이터가 없습니다.');
+    return att;
   }
 }

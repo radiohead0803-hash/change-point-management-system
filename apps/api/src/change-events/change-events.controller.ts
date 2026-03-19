@@ -7,15 +7,9 @@ import {
   Param,
   Delete,
   Query,
-  Res,
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { Response } from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -172,23 +166,6 @@ export class ChangeEventsController {
   @ApiOperation({ summary: '첨부파일 데이터 조회 (base64)' })
   getAttachmentData(@Param('attachmentId') attachmentId: string) {
     return this.changeEventsService.getAttachmentData(attachmentId);
-  }
-
-  @Get('attachment-file/:attachmentId')
-  @ApiOperation({ summary: '첨부파일 직접 다운로드 (파일시스템)' })
-  async getAttachmentFile(@Param('attachmentId') attachmentId: string, @Res() res: Response) {
-    const att = await this.changeEventsService.getAttachmentMeta(attachmentId);
-    if (!att || !att.path) {
-      return res.status(404).json({ message: '파일을 찾을 수 없습니다.' });
-    }
-    const filePath = path.join(UPLOAD_DIR, att.path);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: '파일이 존재하지 않습니다.' });
-    }
-    res.setHeader('Content-Type', att.mimetype || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(att.filename)}"`);
-    const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
   }
 
   @Delete('attachments/:attachmentId')
