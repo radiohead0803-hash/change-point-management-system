@@ -270,17 +270,25 @@ export class ChangeEventsService {
         executive: true,
         reviewer: true,
         createdBy: true,
+        primaryItem: {
+          include: { category: { include: { class: true } } },
+        },
+        tags: {
+          include: { item: { include: { category: { include: { class: true } } } } },
+        },
+        attachments: {
+          where: { deletedAt: null },
+          select: { id: true, filename: true, mimetype: true, size: true, createdAt: true },
+        },
         inspectionResults: {
-          include: {
-            item: true,
-          },
+          include: { item: true },
         },
       },
     });
 
     // 상태 변경시 알림 전송
     if (data.status) {
-      const eventTitle = `${updated.customer} - ${updated.project}`;
+      const eventTitle = `${updated.customer || '미지정'} - ${updated.project || '-'}`;
       try {
         if (data.status === 'SUBMITTED') {
           // 제출시 검토자에게 알림
