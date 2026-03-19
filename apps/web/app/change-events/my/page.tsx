@@ -135,8 +135,8 @@ export default function MyChangeEventsPage() {
         </select>
         <div className="relative">
           <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
-          <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="검색..."
-            className="h-8 w-[100px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[140px]" />
+          <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="고객사, 프로젝트, 부서, 내용 검색..."
+            className="h-8 w-[200px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[280px]" />
         </div>
         {hasFilters && (
           <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}
@@ -167,26 +167,32 @@ export default function MyChangeEventsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
-          <div className="overflow-auto max-h-[600px]">
-            <table className="w-full min-w-[950px] text-xs border-collapse">
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
+            <table className="w-full min-w-[1400px] text-xs border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60">
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-10 border-r border-gray-200 dark:border-gray-700">NO</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>발생내역</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 border-r border-gray-200 dark:border-gray-700" colSpan={4}>조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-16">상태</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-8 border-r border-gray-200">NO</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-blue-600 border-r border-gray-200" colSpan={4}>발생내역</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-gray-500 border-r border-gray-200" colSpan={5}>기본정보</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold uppercase text-muted-foreground w-14">상태</th>
                 </tr>
                 <tr className="border-b border-gray-200 bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/40">
-                  <th className="px-3 py-1.5 border-r border-gray-200 dark:border-gray-700"></th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">분류</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200 dark:border-gray-700">담당자</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
-                  <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200 dark:border-gray-700">품질검증</th>
-                  <th className="px-3 py-1.5"></th>
+                  <th className="px-2 py-1.5 border-r border-gray-200"></th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">분류</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">고객사</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">프로젝트</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">공장</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400">품번</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-gray-400 border-r border-gray-200">협력사</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
+                  <th className="px-2 py-1.5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
@@ -196,18 +202,23 @@ export default function MyChangeEventsPage() {
                     <tr key={event.id}
                       className={`cursor-pointer transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900/40' : 'bg-gray-50/30 dark:bg-gray-800/20'}`}
                       onClick={() => router.push(`/change-events/${event.id}`)}>
-                      <td className="whitespace-nowrap px-3 py-3 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100 dark:border-gray-800">{idx + 1}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
-                      <td className="max-w-[120px] truncate px-3 py-3 text-center font-medium" title={(event as any).primaryItem?.name || ''}>{(event as any).primaryItem?.category?.name || event.customer || '-'}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center">{event.department || '-'}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800">{e.manager?.name || e.createdBy?.name || '-'}</td>
-                      <td className={`whitespace-nowrap px-3 py-3 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center text-[10px] font-bold text-muted-foreground/40 border-r border-gray-100">{idx + 1}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center font-medium">{formatDate(event.occurredDate).slice(5)}</td>
+                      <td className="max-w-[100px] truncate px-2 py-2.5 text-center font-medium" title={e.primaryItem?.name || ''}>{e.primaryItem?.category?.name || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">{event.department || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
+                      <td className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.customer || '-'}</td>
+                      <td className="max-w-[80px] truncate px-2 py-2.5 text-center text-muted-foreground">{event.project || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center text-muted-foreground">{event.factory || '-'}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center font-mono text-[10px] text-muted-foreground">{event.partNumber || '-'}</td>
+                      <td className="max-w-[70px] truncate px-2 py-2.5 text-center text-muted-foreground border-r border-gray-100">{e.company?.name || '-'}</td>
+                      <td className={`whitespace-nowrap px-2 py-2.5 text-center ${!e.actionDate ? 'text-red-400 font-medium' : 'text-emerald-700 dark:text-emerald-400'}`}>
                         {e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}
                       </td>
-                      <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
-                      <td className={`max-w-[120px] truncate px-3 py-3 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
-                      <td className={`max-w-[100px] truncate px-3 py-3 text-center border-r border-gray-100 dark:border-gray-800 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
-                      <td className="whitespace-nowrap px-2 py-2.5 text-center">
+                      <td className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionPlan ? 'text-red-400 font-medium' : ''}`}>{e.actionPlan || '미입력'}</td>
+                      <td className={`max-w-[100px] truncate px-2 py-2.5 text-center ${!e.actionResult ? 'text-red-400 font-medium' : ''}`}>{e.actionResult || '미입력'}</td>
+                      <td className={`max-w-[80px] truncate px-2 py-2.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                      <td className="whitespace-nowrap px-2 py-2 text-center">
                         <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
                       </td>
                     </tr>
