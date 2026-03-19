@@ -293,7 +293,7 @@ export default function MyChangeEventsPage() {
                               <FileEdit className="h-3 w-3" />
                             </button>
                           )}
-                          {event.status === 'DRAFT' && (user?.role === 'ADMIN' || event.createdById === user?.id) && (
+                          {(user?.role === 'ADMIN' || (event.status === 'DRAFT' && event.createdById === user?.id)) && (
                             <button onClick={(ev) => handleDelete(event.id, ev)}
                               className="rounded-md border border-gray-200 p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500" title="삭제">
                               <Trash2 className="h-3 w-3" />
