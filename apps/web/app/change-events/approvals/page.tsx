@@ -143,22 +143,24 @@ export default function ApprovalsPage() {
       </div>
 
       {/* 필터 */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/30 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/20">
-        <Filter className="h-3.5 w-3.5 text-muted-foreground/50" />
-        <div className="flex gap-1.5 rounded-lg bg-gray-100/60 p-0.5 dark:bg-gray-800/40">
-          {[{ key: 'ALL', label: '전체' }, { key: 'SUBMITTED', label: '1차 승인' }, { key: 'REVIEWED', label: '최종 승인' }].map((tab) => (
-            <button key={tab.key} onClick={() => setStepFilter(tab.key)}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-all ${stepFilter === tab.key ? 'bg-white shadow-sm dark:bg-gray-700' : 'text-muted-foreground'}`}>
-              {tab.label} ({stepCounts[tab.key as keyof typeof stepCounts] || 0})
-            </button>
-          ))}
+      <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/20">
+        <div className="flex items-center gap-2 px-3 py-2.5 min-w-max sm:px-4 sm:py-3">
+          <Filter className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/50" />
+          <div className="flex gap-1 rounded-lg bg-gray-100/60 p-0.5 dark:bg-gray-800/40">
+            {[{ key: 'ALL', label: '전체' }, { key: 'SUBMITTED', label: '1차' }, { key: 'REVIEWED', label: '최종' }].map((tab) => (
+              <button key={tab.key} onClick={() => setStepFilter(tab.key)}
+                className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all whitespace-nowrap ${stepFilter === tab.key ? 'bg-white shadow-sm dark:bg-gray-700' : 'text-muted-foreground'}`}>
+                {tab.label} ({stepCounts[tab.key as keyof typeof stepCounts] || 0})
+              </button>
+            ))}
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="검색..."
+              className="h-8 w-[100px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[160px]" />
+          </div>
+          <span className="ml-auto text-[10px] text-muted-foreground whitespace-nowrap">{filtered.length}건</span>
         </div>
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
-          <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="검색..."
-            className="h-8 w-[120px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[160px]" />
-        </div>
-        <span className="ml-auto text-[10px] text-muted-foreground">{filtered.length}건</span>
       </div>
 
       {/* 전담중역 모달 */}

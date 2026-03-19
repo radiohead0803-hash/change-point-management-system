@@ -140,38 +140,40 @@ export default function MyChangeEventsPage() {
       </div>
 
       {/* 필터 */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/30 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/20">
-        <Filter className="h-3.5 w-3.5 text-muted-foreground/50" />
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[120px]" />
-        <span className="text-[10px] text-muted-foreground">~</span>
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[120px]" />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
-          <option value="ALL">전체 상태 ({statusCounts.ALL || 0})</option>
-          <option value="DRAFT">임시저장 ({statusCounts.DRAFT || 0})</option>
-          <option value="SUBMITTED">제출됨 ({statusCounts.SUBMITTED || 0})</option>
-          <option value="REVIEW_RETURNED">보완요청 ({statusCounts.REVIEW_RETURNED || 0})</option>
-          <option value="REVIEWED">검토완료 ({statusCounts.REVIEWED || 0})</option>
-          <option value="APPROVED">승인완료 ({statusCounts.APPROVED || 0})</option>
-          <option value="CLOSED">종결 ({statusCounts.CLOSED || 0})</option>
-        </select>
-        <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}
-          className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
-          <option value="ALL">전체 고객사</option>
-          {customers.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
-          <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="고객사, 프로젝트, 부서, 내용 검색..."
-            className="h-8 w-[200px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[280px]" />
+      <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50/30 dark:border-gray-800 dark:bg-gray-800/20">
+        <div className="flex items-center gap-2 px-3 py-2.5 min-w-max sm:px-4 sm:py-3">
+          <Filter className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/50" />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+            className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[115px]" />
+          <span className="text-[10px] text-muted-foreground">~</span>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+            className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[115px]" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
+            <option value="ALL">전체 ({statusCounts.ALL || 0})</option>
+            <option value="DRAFT">임시저장 ({statusCounts.DRAFT || 0})</option>
+            <option value="SUBMITTED">제출 ({statusCounts.SUBMITTED || 0})</option>
+            <option value="REVIEW_RETURNED">보완 ({statusCounts.REVIEW_RETURNED || 0})</option>
+            <option value="REVIEWED">검토 ({statusCounts.REVIEWED || 0})</option>
+            <option value="APPROVED">승인 ({statusCounts.APPROVED || 0})</option>
+            <option value="CLOSED">종결 ({statusCounts.CLOSED || 0})</option>
+          </select>
+          <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}
+            className="h-8 rounded-lg border border-input bg-white px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900">
+            <option value="ALL">전체 고객사</option>
+            {customers.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/40" />
+            <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="검색..."
+              className="h-8 w-[100px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[180px]" />
+          </div>
+          {hasFilters && (
+            <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}
+              className="text-[10px] text-primary hover:underline whitespace-nowrap">초기화</button>
+          )}
+          <span className="ml-auto text-[10px] text-muted-foreground whitespace-nowrap">{filtered.length}건</span>
         </div>
-        {hasFilters && (
-          <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}
-            className="text-[10px] text-primary hover:underline">초기화</button>
-        )}
-        <span className="ml-auto text-[10px] text-muted-foreground">{filtered.length}건</span>
       </div>
 
       {/* 테이블 */}

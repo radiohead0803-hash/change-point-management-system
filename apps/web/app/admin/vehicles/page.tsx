@@ -172,7 +172,7 @@ export default function VehiclesPage() {
           <h3 className="mb-3 text-sm font-semibold text-blue-700 dark:text-blue-400">
             {adding ? '새 차종 추가' : '차종 수정'}
           </h3>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-6">
             <Input placeholder="차종명 *" value={form.name} onChange={e => updateField('name', e.target.value)} className="text-sm" />
             <Input placeholder="코드 *" value={form.code} onChange={e => updateField('code', e.target.value)} className="text-sm" />
             <Input placeholder="고객사" value={form.customer} onChange={e => updateField('customer', e.target.value)} className="text-sm" />

@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI 카드 */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
         {[
           { label: '전체', value: stats.total, icon: Layers, color: 'text-gray-600' },
           { label: '승인완료', value: stats.approved, icon: CheckCircle2, color: 'text-green-600' },
