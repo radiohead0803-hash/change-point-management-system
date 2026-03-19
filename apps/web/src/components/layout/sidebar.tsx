@@ -4,10 +4,13 @@ import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { notifications } from '@/lib/api-client';
 import {
   LayoutDashboard,
   FileText,
   ClipboardList,
+  Bell,
   CheckSquare,
   Settings,
   Database,
@@ -48,10 +51,16 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-notifications'],
+    queryFn: () => notifications.unreadCount().then(r => r.data),
+    refetchInterval: 30000, // 30초마다 갱신
+  });
+
   return (
     <div className="flex h-full w-[260px] flex-col border-r border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80">
       {/* 로고 */}
-      <div className="flex h-16 items-center px-5">
+      <div className="flex h-16 items-center justify-between px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
             <span className="text-sm font-bold text-primary">C</span>
@@ -61,6 +70,14 @@ export default function Sidebar() {
             <p className="text-[10px] text-muted-foreground">(주)캠스</p>
           </div>
         </div>
+        <Link href="/notifications" className="relative rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800">
+          <Bell className="h-4.5 w-4.5" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
       </div>
 
       {/* 네비게이션 */}

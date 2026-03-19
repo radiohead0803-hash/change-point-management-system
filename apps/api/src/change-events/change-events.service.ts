@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Prisma, ChangeEvent, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ChangeEventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(data: any, userId: string) {
     const { tags, ...eventData } = data;
@@ -199,7 +203,7 @@ export class ChangeEventsService {
     }
 
     const { tags, ...updateData } = data;
-    return this.prisma.changeEvent.update({
+    const updated = await this.prisma.changeEvent.update({
       where: { id },
       data: {
         ...updateData,
@@ -219,6 +223,7 @@ export class ChangeEventsService {
         manager: true,
         executive: true,
         reviewer: true,
+        createdBy: true,
         inspectionResults: {
           include: {
             item: true,
@@ -226,6 +231,31 @@ export class ChangeEventsService {
         },
       },
     });
+
+    // 상태 변경시 알림 전송
+    if (data.status) {
+      const eventTitle = `${updated.customer} - ${updated.project}`;
+      try {
+        if (data.status === 'SUBMITTED') {
+          // 제출시 검토자에게 알림
+          await this.notificationsService.notifyApprovalRequest(id, eventTitle, updated.reviewerId || undefined, undefined);
+        } else if (data.status === 'REVIEWED') {
+          // 검토완료시 전담중역에게 알림
+          await this.notificationsService.notifyApprovalRequest(id, eventTitle, undefined, updated.executiveId || undefined);
+        } else if (data.status === 'APPROVED') {
+          // 승인완료시 등록자에게 알림
+          await this.notificationsService.notifyApproved(id, eventTitle, updated.createdById);
+        } else if (data.status === 'REVIEW_RETURNED') {
+          // 보완요청시 등록자에게 알림
+          await this.notificationsService.notifyReturned(id, eventTitle, updated.createdById);
+        }
+      } catch (e) {
+        // 알림 실패해도 상태 변경은 유지
+        console.error('Notification send failed:', e);
+      }
+    }
+
+    return updated;
   }
 
   async remove(id: string, userId: string, userRole: Role) {

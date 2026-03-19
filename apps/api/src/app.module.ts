@@ -9,6 +9,7 @@ import { InspectionModule } from './inspection/inspection.module';
 import { ExcelModule } from './excel/excel.module';
 import { SettingsModule } from './settings/settings.module';
 import { UsersModule } from './users/users.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -36,6 +37,7 @@ import { BootstrapService } from './bootstrap.service';
     ExcelModule,
     SettingsModule,
     UsersModule,
+    NotificationsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

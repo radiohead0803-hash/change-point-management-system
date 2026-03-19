@@ -304,3 +304,25 @@ model Attachment {
 
   @@map("attachments")
 }
+
+// 알림
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String    // 수신자
+  type        NotificationType
+  title       String
+  message     String
+  eventId     String?   // 관련 변동점
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  APPROVAL_REQUEST   // 승인 요청
+  APPROVED           // 승인 완료
+  REVIEW_RETURNED    // 보완 요청
+  SUBMITTED          // 제출됨
+}
