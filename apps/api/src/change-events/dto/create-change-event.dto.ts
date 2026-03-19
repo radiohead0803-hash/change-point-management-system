@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsEnum, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { EventStatus } from '@prisma/client';
 import { ChangeEventTagDto } from './change-event-tag.dto';
 
 export class CreateChangeEventDto {
@@ -10,9 +11,14 @@ export class CreateChangeEventDto {
   receiptMonth: string;
 
   @ApiProperty({ description: '발생일' })
-  @IsDateString()
+  @IsString()
   @IsNotEmpty()
   occurredDate: string;
+
+  @ApiProperty({ description: '상태', enum: EventStatus, required: false })
+  @IsEnum(EventStatus)
+  @IsOptional()
+  status?: EventStatus;
 
   @ApiProperty({ description: '고객사' })
   @IsString()

@@ -12,19 +12,59 @@ export class ChangeEventsService {
 
   async create(data: any, userId: string) {
     const { tags, ...rawData } = data;
-    // 허용된 필드만 필터링 (알 수 없는 필드는 Prisma 오류 발생)
-    const allowedFields = [
-      'receiptMonth', 'occurredDate', 'customer', 'project', 'productLine',
-      'partNumber', 'productName', 'factory', 'productionLine', 'companyId',
-      'primaryItemId', 'description', 'department', 'status',
-      'actionDate', 'actionPlan', 'actionResult', 'qualityVerification',
-      'managerId', 'executiveId', 'reviewerId',
+
+    // 허용된 필드 (String 타입)
+    const stringFields = [
+      'receiptMonth', 'customer', 'project', 'productLine',
+      'partNumber', 'productName', 'factory', 'productionLine',
+      'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification',
     ];
-    // 빈 문자열을 null로 변환 (optional 필드)
+    // 허용된 필드 (관계 ID - 빈 문자열이면 null, 유효한 ID만)
+    const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
+    // 날짜 필드 (문자열 → Date 변환 필요)
+    const dateFields = ['occurredDate', 'actionDate'];
+    // 상태 필드
+    const enumFields = ['status'];
+
+    // 데이터 정제
     const eventData: any = {};
-    for (const [key, value] of Object.entries(rawData)) {
-      if (!allowedFields.includes(key)) continue; // 알 수 없는 필드 무시
-      eventData[key] = value === '' ? null : value;
+
+    // String 필드: 빈 문자열 → null
+    for (const key of stringFields) {
+      const val = rawData[key];
+      if (val !== undefined) {
+        eventData[key] = (val === '' || val === null) ? null : val;
+      }
+    }
+
+    // ID 필드: 빈 문자열 → undefined (Prisma에 전달 안 함), 유효한 ID만 설정
+    for (const key of idFields) {
+      const val = rawData[key];
+      if (val && val !== '') {
+        eventData[key] = val;
+      }
+      // 빈 문자열이거나 없으면 eventData에 포함하지 않음 → Prisma default/null 사용
+    }
+
+    // 날짜 필드: 문자열 → Date 객체 변환
+    for (const key of dateFields) {
+      const val = rawData[key];
+      if (val && val !== '') {
+        try {
+          eventData[key] = new Date(val);
+        } catch {
+          eventData[key] = null;
+        }
+      }
+      // 빈 문자열이면 null (nullable) 또는 생략
+    }
+
+    // 상태 필드
+    for (const key of enumFields) {
+      const val = rawData[key];
+      if (val && val !== '') {
+        eventData[key] = val;
+      }
     }
 
     // 정책 설정 확인
@@ -40,31 +80,40 @@ export class ChangeEventsService {
       },
     });
 
-    // 정책이 활성화되어 있는데 96태그가 없는 경우
     const settingValue = requireTag?.value as any;
     if (settingValue?.enabled && (!tags || tags.length === 0)) {
       throw new ForbiddenException('96항목 태그는 필수항목입니다.');
     }
 
-    return this.prisma.changeEvent.create({
-      data: {
-        ...eventData,
-        createdById: userId,
-        tags: {
-          create: tags?.map((tag) => ({
-            itemId: tag.itemId,
-            tagType: tag.tagType,
-          })),
+    // 태그 데이터 정제 (유효한 태그만)
+    const validTags = (tags || []).filter((t: any) => t.itemId && t.itemId !== '' && !t.itemId.startsWith('custom_'));
+
+    try {
+      return await this.prisma.changeEvent.create({
+        data: {
+          ...eventData,
+          createdById: userId,
+          ...(validTags.length > 0 ? {
+            tags: {
+              create: validTags.map((tag: any) => ({
+                itemId: tag.itemId,
+                tagType: tag.tagType || 'TAG',
+              })),
+            },
+          } : {}),
         },
-      },
-      include: {
-        tags: {
-          include: {
-            item: true,
+        include: {
+          tags: {
+            include: {
+              item: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error: any) {
+      console.error('ChangeEvent create error:', error?.message || error);
+      throw error;
+    }
   }
 
   async findAll(params: {
@@ -257,11 +306,48 @@ export class ChangeEventsService {
       }
     }
 
-    const { tags, ...updateData } = data;
+    const { tags, ...rawUpdateData } = data;
+
+    // 데이터 정제 (허용된 필드만, 타입 변환)
+    const cleanData: any = {};
+    const stringFields = ['receiptMonth', 'customer', 'project', 'productLine', 'partNumber', 'productName', 'factory', 'productionLine', 'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification'];
+    const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
+    const dateFields = ['occurredDate', 'actionDate'];
+    const enumFields = ['status'];
+
+    for (const key of stringFields) {
+      if (rawUpdateData[key] !== undefined) {
+        cleanData[key] = (rawUpdateData[key] === '' || rawUpdateData[key] === null) ? null : rawUpdateData[key];
+      }
+    }
+    for (const key of idFields) {
+      if (rawUpdateData[key] !== undefined) {
+        if (rawUpdateData[key] && rawUpdateData[key] !== '') {
+          cleanData[key] = rawUpdateData[key];
+        } else {
+          cleanData[key] = null;
+        }
+      }
+    }
+    for (const key of dateFields) {
+      if (rawUpdateData[key] !== undefined) {
+        if (rawUpdateData[key] && rawUpdateData[key] !== '') {
+          try { cleanData[key] = new Date(rawUpdateData[key]); } catch { cleanData[key] = null; }
+        } else {
+          cleanData[key] = null;
+        }
+      }
+    }
+    for (const key of enumFields) {
+      if (rawUpdateData[key] !== undefined && rawUpdateData[key] !== '') {
+        cleanData[key] = rawUpdateData[key];
+      }
+    }
+
     const updated = await this.prisma.changeEvent.update({
       where: { id },
       data: {
-        ...updateData,
+        ...cleanData,
         updatedById: userId,
         ...(tags ? {
           tags: {

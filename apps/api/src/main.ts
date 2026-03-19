@@ -12,7 +12,9 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',').map((s) => s.trim())
+      : true, // 개발 환경에서는 모든 origin 허용
     credentials: true,
   });
 

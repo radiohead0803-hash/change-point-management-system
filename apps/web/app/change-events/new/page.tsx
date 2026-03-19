@@ -161,7 +161,7 @@ export default function NewChangeEventPage() {
       const { tags, ...rest } = data;
       const result = await changeEvents.create({
         ...rest, receiptMonth, status,
-        createdById: user.id, tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
+        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
       if (attachments.length && result.data?.id) {
         await Promise.all(attachments.map((a) => changeEvents.addAttachment(result.data.id, { filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data })));
