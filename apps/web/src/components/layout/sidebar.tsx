@@ -23,6 +23,7 @@ import {
   FolderTree,
   ChevronDown,
   List,
+  BarChart3,
 } from 'lucide-react';
 
 /* ── 역할별 라벨 ── */
@@ -47,6 +48,7 @@ const navigation = [
   { name: '변동점 등록',     href: '/change-events/new',       icon: FileText,        roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
   { name: '발생현황',       href: '/change-events/my',        icon: ClipboardList,   roles: ['ADMIN', 'TIER1_EDITOR', 'TIER1_REVIEWER', 'EXEC_APPROVER', 'TIER2_EDITOR'] },
   { name: '승인함',         href: '/change-events/approvals', icon: CheckSquare,     roles: ['ADMIN', 'TIER1_REVIEWER', 'TIER1_EDITOR', 'EXEC_APPROVER'] },
+  { name: '시각화 분석',    href: '/analytics',              icon: BarChart3,       roles: null },
   { name: '기초정보', href: '', icon: Database, roles: ['ADMIN'], isGroup: true, children: [
     { name: '분류 체계',   href: '/admin/master-data', icon: FolderTree },
     { name: '공통코드',   href: '/admin/codes',       icon: List },

@@ -35,22 +35,26 @@ function TipCell({ children, tip, className = '' }: { children: React.ReactNode;
   );
 }
 
-function CollapsibleSection({ title, icon: Icon, defaultOpen = true, children, className = '' }: {
-  title: string; icon?: any; defaultOpen?: boolean; children: React.ReactNode; className?: string;
+function CollapsibleSection({ title, icon: Icon, defaultOpen = true, children, className = '', linkHref }: {
+  title: string; icon?: any; defaultOpen?: boolean; children: React.ReactNode; className?: string; linkHref?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const r = useRouter();
   return (
     <div className={`overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70 ${className}`}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between p-4 sm:p-5 text-left transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
-      >
-        <h3 className="flex items-center gap-2 text-sm font-semibold">
+      <div className="flex items-center justify-between p-4 sm:p-5">
+        <h3
+          className={`flex items-center gap-2 text-sm font-semibold ${linkHref ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+          onClick={() => linkHref && r.push(linkHref)}
+        >
           {Icon && <Icon className="h-4 w-4 text-primary" />}
           {title}
+          {linkHref && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40" />}
         </h3>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
+        <button onClick={() => setOpen(!open)} className="rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <ChevronDown className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
       {open && <div className="border-t border-gray-100 dark:border-gray-800">{children}</div>}
     </div>
   );
@@ -331,7 +335,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 시각화 분석 (전체 접기/펼치기) */}
-      <CollapsibleSection title="시각화 분석 · AI 인사이트" icon={BarChart3}>
+      <CollapsibleSection title="시각화 분석 · AI 인사이트" icon={BarChart3} linkHref="/analytics">
         <div className="space-y-4 p-4 sm:p-5">
           {/* 차트 1행 */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
