@@ -80,12 +80,21 @@ export default function SuppliersPage() {
   };
   const typeIcons: Record<string, any> = { TIER1: Factory, TIER2: Truck, CUSTOMER: Building2 };
 
+  // 코드 자동 생성: TYPE_001, TYPE_002 ...
+  const generateCode = (type: string) => {
+    const prefix = type === 'TIER1' ? 'T1' : type === 'TIER2' ? 'T2' : 'CU';
+    const existing = companies.filter((c: Company) => c.code.startsWith(prefix));
+    const nextNum = existing.length + 1;
+    return `${prefix}_${String(nextNum).padStart(3, '0')}`;
+  };
+
   const handleAdd = () => {
-    if (!form.name || !form.code) {
-      toast({ variant: 'destructive', title: '업체명과 코드를 입력해주세요' });
+    if (!form.name) {
+      toast({ variant: 'destructive', title: '업체명을 입력해주세요' });
       return;
     }
-    createM.mutate(form);
+    const autoCode = generateCode(form.type);
+    createM.mutate({ ...form, code: autoCode });
   };
 
   const handleEdit = (id: string) => {
@@ -164,7 +173,13 @@ export default function SuppliersPage() {
           </h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Input placeholder="업체명 *" value={form.name} onChange={e => updateField('name', e.target.value)} className="text-sm" />
-            <Input placeholder="코드 *" value={form.code} onChange={e => updateField('code', e.target.value)} className="text-sm" />
+            {editing ? (
+              <Input placeholder="코드" value={form.code} onChange={e => updateField('code', e.target.value)} className="text-sm" />
+            ) : (
+              <div className="flex h-11 items-center rounded-xl border border-input bg-gray-50 px-3 text-sm text-muted-foreground dark:bg-gray-800">
+                코드 자동부여
+              </div>
+            )}
             <select
               value={form.type}
               onChange={e => updateField('type', e.target.value)}
