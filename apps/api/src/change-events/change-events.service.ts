@@ -12,9 +12,18 @@ export class ChangeEventsService {
 
   async create(data: any, userId: string) {
     const { tags, ...rawData } = data;
+    // 허용된 필드만 필터링 (알 수 없는 필드는 Prisma 오류 발생)
+    const allowedFields = [
+      'receiptMonth', 'occurredDate', 'customer', 'project', 'productLine',
+      'partNumber', 'productName', 'factory', 'productionLine', 'companyId',
+      'primaryItemId', 'description', 'department', 'status',
+      'actionDate', 'actionPlan', 'actionResult', 'qualityVerification',
+      'managerId', 'executiveId', 'reviewerId',
+    ];
     // 빈 문자열을 null로 변환 (optional 필드)
     const eventData: any = {};
     for (const [key, value] of Object.entries(rawData)) {
+      if (!allowedFields.includes(key)) continue; // 알 수 없는 필드 무시
       eventData[key] = value === '' ? null : value;
     }
 

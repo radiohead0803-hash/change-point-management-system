@@ -157,7 +157,7 @@ export default function NewChangeEventPage() {
       status === 'DRAFT' ? setDraftSaving(true) : setLoading(true);
       const { tags, ...rest } = data;
       const result = await changeEvents.create({
-        ...rest, receiptMonth, status, changeType: 'FOUR_M', category: '', subCategory: '',
+        ...rest, receiptMonth, status,
         createdById: user.id, tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
       });
       if (attachments.length && result.data?.id) {

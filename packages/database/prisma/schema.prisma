@@ -138,10 +138,10 @@ model ChangeEvent {
   productionLine  String?   // 라인
   companyId       String    // 협력사 ID
   company         Company   @relation(fields: [companyId], references: [id])
-  primaryItemId   String    // 주 분류 항목
-  primaryItem     ChangeItem @relation("PrimaryClassification", fields: [primaryItemId], references: [id])
+  primaryItemId   String?   // 주 분류 항목 (임시저장 시 미지정 가능)
+  primaryItem     ChangeItem? @relation("PrimaryClassification", fields: [primaryItemId], references: [id])
   tags            ChangeEventTag[] // 추가 분류 태그
-  description     String    // 변경 상세내용
+  description     String?   // 변경 상세내용 (임시저장 시 미입력 가능)
   department      String?   // 발생부서
   status          EventStatus @default(DRAFT)
 
