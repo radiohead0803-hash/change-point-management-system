@@ -315,133 +315,115 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* 차트 영역 - 1행 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 발생 추이 */}
-        <CollapsibleSection title="발생 추이" icon={BarChart3}>
-          <div className="p-4 sm:p-5">
-          {trendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="count" name="변동점" fill="#3b82f6" radius={[6, 6, 0, 0]}>
-                  <LabelList dataKey="count" position="top" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
-          )}
-          </div>
-        </CollapsibleSection>
-
-        {/* 상태 분포 */}
-        <CollapsibleSection title="상태별 분포">
-          <div className="p-4 sm:p-5">
-          {statusPieData.length > 0 ? (
-            <div className="flex flex-col items-center sm:flex-row">
-              <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
-                <PieChart>
-                  <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
-                    {statusPieData.map((_, idx) => (<Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
-                {statusPieData.map((d, idx) => (
-                  <div key={d.status} className="flex items-center gap-2 text-xs">
-                    <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="ml-auto font-semibold">{d.value}건</span>
-                  </div>
-                ))}
-              </div>
+      {/* 시각화 분석 (전체 접기/펼치기) */}
+      <CollapsibleSection title="시각화 분석 · AI 인사이트" icon={BarChart3}>
+        <div className="space-y-4 p-4 sm:p-5">
+          {/* 차트 1행 */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 text-primary" />발생 추이</h4>
+              {trendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+                    <Bar dataKey="count" name="변동점" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                      <LabelList dataKey="count" position="top" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>}
             </div>
-          ) : (
-            <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
-          )}
-          </div>
-        </CollapsibleSection>
-      </div>
-
-      {/* 차트 영역 - 2행: 업체별 분석 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 협력사별 변동점 */}
-        <CollapsibleSection title="협력사별 변동점" icon={Building2}>
-          <div className="p-4 sm:p-5">
-          {companyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={companyData} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]}>
-                  <LabelList dataKey="count" position="right" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
-          )}
-          </div>
-        </CollapsibleSection>
-
-        {/* 고객사별 변동점 */}
-        <CollapsibleSection title="고객사별 변동점" icon={Building2}>
-          <div className="p-4 sm:p-5">
-          {customerData.length > 0 ? (
-            <div className="flex flex-col items-center sm:flex-row">
-              <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
-                <PieChart>
-                  <Pie data={customerData} cx="50%" cy="50%" outerRadius={65} paddingAngle={2} dataKey="count" nameKey="fullName">
-                    {customerData.map((_, idx) => (<Cell key={idx} fill={COMPANY_COLORS[idx % COMPANY_COLORS.length]} />))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
-                {customerData.map((d, idx) => (
-                  <div key={d.fullName} className="flex items-center gap-2 text-xs">
-                    <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: COMPANY_COLORS[idx % COMPANY_COLORS.length] }} />
-                    <span className="text-muted-foreground truncate">{d.fullName}</span>
-                    <span className="ml-auto font-semibold">{d.count}건</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>
-          )}
-          </div>
-        </CollapsibleSection>
-      </div>
-
-      {/* AI 인사이트 */}
-      {insights.length > 0 && (
-        <CollapsibleSection title={`AI 인사이트 · ${timeRanges.find(t => t.key === timeRange)?.label}`} icon={Lightbulb} defaultOpen={false}>
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
-            {insights.map((insight, idx) => {
-              const Icon = insight.icon;
-              return (
-                <div key={idx} className={`rounded-xl border p-3.5 ${insightBg[insight.type]}`}>
-                  <div className="flex items-start gap-2.5">
-                    <Icon className={`mt-0.5 h-4 w-4 flex-shrink-0 ${insightIcon[insight.type]}`} />
-                    <div>
-                      <p className="text-xs font-semibold">{insight.title}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{insight.desc}</p>
-                    </div>
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-muted-foreground">상태별 분포</h4>
+              {statusPieData.length > 0 ? (
+                <div className="flex flex-col items-center sm:flex-row">
+                  <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
+                    <PieChart><Pie data={statusPieData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
+                      {statusPieData.map((_, idx) => (<Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />))}
+                    </Pie><Tooltip /></PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
+                    {statusPieData.map((d, idx) => (
+                      <div key={d.status} className="flex items-center gap-2 text-xs">
+                        <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
+                        <span className="text-muted-foreground">{d.name}</span>
+                        <span className="ml-auto font-semibold">{d.value}건</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              ) : <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>}
+            </div>
           </div>
-        </CollapsibleSection>
-      )}
+
+          {/* 차트 2행 */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-green-600" />협력사별 변동점</h4>
+              {companyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={companyData} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+                    <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]}>
+                      <LabelList dataKey="count" position="right" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280' }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>}
+            </div>
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-blue-600" />고객사별 변동점</h4>
+              {customerData.length > 0 ? (
+                <div className="flex flex-col items-center sm:flex-row">
+                  <ResponsiveContainer width="100%" height={180} className="sm:!w-1/2">
+                    <PieChart><Pie data={customerData} cx="50%" cy="50%" outerRadius={65} paddingAngle={2} dataKey="count" nameKey="fullName">
+                      {customerData.map((_, idx) => (<Cell key={idx} fill={COMPANY_COLORS[idx % COMPANY_COLORS.length]} />))}
+                    </Pie><Tooltip /></PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 flex w-full flex-wrap gap-x-4 gap-y-1.5 sm:mt-0 sm:flex-1 sm:flex-col sm:space-y-2">
+                    {customerData.map((d, idx) => (
+                      <div key={d.fullName} className="flex items-center gap-2 text-xs">
+                        <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: COMPANY_COLORS[idx % COMPANY_COLORS.length] }} />
+                        <span className="text-muted-foreground truncate">{d.fullName}</span>
+                        <span className="ml-auto font-semibold">{d.count}건</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">데이터가 없습니다</div>}
+            </div>
+          </div>
+
+          {/* AI 인사이트 */}
+          {insights.length > 0 && (
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5 text-violet-600" />AI 인사이트</h4>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {insights.map((insight, idx) => {
+                  const Icon = insight.icon;
+                  return (
+                    <div key={idx} className={`rounded-xl border p-3.5 ${insightBg[insight.type]}`}>
+                      <div className="flex items-start gap-2.5">
+                        <Icon className={`mt-0.5 h-4 w-4 flex-shrink-0 ${insightIcon[insight.type]}`} />
+                        <div>
+                          <p className="text-xs font-semibold">{insight.title}</p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{insight.desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
 
       {/* 최근 변동점 - 필수 작성 항목 테이블 */}
       <ChangeEventTable events={allEvents} isLoading={isLoading} router={router} />
