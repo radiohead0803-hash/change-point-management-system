@@ -261,7 +261,7 @@ function ReportContent() {
           <header className="mb-4 flex items-center justify-between">
             <div>
               <h1 className="text-lg font-extrabold text-gray-900">변동점 관리 월간 리포트</h1>
-              <p className="text-xs text-gray-400">{periodLabel} · 필수 작성 항목 상세</p>
+              <p className="text-xs text-gray-400">{periodLabel} · 변동점 발생현황 리스트</p>
             </div>
             <div className="text-right text-[10px] text-gray-400">
               <p>(주)캠스 품질관리부</p>
@@ -271,7 +271,7 @@ function ReportContent() {
           <div className="h-0.5 rounded-full bg-gradient-to-r from-primary via-primary/50 to-transparent mb-4" />
 
           <section>
-            <SectionTitle icon={FileText} number={4} title={`필수 작성 항목 (${filtered.length}건)`} />
+            <SectionTitle icon={FileText} number={4} title={`변동점 발생현황 리스트 (${filtered.length}건)`} />
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-[9px] border-collapse">
                 <thead>
