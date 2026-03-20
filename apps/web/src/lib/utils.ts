@@ -42,6 +42,8 @@ export function getStatusBadgeClass(status: string) {
       return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     case 'SUBMITTED':
       return 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'CONFIRMED':
+      return 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
     case 'REVIEW_RETURNED':
       return 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
     case 'REVIEWED':
@@ -64,6 +66,8 @@ export function getStatusIconClass(status: string) {
       return 'text-gray-500';
     case 'SUBMITTED':
       return 'text-blue-500';
+    case 'CONFIRMED':
+      return 'text-indigo-500';
     case 'REVIEW_RETURNED':
       return 'text-amber-500';
     case 'REVIEWED':
@@ -85,6 +89,8 @@ export function getStatusColor(status: string) {
       return 'gray';
     case 'SUBMITTED':
       return 'blue';
+    case 'CONFIRMED':
+      return 'indigo';
     case 'REVIEW_RETURNED':
       return 'yellow';
     case 'REVIEWED':
@@ -106,6 +112,8 @@ export function getStatusText(status: string) {
       return '임시저장';
     case 'SUBMITTED':
       return '제출됨';
+    case 'CONFIRMED':
+      return '제출완료';
     case 'REVIEW_RETURNED':
       return '보완요청';
     case 'REVIEWED':

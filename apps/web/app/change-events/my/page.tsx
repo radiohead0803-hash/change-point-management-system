@@ -216,6 +216,7 @@ export default function MyChangeEventsPage() {
             <option value="ALL">전체 ({statusCounts.ALL || 0})</option>
             <option value="DRAFT">임시저장 ({statusCounts.DRAFT || 0})</option>
             <option value="SUBMITTED">제출 ({statusCounts.SUBMITTED || 0})</option>
+            <option value="CONFIRMED">제출완료 ({statusCounts.CONFIRMED || 0})</option>
             <option value="REVIEW_RETURNED">보완 ({statusCounts.REVIEW_RETURNED || 0})</option>
             <option value="REVIEWED">검토 ({statusCounts.REVIEWED || 0})</option>
             <option value="APPROVED">승인 ({statusCounts.APPROVED || 0})</option>

@@ -230,6 +230,7 @@ enum ScopeType {
 enum EventStatus {
   DRAFT
   SUBMITTED
+  CONFIRMED
   REVIEW_RETURNED
   REVIEWED
   APPROVED

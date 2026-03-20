@@ -11,6 +11,7 @@ export type ChangeType = 'FOUR_M' | 'NON_FOUR_M';
 export type EventStatus =
   | 'DRAFT'
   | 'SUBMITTED'
+  | 'CONFIRMED'
   | 'REVIEW_RETURNED'
   | 'REVIEWED'
   | 'APPROVED'

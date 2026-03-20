@@ -307,7 +307,8 @@ export class ChangeEventsService {
       // 허용된 상태 전이 규칙
       const allowedTransitions: Record<string, string[]> = {
         'DRAFT': ['SUBMITTED', 'DRAFT'],
-        'SUBMITTED': ['REVIEWED', 'REVIEW_RETURNED'],
+        'SUBMITTED': ['CONFIRMED', 'REVIEW_RETURNED'],
+        'CONFIRMED': ['REVIEWED', 'REVIEW_RETURNED'],
         'REVIEW_RETURNED': ['SUBMITTED', 'DRAFT'],
         'REVIEWED': ['APPROVED', 'REJECTED'],
         'APPROVED': ['CLOSED'],
@@ -321,15 +322,22 @@ export class ChangeEventsService {
       }
 
       // 역할 권한 체크
-      const canReview = ([Role.TIER1_REVIEWER, Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
+      const canConfirm = ([Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
+      const canReview = ([Role.TIER1_REVIEWER, Role.ADMIN] as Role[]).includes(userRole);
       const canApprove = ([Role.EXEC_APPROVER, Role.ADMIN] as Role[]).includes(userRole);
       const isOwnerOrEditor = event.createdById === userId || ([Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
 
       if (newStatus === 'SUBMITTED' && !isOwnerOrEditor) {
         throw new ForbiddenException('제출 권한이 없습니다.');
       }
-      if ((newStatus === 'REVIEWED' || newStatus === 'REVIEW_RETURNED') && !canReview) {
+      if (newStatus === 'CONFIRMED' && !canConfirm) {
+        throw new ForbiddenException('제출완료 권한이 없습니다.');
+      }
+      if ((newStatus === 'REVIEWED' || (newStatus === 'REVIEW_RETURNED' && currentStatus === 'CONFIRMED')) && !canReview) {
         throw new ForbiddenException('검토 권한이 없습니다.');
+      }
+      if (newStatus === 'REVIEW_RETURNED' && currentStatus === 'SUBMITTED' && !canConfirm) {
+        throw new ForbiddenException('보완요청 권한이 없습니다.');
       }
       if ((newStatus === 'APPROVED' || newStatus === 'REJECTED') && !canApprove) {
         throw new ForbiddenException('승인 권한이 없습니다.');
@@ -436,7 +444,10 @@ export class ChangeEventsService {
       const eventTitle = `${updated.customer || '미지정'} - ${updated.project || '-'}`;
       try {
         if (data.status === 'SUBMITTED') {
-          // 제출시 검토자에게 알림
+          // 제출시 담당자에게 알림
+          await this.notificationsService.notifyApprovalRequest(id, eventTitle, updated.managerId || undefined, undefined);
+        } else if (data.status === 'CONFIRMED') {
+          // 제출완료시 1차 검토자에게 알림
           await this.notificationsService.notifyApprovalRequest(id, eventTitle, updated.reviewerId || undefined, undefined);
         } else if (data.status === 'REVIEWED') {
           // 검토완료시 전담중역에게 알림

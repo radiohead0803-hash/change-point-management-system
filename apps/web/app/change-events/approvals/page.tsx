@@ -29,7 +29,8 @@ function TipCell({ children, tip, className = '' }: { children: React.ReactNode;
 }
 
 const FLOW_STEPS = [
-  { status: 'SUBMITTED', label: '접수완료', nextStatus: 'REVIEWED', btnLabel: '1차 승인', allowedRoles: ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'], needsExecutive: true },
+  { status: 'SUBMITTED', label: '접수완료', nextStatus: 'CONFIRMED', btnLabel: '제출완료', allowedRoles: ['TIER1_EDITOR', 'ADMIN'], needsExecutive: false },
+  { status: 'CONFIRMED', label: '제출완료', nextStatus: 'REVIEWED', btnLabel: '1차 승인', allowedRoles: ['TIER1_REVIEWER', 'ADMIN'], needsExecutive: true },
   { status: 'REVIEWED', label: '검토완료', nextStatus: 'APPROVED', btnLabel: '최종승인', allowedRoles: ['EXEC_APPROVER', 'ADMIN'], needsExecutive: false },
 ];
 
@@ -76,6 +77,7 @@ export default function ApprovalsPage() {
   const stepCounts = useMemo(() => ({
     ALL: pendingApprovals.length,
     SUBMITTED: pendingApprovals.filter((e) => e.status === 'SUBMITTED').length,
+    CONFIRMED: pendingApprovals.filter((e) => e.status === 'CONFIRMED').length,
     REVIEWED: pendingApprovals.filter((e) => e.status === 'REVIEWED').length,
   }), [pendingApprovals]);
 
@@ -162,7 +164,7 @@ export default function ApprovalsPage() {
         <div className="flex items-center gap-2 px-3 py-2.5 min-w-max sm:px-4 sm:py-3">
           <Filter className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/50" />
           <div className="flex gap-1 rounded-lg bg-gray-100/60 p-0.5 dark:bg-gray-800/40">
-            {[{ key: 'ALL', label: '전체' }, { key: 'SUBMITTED', label: '1차' }, { key: 'REVIEWED', label: '최종' }].map((tab) => (
+            {[{ key: 'ALL', label: '전체' }, { key: 'SUBMITTED', label: '제출완료' }, { key: 'CONFIRMED', label: '1차' }, { key: 'REVIEWED', label: '최종' }].map((tab) => (
               <button key={tab.key} onClick={() => setStepFilter(tab.key)}
                 className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all whitespace-nowrap ${stepFilter === tab.key ? 'bg-white shadow-sm dark:bg-gray-700' : 'text-muted-foreground'}`}>
                 {tab.label} ({stepCounts[tab.key as keyof typeof stepCounts] || 0})

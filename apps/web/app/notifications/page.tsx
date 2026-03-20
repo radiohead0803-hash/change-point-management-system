@@ -1,12 +1,14 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Bell, CheckCircle2, AlertTriangle, Send, FileCheck,
-  CheckCheck, Clock,
+  CheckCheck, Clock, Trash2, X,
 } from 'lucide-react';
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
@@ -27,9 +29,13 @@ function timeAgo(dateStr: string) {
   return `${days}일 전`;
 }
 
+type FilterType = 'ALL' | 'UNREAD' | 'READ';
+
 export default function NotificationsPage() {
   const router = useRouter();
   const qc = useQueryClient();
+  const { toast } = useToast();
+  const [filter, setFilter] = useState<FilterType>('ALL');
 
   const { data: notifs = [], isLoading } = useQuery<any[]>({
     queryKey: ['notifications'],
@@ -49,6 +55,25 @@ export default function NotificationsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
       qc.invalidateQueries({ queryKey: ['unread-notifications'] });
+      toast({ title: '모든 알림을 읽음 처리했습니다.' });
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => notifications.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['unread-notifications'] });
+      toast({ title: '알림이 삭제되었습니다.' });
+    },
+  });
+
+  const removeAllMutation = useMutation({
+    mutationFn: () => notifications.removeAll(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['unread-notifications'] });
+      toast({ title: '모든 알림이 삭제되었습니다.' });
     },
   });
 
@@ -57,7 +82,25 @@ export default function NotificationsPage() {
     if (notif.eventId) router.push(`/change-events/${notif.eventId}`);
   };
 
+  const handleRemove = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    removeMutation.mutate(id);
+  };
+
   const unreadCount = notifs.filter((n: any) => !n.isRead).length;
+  const readCount = notifs.filter((n: any) => n.isRead).length;
+
+  const filtered = useMemo(() => {
+    if (filter === 'UNREAD') return notifs.filter((n: any) => !n.isRead);
+    if (filter === 'READ') return notifs.filter((n: any) => n.isRead);
+    return notifs;
+  }, [notifs, filter]);
+
+  const FILTERS: { key: FilterType; label: string; count: number }[] = [
+    { key: 'ALL', label: '전체', count: notifs.length },
+    { key: 'UNREAD', label: '읽지않음', count: unreadCount },
+    { key: 'READ', label: '읽음', count: readCount },
+  ];
 
   return (
     <div className="space-y-5">
@@ -68,33 +111,55 @@ export default function NotificationsPage() {
             {unreadCount > 0 ? `읽지 않은 알림 ${unreadCount}건` : '모든 알림을 확인했습니다'}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Button size="sm" variant="outline" onClick={() => markAllReadMutation.mutate()}>
-            <CheckCheck className="mr-1.5 h-4 w-4" />
-            모두 읽음
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {unreadCount > 0 && (
+            <Button size="sm" variant="outline" onClick={() => markAllReadMutation.mutate()}>
+              <CheckCheck className="mr-1.5 h-4 w-4" />
+              모두 읽음
+            </Button>
+          )}
+          {notifs.length > 0 && (
+            <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeAllMutation.mutate()}>
+              <Trash2 className="mr-1.5 h-4 w-4" />
+              전체 삭제
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* 필터 탭 */}
+      <div className="flex gap-1 rounded-xl bg-gray-100/60 p-1 dark:bg-gray-800/40 w-fit">
+        {FILTERS.map((f) => (
+          <button key={f.key} onClick={() => setFilter(f.key)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              filter === f.key ? 'bg-white shadow-sm dark:bg-gray-700 text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}>
+            {f.label} ({f.count})
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      ) : notifs.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Bell className="mb-3 h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">알림이 없습니다</p>
+          <p className="text-sm text-muted-foreground">
+            {filter === 'UNREAD' ? '읽지 않은 알림이 없습니다' : filter === 'READ' ? '읽은 알림이 없습니다' : '알림이 없습니다'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {notifs.map((notif: any) => {
+          {filtered.map((notif: any) => {
             const config = TYPE_CONFIG[notif.type] || TYPE_CONFIG.SUBMITTED;
             const Icon = config.icon;
             return (
               <div
                 key={notif.id}
                 onClick={() => handleClick(notif)}
-                className={`cursor-pointer rounded-2xl border p-4 transition-all hover:shadow-md ${
+                className={`group cursor-pointer rounded-2xl border p-4 transition-all hover:shadow-md ${
                   notif.isRead
                     ? 'border-white/60 bg-white/50 dark:border-gray-800/60 dark:bg-gray-900/50'
                     : 'border-primary/20 bg-white/80 shadow-sm dark:border-primary/30 dark:bg-gray-900/80'
@@ -119,6 +184,13 @@ export default function NotificationsPage() {
                       {timeAgo(notif.createdAt)}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => handleRemove(e, notif.id)}
+                    className="flex-shrink-0 rounded-lg p-1.5 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-900/20"
+                    title="삭제"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             );

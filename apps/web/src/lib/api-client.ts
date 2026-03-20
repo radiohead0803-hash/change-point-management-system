@@ -162,4 +162,6 @@ export const notifications = {
   unreadCount: () => api.get<number>('/notifications/unread-count'),
   markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
   markAllAsRead: () => api.patch('/notifications/read-all'),
+  remove: (id: string) => api.delete(`/notifications/${id}`),
+  removeAll: () => api.delete('/notifications'),
 };

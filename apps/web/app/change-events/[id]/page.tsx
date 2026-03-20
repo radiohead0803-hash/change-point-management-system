@@ -16,9 +16,10 @@ import {
   Image, FileText, X, ZoomIn,
 } from 'lucide-react';
 
-/* ── 승인 플로우 ── */
+/* ── 승인 플로우 (3단계) ── */
 const FLOW_STEPS = [
-  { status: 'SUBMITTED', nextStatus: 'REVIEWED', btnLabel: '1차 승인', roles: ['TIER1_REVIEWER', 'TIER1_EDITOR', 'ADMIN'] },
+  { status: 'SUBMITTED', nextStatus: 'CONFIRMED', btnLabel: '제출완료', roles: ['TIER1_EDITOR', 'ADMIN'] },
+  { status: 'CONFIRMED', nextStatus: 'REVIEWED', btnLabel: '1차 승인', roles: ['TIER1_REVIEWER', 'ADMIN'] },
   { status: 'REVIEWED', nextStatus: 'APPROVED', btnLabel: '최종승인', roles: ['EXEC_APPROVER', 'ADMIN'] },
 ];
 
@@ -191,7 +192,7 @@ function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; 
   );
 }
 
-const STATUS_FLOW = ['DRAFT', 'SUBMITTED', 'REVIEWED', 'APPROVED'];
+const STATUS_FLOW = ['DRAFT', 'SUBMITTED', 'CONFIRMED', 'REVIEWED', 'APPROVED'];
 function getFlowStep(status: string) {
   if (status === 'REVIEW_RETURNED') return 1;
   if (status === 'REJECTED') return -1;
@@ -319,20 +320,20 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
       {/* 승인 진행 상태 */}
       <div className="rounded-2xl border border-white/60 bg-gradient-to-r from-blue-50/60 via-indigo-50/60 to-purple-50/60 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10 dark:border-gray-800/60">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">승인 진행상태</p>
-        <div className="flex items-center gap-2 sm:gap-3">
-          {['접수·등록', '검토', '최종승인'].map((step, i) => {
+        <div className="flex items-center gap-1 sm:gap-2">
+          {['접수·등록', '제출완료', '1차 승인', '최종승인'].map((step, i) => {
             const isComplete = flowStep > i;
             const isCurrent = flowStep === i;
             const isReturned = event.status === 'REVIEW_RETURNED' && i === 1;
             return (
-              <div key={step} className="flex flex-1 items-center gap-2 sm:gap-3">
-                <div className={`flex-1 text-center rounded-xl px-2 py-2.5 transition-all ${
+              <div key={step} className="flex flex-1 items-center gap-1 sm:gap-2">
+                <div className={`flex-1 text-center rounded-xl px-1.5 py-2.5 transition-all ${
                   isComplete ? 'bg-primary/10 ring-1 ring-primary/20' :
                   isCurrent ? 'bg-white/80 ring-1 ring-primary/30 shadow-sm dark:bg-gray-800/60' :
                   isReturned ? 'bg-amber-50 ring-1 ring-amber-300 dark:bg-amber-900/20' :
                   'bg-white/40 dark:bg-gray-800/20'
                 }`}>
-                  <div className={`text-[10px] font-bold sm:text-xs ${
+                  <div className={`text-[9px] font-bold sm:text-xs ${
                     isComplete ? 'text-primary' :
                     isReturned ? 'text-amber-600 dark:text-amber-400' :
                     isCurrent ? 'text-primary' :
@@ -343,7 +344,7 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
                   {isComplete && <CheckCircle2 className="mx-auto mt-1 h-4 w-4 text-primary" />}
                   {isReturned && <AlertTriangle className="mx-auto mt-1 h-4 w-4 text-amber-500" />}
                 </div>
-                {i < 2 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/30" />}
+                {i < 3 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/30" />}
               </div>
             );
           })}
