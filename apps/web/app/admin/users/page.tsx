@@ -54,6 +54,8 @@ export default function UserManagementPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [groupFilter, setGroupFilter] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 15;
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
@@ -157,6 +159,17 @@ export default function UserManagementPage() {
     const matchRole = roleFilter === 'ALL' || u.role === roleFilter;
     return matchSearch && matchRole;
   });
+
+  // 페이지네이션
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedUsers = filtered.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+
+  // 필터 변경 시 1페이지로 리셋
+  const handleFilterChange = (setter: Function, value: any) => {
+    setter(value);
+    setCurrentPage(1);
+  };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -307,7 +320,7 @@ export default function UserManagementPage() {
           <Input
             placeholder="이름, 아이디, 회사 검색..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             className="pl-10"
           />
         </div>
@@ -376,6 +389,7 @@ export default function UserManagementPage() {
                 </optgroup>
                 <optgroup label="── 본사(캠스) ──">
                   <option value="TIER1_EDITOR">캠스 담당자 - 등록·접수·1차승인</option>
+                  <option value="TIER1_REVIEWER">중역 - 검토·1차승인·주간점검</option>
                   <option value="EXEC_APPROVER">전담중역 - 최종승인</option>
                 </optgroup>
                 <optgroup label="── 협력사 ──">
@@ -461,7 +475,7 @@ export default function UserManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {filtered.map((u) => {
+                {paginatedUsers.map((u) => {
                   const roleInfo = ROLE_MAP[u.role] || { label: u.role, color: '', group: '-', level: 0, shortLabel: u.role, badgeColor: 'bg-gray-500', desc: '' };
                   return (
                     <tr key={u.id} className="transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
@@ -522,7 +536,7 @@ export default function UserManagementPage() {
 
           {/* 모바일 카드 */}
           <div className="space-y-2 p-3 sm:hidden">
-            {filtered.map((u) => {
+            {paginatedUsers.map((u) => {
               const roleInfo = ROLE_MAP[u.role] || { label: u.role, color: '', group: '-', level: 0, shortLabel: u.role, badgeColor: 'bg-gray-500', desc: '' };
               return (
                 <div
@@ -578,6 +592,69 @@ export default function UserManagementPage() {
               );
             })}
           </div>
+
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/30 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/20">
+              <p className="text-xs text-muted-foreground">
+                전체 {filtered.length}명 중 {(safeCurrentPage - 1) * PAGE_SIZE + 1}-{Math.min(safeCurrentPage * PAGE_SIZE, filtered.length)}명
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={safeCurrentPage === 1}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-700"
+                >
+                  «
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage === 1}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-700"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 2)
+                  .reduce<(number | string)[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    typeof p === 'string' ? (
+                      <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`min-w-[28px] rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                          p === safeCurrentPage
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-700"
+                >
+                  ›
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={safeCurrentPage === totalPages}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-700"
+                >
+                  »
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
