@@ -21,17 +21,33 @@ export default function ReportPage() {
 function ReportContent() {
   const searchParams = useSearchParams();
   const now = new Date();
+  type PeriodType = 'month' | 'range';
+  const [periodType, setPeriodType] = useState<PeriodType>('month');
   const [year, setYear] = useState(searchParams.get('year') || now.getFullYear().toString());
   const [month, setMonth] = useState(searchParams.get('month') || (now.getMonth() + 1).toString());
+  const [startDate, setStartDate] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`);
+  const [endDate, setEndDate] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`);
 
   const { data: events = [] } = useQuery<ChangeEvent[]>({
     queryKey: ['change-events'],
     queryFn: () => changeEvents.list().then((r) => r.data),
   });
 
-  const periodLabel = `${year}년 ${month.padStart(2, '0')}월`;
+  const periodLabel = periodType === 'month'
+    ? `${year}년 ${month.padStart(2, '0')}월`
+    : `${startDate} ~ ${endDate}`;
   const periodKey = `${year}-${month.padStart(2, '0')}`;
-  const filtered = useMemo(() => events.filter((e) => e.receiptMonth === periodKey), [events, periodKey]);
+
+  const filtered = useMemo(() => {
+    if (periodType === 'month') {
+      return events.filter((e) => e.receiptMonth === periodKey);
+    }
+    // range: occurredDate 기준 필터
+    return events.filter((e) => {
+      const d = e.occurredDate?.slice(0, 10);
+      return d && d >= startDate && d <= endDate;
+    });
+  }, [events, periodType, periodKey, startDate, endDate]);
 
   const prevKey = useMemo(() => {
     const m = parseInt(month) - 1;
@@ -88,12 +104,27 @@ function ReportContent() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <select value={year} onChange={(e) => setYear(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white">
-              {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}년</option>)}
-            </select>
-            <select value={month} onChange={(e) => setMonth(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white">
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}월</option>)}
-            </select>
+            {/* 기간 타입 선택 */}
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button onClick={() => setPeriodType('month')} className={`px-3 py-1.5 text-xs font-medium transition-colors ${periodType === 'month' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>월간</button>
+              <button onClick={() => setPeriodType('range')} className={`px-3 py-1.5 text-xs font-medium transition-colors border-l ${periodType === 'range' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>기간선택</button>
+            </div>
+            {periodType === 'month' ? (
+              <>
+                <select value={year} onChange={(e) => setYear(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white">
+                  {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}년</option>)}
+                </select>
+                <select value={month} onChange={(e) => setMonth(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}월</option>)}
+                </select>
+              </>
+            ) : (
+              <>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-2 text-sm bg-white" />
+                <span className="text-xs text-gray-400">~</span>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 rounded-lg border border-gray-200 px-2 text-sm bg-white" />
+              </>
+            )}
             <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 shadow-sm">
               <Printer className="h-4 w-4" />인쇄
             </button>
