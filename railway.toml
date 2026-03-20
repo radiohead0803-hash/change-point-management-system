@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "corepack enable && corepack prepare pnpm@8.15.1 --activate && NODE_ENV=development pnpm install --no-frozen-lockfile && cd packages/database && npx prisma@5.22.0 generate && cd ../.. && pnpm --filter @cpms/database build && pnpm --filter @cpms/api build"
 
 [deploy]
-startCommand = "cd packages/database && npx prisma@5.22.0 migrate deploy && cd ../../apps/api && node dist/main"
+startCommand = "cd packages/database && npx prisma@5.22.0 migrate deploy; cd /app/apps/api && node dist/main"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
