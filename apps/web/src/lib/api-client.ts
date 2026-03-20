@@ -44,6 +44,7 @@ export const changeEvents = {
     api.delete(`/change-events/attachments/${attachmentId}`),
   getAttachmentData: (attachmentId: string) =>
     api.get<any>(`/change-events/attachment-data/${attachmentId}`),
+  seedTestData: () => api.post('/change-events/seed-test-data'),
 };
 
 export const inspection = {

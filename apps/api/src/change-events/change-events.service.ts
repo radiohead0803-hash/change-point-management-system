@@ -574,4 +574,94 @@ export class ChangeEventsService {
     if (!att.data) throw new NotFoundException('파일 데이터가 없습니다.');
     return att;
   }
+
+  // ── 테스트 시드 데이터 생성 ──
+  async seedTestData(adminUserId: string) {
+    const dbUsers = await this.prisma.user.findMany({ where: { deletedAt: null }, select: { id: true, role: true } });
+    const dbCompanies = await this.prisma.company.findMany({ select: { id: true } });
+    const allItems = await this.prisma.changeItem.findMany({ take: 50, select: { id: true } });
+    const itemIds = allItems.map(i => i.id);
+
+    const editorIds = dbUsers.filter(u => ['TIER1_EDITOR', 'ADMIN'].includes(u.role)).map(u => u.id);
+    const reviewerIds = dbUsers.filter(u => ['TIER1_REVIEWER', 'ADMIN'].includes(u.role)).map(u => u.id);
+    const executiveIds = dbUsers.filter(u => ['EXEC_APPROVER', 'ADMIN'].includes(u.role)).map(u => u.id);
+    const companyIds = dbCompanies.map(c => c.id);
+
+    if (companyIds.length === 0) throw new BadRequestException('회사 데이터가 없습니다. 먼저 회사를 등록해주세요.');
+    if (editorIds.length === 0) editorIds.push(adminUserId);
+    if (reviewerIds.length === 0) reviewerIds.push(adminUserId);
+    if (executiveIds.length === 0) executiveIds.push(adminUserId);
+
+    // DB 공통코드 조회
+    const codeGroups = ['CUSTOMER', 'PROJECT', 'PRODUCT_LINE', 'FACTORY', 'LINE', 'DEPARTMENT'];
+    const cc: Record<string, string[]> = {};
+    for (const g of codeGroups) {
+      const s = await this.prisma.policySetting.findFirst({ where: { key: `COMMON_CODE_${g}` } });
+      if (s?.value) {
+        try {
+          const v = typeof s.value === 'string' ? JSON.parse(s.value as string) : s.value;
+          cc[g] = Array.isArray(v) ? v : ((v as any)?.items || []);
+        } catch { cc[g] = []; }
+      } else { cc[g] = []; }
+    }
+
+    const customers = cc['CUSTOMER'].length > 0 ? cc['CUSTOMER'] : ['현대자동차', '기아자동차'];
+    const projects = cc['PROJECT'].length > 0 ? cc['PROJECT'] : ['MX5 (싼타페)', 'SP3(셀토스)', 'NQ5(투싼)'];
+    const productLines = cc['PRODUCT_LINE'].length > 0 ? cc['PRODUCT_LINE'] : ['샤시', '트림', '바디'];
+    const factories = cc['FACTORY'].length > 0 ? cc['FACTORY'] : ['본사 1공장', '본사 2공장'];
+    const lines = cc['LINE'].length > 0 ? cc['LINE'] : ['A라인', 'B라인', 'C라인'];
+    const departments = cc['DEPARTMENT'].length > 0 ? cc['DEPARTMENT'] : ['생산기술팀', '품질관리팀', '생산1팀'];
+
+    const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+    const statuses = ['DRAFT', 'CONFIRMED', 'REVIEWED', 'APPROVED', 'CLOSED', 'REVIEW_RETURNED'] as const;
+    const weights = [4, 10, 8, 15, 8, 5];
+    const wRandom = () => { const t = weights.reduce((a, b) => a + b, 0); let r = Math.random() * t; for (let i = 0; i < weights.length; i++) { r -= weights[i]; if (r <= 0) return i; } return weights.length - 1; };
+
+    const actionPlans = ['금형 보정 후 재생산', '작업 표준서 개정', '원자재 LOT 변경', '설비 파라미터 재설정', '검사기준 강화', '공정 조건 최적화', '재교육 실시'];
+    const actionResults = ['조치 완료 - 양산 적용', '시험 생산 진행중', '개선 완료 확인', '후속 모니터링 중', '양품 확인 완료'];
+    const qualityChecks = ['초도품 검사 합격', 'SPC 관리 정상', '치수검사 OK', '외관검사 합격', '기능검사 PASS'];
+    const descriptions = [
+      '금형 수명 도달로 인한 신규 금형 투입', '원자재 공급업체 변경에 따른 소재 물성 확인',
+      '작업자 교대 근무 변경으로 인한 공정 관리', '설비 노후화에 따른 신규 설비 도입',
+      '고객사 요청에 의한 사양 변경 대응', '계절 변화에 따른 도장 조건 변경',
+      '품질 클레임 발생에 따른 검사 기준 강화', '2차사 변경에 따른 입고품 품질 확인',
+      '생산 라인 레이아웃 변경', '포장 방법 변경 (고객사 요청)',
+    ];
+
+    let created = 0;
+    for (let i = 0; i < 50; i++) {
+      const month = Math.floor(Math.random() * 3); // 1~3월
+      const day = Math.floor(Math.random() * 28) + 1;
+      const occurredDate = new Date(2026, month, day);
+      const receiptMonth = `2026-${String(month + 1).padStart(2, '0')}`;
+      const status = statuses[wRandom()];
+      const isAdvanced = ['CONFIRMED', 'REVIEWED', 'APPROVED', 'CLOSED'].includes(status);
+      const editorId = pick(editorIds);
+
+      try {
+        await this.prisma.changeEvent.create({
+          data: {
+            receiptMonth, occurredDate,
+            customer: pick(customers), project: pick(projects),
+            productLine: pick(productLines), factory: pick(factories),
+            productionLine: pick(lines), department: pick(departments),
+            description: pick(descriptions),
+            partNumber: `P${String(1000 + Math.floor(Math.random() * 9000))}`,
+            productName: `부품-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 100)}`,
+            status, companyId: pick(companyIds),
+            primaryItemId: itemIds.length > 0 ? pick(itemIds) : undefined,
+            managerId: editorId, createdById: editorId,
+            reviewerId: pick(reviewerIds),
+            executiveId: isAdvanced ? pick(executiveIds) : undefined,
+            actionDate: isAdvanced ? new Date(2026, month, Math.min(day + 7, 28)) : undefined,
+            actionPlan: isAdvanced ? pick(actionPlans) : undefined,
+            actionResult: ['APPROVED', 'CLOSED'].includes(status) ? pick(actionResults) : undefined,
+            qualityVerification: ['APPROVED', 'CLOSED'].includes(status) ? pick(qualityChecks) : undefined,
+          },
+        });
+        created++;
+      } catch (e) { /* skip failed entries */ }
+    }
+    return { message: `${created}건 시드 데이터 생성 완료`, created };
+  }
 }

@@ -174,6 +174,13 @@ export class ChangeEventsController {
     return this.changeEventsService.removeAttachment(attachmentId);
   }
 
+  @Post('seed-test-data')
+  @ApiOperation({ summary: '테스트 시드 데이터 50건 생성 (관리자 전용)' })
+  @Roles(Role.ADMIN)
+  seedTestData(@Request() req: any) {
+    return this.changeEventsService.seedTestData(req.user.id);
+  }
+
   // ── Change Event CRUD by ID (must come AFTER all literal routes) ──
 
   @Get(':id')

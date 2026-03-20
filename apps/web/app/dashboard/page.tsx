@@ -19,6 +19,113 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
+/* ── 보고서 엑셀 내보내기 (주/월/년) ── */
+function ReportExportButtons({ events }: { events: ChangeEvent[] }) {
+  const [reportType, setReportType] = useState<'week' | 'month' | 'year'>('month');
+  const [open, setOpen] = useState(false);
+
+  const exportReport = () => {
+    const now = new Date();
+    const evts = events as any[];
+    let title = '';
+    let filtered: any[] = [];
+
+    if (reportType === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      filtered = evts.filter(e => new Date(e.occurredDate) >= weekAgo);
+      title = `주간보고_${now.toISOString().slice(0, 10)}`;
+    } else if (reportType === 'month') {
+      const y = now.getFullYear(), m = now.getMonth();
+      filtered = evts.filter(e => { const d = new Date(e.occurredDate); return d.getFullYear() === y && d.getMonth() === m; });
+      title = `월간보고_${y}-${String(m + 1).padStart(2, '0')}`;
+    } else {
+      const y = now.getFullYear();
+      filtered = evts.filter(e => new Date(e.occurredDate).getFullYear() === y);
+      title = `연간보고_${y}`;
+    }
+
+    // 요약 통계
+    const total = filtered.length;
+    const byStatus: Record<string, number> = {};
+    const byDept: Record<string, number> = {};
+    const byCustomer: Record<string, number> = {};
+    filtered.forEach(e => {
+      byStatus[getStatusText(e.status)] = (byStatus[getStatusText(e.status)] || 0) + 1;
+      byDept[e.department || '미지정'] = (byDept[e.department || '미지정'] || 0) + 1;
+      byCustomer[e.customer || '미지정'] = (byCustomer[e.customer || '미지정'] || 0) + 1;
+    });
+
+    const bom = '\uFEFF';
+    const lines: string[] = [];
+    const label = reportType === 'week' ? '주간' : reportType === 'month' ? '월간' : '연간';
+    lines.push(`"변동점 관리 ${label} 보고서",,,,`);
+    lines.push(`"작성일","${now.toISOString().slice(0, 10)}","총 건수","${total}건",`);
+    lines.push('');
+
+    // 상태별 요약
+    lines.push('"[상태별 현황]",,,,');
+    lines.push('"상태","건수","비율",,');
+    Object.entries(byStatus).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+      lines.push(`"${k}","${v}","${total > 0 ? Math.round(v / total * 100) : 0}%",,`);
+    });
+    lines.push('');
+
+    // 부서별 요약
+    lines.push('"[부서별 현황]",,,,');
+    lines.push('"부서","건수","비율",,');
+    Object.entries(byDept).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+      lines.push(`"${k}","${v}","${total > 0 ? Math.round(v / total * 100) : 0}%",,`);
+    });
+    lines.push('');
+
+    // 고객사별 요약
+    lines.push('"[고객사별 현황]",,,,');
+    lines.push('"고객사","건수","비율",,');
+    Object.entries(byCustomer).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+      lines.push(`"${k}","${v}","${total > 0 ? Math.round(v / total * 100) : 0}%",,`);
+    });
+    lines.push('');
+
+    // 상세 목록
+    lines.push('"[상세 목록]",,,,');
+    lines.push('"NO","발생일","고객사","프로젝트","발생부서","담당자","세부항목","상태","조치방안","조치결과","품질검증"');
+    filtered.forEach((e, i) => {
+      lines.push([
+        i + 1, formatDate(e.occurredDate), e.customer || '-', e.project || '-',
+        e.department || '-', e.manager?.name || e.createdBy?.name || '-',
+        e.primaryItem?.name || '-', getStatusText(e.status),
+        e.actionPlan || '미입력', e.actionResult || '미입력', e.qualityVerification || '미입력',
+      ].map(v => `"${v}"`).join(','));
+    });
+
+    const csv = bom + lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${title}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <Button size="sm" variant="outline" onClick={() => setOpen(!open)}>
+        <Download className="mr-1.5 h-3.5 w-3.5" />보고서 <ChevronDown className="ml-1 h-3 w-3" />
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border bg-white p-2 shadow-lg dark:bg-gray-900 dark:border-gray-700">
+          {([['week', '주간 보고서'], ['month', '월간 보고서'], ['year', '연간 보고서']] as const).map(([key, label]) => (
+            <button key={key} onClick={() => { setReportType(key); setTimeout(exportReport, 0); }}
+              className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-800">
+              <Download className="mr-2 inline h-3.5 w-3.5" />{label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── 접기/펼치기 섹션 ── */
 /* ── Tooltip 셀 ── */
 function TipCell({ children, tip, className = '' }: { children: React.ReactNode; tip?: string; className?: string }) {
@@ -278,6 +385,11 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">변동점 현황을 한눈에 확인하세요</p>
         </div>
         <div className="flex gap-2">
+          {user?.role === 'ADMIN' && allEvents.length < 5 && (
+            <Button size="sm" variant="outline" onClick={async () => {
+              try { const r = await changeEvents.seedTestData(); alert(`${(r.data as any)?.created || 50}건 생성 완료`); window.location.reload(); } catch { alert('시드 생성 실패'); }
+            }}>테스트 데이터 생성</Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="hidden sm:inline-flex">
             <Download className="mr-1.5 h-4 w-4" />월간 리포트
           </Button>
@@ -534,10 +646,11 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
       {/* 헤더 */}
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <h3 className="text-sm font-semibold">필수 작성 항목 (발생 & 조치결과)</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <ReportExportButtons events={events} />
           <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
             <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
-            {exporting ? '내보내기...' : `엑셀 내보내기 (${filtered.length}건)`}
+            {exporting ? '내보내기...' : `목록 CSV (${filtered.length}건)`}
           </Button>
           <button onClick={() => router.push('/change-events/my')} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80">
             전체보기 <ArrowRight className="h-3.5 w-3.5" />
