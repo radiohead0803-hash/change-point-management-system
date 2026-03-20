@@ -276,15 +276,18 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
   const canSubmit = event.status === 'DRAFT' || event.status === 'REVIEW_RETURNED';
   const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '캠스 담당자', EXEC_APPROVER: '전담중역' };
 
-  const Sel = ({ label, req, opts, err, ...p }: any) => (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium">{label} {req && <span className="text-red-400">*</span>}</label>
-      <select {...p} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
-        <option value="">{label} 선택</option>
-        {(opts || []).map((o: string) => <option key={o} value={o}>{o}</option>)}
-      </select>
-      {err && <p className="text-xs text-red-500">{err}</p>}
-    </div>
+  const CSel = ({ name, label, req, opts, err }: { name: keyof FormData; label: string; req?: boolean; opts: string[]; err?: string }) => (
+    <Controller name={name} control={control} render={({ field }) => (
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">{label} {req && <span className="text-red-400">*</span>}</label>
+        <select value={field.value as string || ''} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref}
+          className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+          <option value="">{label} 선택</option>
+          {(opts || []).map((o: string) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        {err && <p className="text-xs text-red-500">{err}</p>}
+      </div>
+    )} />
   );
 
   return (
@@ -342,14 +345,14 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
             <FileText className="h-4 w-4" /> 기본 정보
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-            <Sel label="고객사" opts={CUSTOMERS} {...register('customer')} />
-            <Sel label="프로젝트" opts={PROJECTS} {...register('project')} />
-            <Sel label="제품군" opts={PRODUCT_LINES} {...register('productLine')} />
-            <Sel label="공장" opts={FACTORIES} {...register('factory')} />
+            <CSel name="customer" label="고객사" opts={CUSTOMERS} />
+            <CSel name="project" label="프로젝트" opts={PROJECTS} />
+            <CSel name="productLine" label="제품군" opts={PRODUCT_LINES} />
+            <CSel name="factory" label="공장" opts={FACTORIES} />
             <div className="space-y-1.5"><label className="text-sm font-medium">품번</label><Input {...register('partNumber')} placeholder="품번 입력" /></div>
             <div className="space-y-1.5"><label className="text-sm font-medium">품명</label><Input {...register('productName')} placeholder="품명 입력" /></div>
-            <Sel label="라인" opts={LINES} {...register('productionLine')} />
-            <Sel label="발생부서" opts={DEPTS} {...register('department')} />
+            <CSel name="productionLine" label="라인" opts={LINES} />
+            <CSel name="department" label="발생부서" opts={DEPTS} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
               <select {...register('companyId')} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
