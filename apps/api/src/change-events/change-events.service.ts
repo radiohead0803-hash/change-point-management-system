@@ -306,10 +306,9 @@ export class ChangeEventsService {
 
       // 허용된 상태 전이 규칙
       const allowedTransitions: Record<string, string[]> = {
-        'DRAFT': ['SUBMITTED', 'DRAFT'],
-        'SUBMITTED': ['CONFIRMED'],
+        'DRAFT': ['CONFIRMED', 'DRAFT'],
         'CONFIRMED': ['REVIEWED', 'REVIEW_RETURNED'],
-        'REVIEW_RETURNED': ['SUBMITTED', 'DRAFT'],
+        'REVIEW_RETURNED': ['CONFIRMED', 'DRAFT'],
         'REVIEWED': ['APPROVED', 'REJECTED'],
         'APPROVED': ['CLOSED'],
         'CLOSED': [],
@@ -327,24 +326,18 @@ export class ChangeEventsService {
       const canApprove = ([Role.EXEC_APPROVER, Role.ADMIN] as Role[]).includes(userRole);
       const isOwnerOrEditor = event.createdById === userId || ([Role.TIER1_EDITOR, Role.ADMIN] as Role[]).includes(userRole);
 
-      if (newStatus === 'SUBMITTED' && !isOwnerOrEditor) {
+      if (newStatus === 'CONFIRMED' && !isOwnerOrEditor) {
         throw new ForbiddenException('제출 권한이 없습니다.');
       }
-      if (newStatus === 'CONFIRMED' && !canConfirm) {
-        throw new ForbiddenException('제출완료 권한이 없습니다.');
-      }
-      if ((newStatus === 'REVIEWED' || (newStatus === 'REVIEW_RETURNED' && currentStatus === 'CONFIRMED')) && !canReview) {
+      if ((newStatus === 'REVIEWED' || newStatus === 'REVIEW_RETURNED') && currentStatus === 'CONFIRMED' && !canReview) {
         throw new ForbiddenException('검토 권한이 없습니다.');
-      }
-      if (newStatus === 'REVIEW_RETURNED' && currentStatus === 'SUBMITTED' && !canConfirm) {
-        throw new ForbiddenException('보완요청 권한이 없습니다.');
       }
       if ((newStatus === 'APPROVED' || newStatus === 'REJECTED') && !canApprove) {
         throw new ForbiddenException('승인 권한이 없습니다.');
       }
 
       // 결재선 필수 검증
-      if (newStatus === 'SUBMITTED' && !event.reviewerId && !data.reviewerId) {
+      if (newStatus === 'CONFIRMED' && !event.reviewerId && !data.reviewerId) {
         throw new BadRequestException('제출하려면 1차 검토자를 지정해야 합니다.');
       }
       if (newStatus === 'APPROVED' && !event.executiveId && !data.executiveId) {
@@ -443,11 +436,8 @@ export class ChangeEventsService {
     if (data.status) {
       const eventTitle = `${updated.customer || '미지정'} - ${updated.project || '-'}`;
       try {
-        if (data.status === 'SUBMITTED') {
-          // 제출시 담당자에게 알림
-          await this.notificationsService.notifyApprovalRequest(id, eventTitle, updated.managerId || undefined, undefined);
-        } else if (data.status === 'CONFIRMED') {
-          // 제출완료시 1차 검토자에게 알림
+        if (data.status === 'CONFIRMED') {
+          // 제출(승인요청)시 1차 검토자에게 알림
           await this.notificationsService.notifyApprovalRequest(id, eventTitle, updated.reviewerId || undefined, undefined);
         } else if (data.status === 'REVIEWED') {
           // 검토완료시 전담중역에게 알림

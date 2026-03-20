@@ -16,9 +16,8 @@ import {
   Image, FileText, X, ZoomIn,
 } from 'lucide-react';
 
-/* ── 승인 플로우 (3단계) ── */
+/* ── 승인 플로우 (2단계: 1차승인 → 최종승인) ── */
 const FLOW_STEPS = [
-  { status: 'SUBMITTED', nextStatus: 'CONFIRMED', btnLabel: '제출완료', roles: ['TIER1_EDITOR', 'ADMIN'] },
   { status: 'CONFIRMED', nextStatus: 'REVIEWED', btnLabel: '1차 승인', roles: ['TIER1_REVIEWER', 'ADMIN'] },
   { status: 'REVIEWED', nextStatus: 'APPROVED', btnLabel: '최종승인', roles: ['EXEC_APPROVER', 'ADMIN'] },
 ];
@@ -192,11 +191,12 @@ function ImagePreview({ attachmentId, filename, full }: { attachmentId: string; 
   );
 }
 
-const STATUS_FLOW = ['DRAFT', 'SUBMITTED', 'CONFIRMED', 'REVIEWED', 'APPROVED'];
+const STATUS_FLOW = ['DRAFT', 'CONFIRMED', 'REVIEWED', 'APPROVED'];
 function getFlowStep(status: string) {
-  if (status === 'REVIEW_RETURNED') return 1;
+  if (status === 'REVIEW_RETURNED') return 0;
   if (status === 'REJECTED') return -1;
-  return STATUS_FLOW.indexOf(status);
+  const idx = STATUS_FLOW.indexOf(status);
+  return idx >= 0 ? idx - 1 : -1; // DRAFT=-1, CONFIRMED=0, REVIEWED=1, APPROVED=2
 }
 
 export default function ChangeEventDetailPage({ params }: { params: { id: string } }) {
@@ -333,10 +333,10 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
       <div className="rounded-2xl border border-white/60 bg-gradient-to-r from-blue-50/60 via-indigo-50/60 to-purple-50/60 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10 dark:border-gray-800/60">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">승인 진행상태</p>
         <div className="flex items-center gap-1 sm:gap-2">
-          {['접수·등록', '제출완료', '1차 승인', '최종승인'].map((step, i) => {
+          {['승인요청', '1차 승인', '최종승인'].map((step, i) => {
             const isComplete = flowStep > i;
             const isCurrent = flowStep === i;
-            const isReturned = event.status === 'REVIEW_RETURNED' && i === 1;
+            const isReturned = event.status === 'REVIEW_RETURNED' && i === 0;
             return (
               <div key={step} className="flex flex-1 items-center gap-1 sm:gap-2">
                 <div className={`flex-1 text-center rounded-xl px-1.5 py-2.5 transition-all ${
@@ -356,7 +356,7 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
                   {isComplete && <CheckCircle2 className="mx-auto mt-1 h-4 w-4 text-primary" />}
                   {isReturned && <AlertTriangle className="mx-auto mt-1 h-4 w-4 text-amber-500" />}
                 </div>
-                {i < 3 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/30" />}
+                {i < 2 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/30" />}
               </div>
             );
           })}

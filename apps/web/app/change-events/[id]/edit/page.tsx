@@ -216,14 +216,14 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
   };
 
   /* ── 저장 ── */
-  const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
+  const save = async (data: FormData, status: 'DRAFT' | 'CONFIRMED') => {
     if (!user?.id) return;
 
     // tags에서 primaryItemId 자동 추출
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
     const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
 
-    if (status === 'SUBMITTED') {
+    if (status === 'CONFIRMED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
       if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
       if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
@@ -317,7 +317,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         </div>
       </div>
 
-      <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'))} className="space-y-5">
+      <form onSubmit={handleSubmit((d) => save(d, 'CONFIRMED'))} className="space-y-5">
         {/* ① 변동점 발생항목 */}
         <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-6 dark:border-gray-800/60 dark:bg-gray-900/70">
           <div className="mb-3 flex items-center justify-between">

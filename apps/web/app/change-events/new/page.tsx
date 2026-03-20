@@ -160,14 +160,14 @@ export default function NewChangeEventPage() {
   }, [toast]);
 
   /* ── 저장 ── */
-  const save = async (data: FormData, status: 'DRAFT' | 'SUBMITTED') => {
+  const save = async (data: FormData, status: 'DRAFT' | 'CONFIRMED') => {
     if (!user?.id) return;
 
     // tags에서 primaryItemId 자동 추출
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
     const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
 
-    if (status === 'SUBMITTED') {
+    if (status === 'CONFIRMED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
       if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
       if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
@@ -243,7 +243,7 @@ export default function NewChangeEventPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit((d) => save(d, 'SUBMITTED'), (formErrors) => {
+      <form onSubmit={handleSubmit((d) => save(d, 'CONFIRMED'), (formErrors) => {
         // zod 유효성 검사 실패 시 첫 번째 에러 표시
         const firstError = Object.values(formErrors)[0];
         const msg = firstError?.message || '필수 항목을 확인해주세요';
