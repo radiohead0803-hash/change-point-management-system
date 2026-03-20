@@ -34,7 +34,7 @@ export class SettingsService {
     return this.prisma.policySetting.create({
       data: {
         ...data,
-        value: JSON.stringify(data.value),
+        value: data.value, // Prisma Json 타입이 자동 직렬화
       },
     });
   }
@@ -50,7 +50,7 @@ export class SettingsService {
       where: { id },
       data: {
         ...data,
-        value: data.value !== undefined ? JSON.stringify(data.value) : undefined,
+        value: data.value !== undefined ? data.value : undefined,
       },
     });
   }

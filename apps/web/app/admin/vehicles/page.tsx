@@ -21,15 +21,19 @@ interface VehicleModel {
   createdAt: string;
 }
 
-// 차종 관리 API (localStorage 기반 임시 구현 - 추후 백엔드 연결)
+// 차종 관리 API (서버 DB 기반)
+import { commonCodes } from '@/lib/api-client';
+
 const vehicleApi = {
-  list: (): VehicleModel[] => {
-    if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('cpms_vehicles');
-    return stored ? JSON.parse(stored) : getDefaultVehicles();
+  list: async (): Promise<VehicleModel[]> => {
+    try {
+      const res = await commonCodes.get('VEHICLES');
+      const data = res.data;
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
   },
-  save: (vehicles: VehicleModel[]) => {
-    localStorage.setItem('cpms_vehicles', JSON.stringify(vehicles));
+  save: async (vehicles: VehicleModel[]) => {
+    await commonCodes.save('VEHICLES', vehicles as any);
   },
 };
 
