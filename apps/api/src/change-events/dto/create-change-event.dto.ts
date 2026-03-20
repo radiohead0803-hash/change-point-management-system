@@ -116,4 +116,9 @@ export class CreateChangeEventDto {
   @IsString()
   @IsOptional()
   qualityVerification?: string;
+
+  @ApiProperty({ description: '보완요청 사유' })
+  @IsString()
+  @IsOptional()
+  returnComment?: string;
 }

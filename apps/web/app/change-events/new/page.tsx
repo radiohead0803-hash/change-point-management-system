@@ -191,7 +191,11 @@ export default function NewChangeEventPage() {
         await Promise.all(attachments.map((a) => changeEvents.addAttachment(result.data.id, { filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data })));
       }
       toast({ title: status === 'DRAFT' ? '임시 저장 완료' : '승인 요청 완료' });
-      router.push('/change-events/my');
+      if (status === 'DRAFT' && result.data?.id) {
+        router.replace(`/change-events/${result.data.id}/edit`);
+      } else {
+        router.push('/change-events/my');
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || '서버 오류';
       toast({ variant: 'destructive', title: '등록 실패', description: typeof msg === 'string' ? msg : JSON.stringify(msg) });

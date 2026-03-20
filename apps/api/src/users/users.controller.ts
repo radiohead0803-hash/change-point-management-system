@@ -10,14 +10,14 @@ import { Role } from '@prisma/client';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // 사용자 목록 조회 - 모든 로그인 사용자 접근 가능 (등록폼 승인자 선택에 필요)
   @Get()
-  @Roles(Role.ADMIN)
   findAll() {
     return this.usersService.findAll();
   }
 
+  // 회사 목록 조회 - 모든 로그인 사용자 접근 가능 (등록폼 협력사 선택에 필요)
   @Get('companies')
-  @Roles(Role.ADMIN)
   findCompanies() {
     return this.usersService.findCompanies();
   }

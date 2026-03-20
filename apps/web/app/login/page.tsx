@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,18 +21,35 @@ export default function LoginPage() {
   const { login } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
+  // 저장된 아이디 불러오기
+  useEffect(() => {
+    const savedId = localStorage.getItem('saved_login_id');
+    if (savedId) {
+      setValue('email', savedId);
+      setRememberMe(true);
+    }
+  }, [setValue]);
+
   const onSubmit = async (data: LoginForm) => {
     try {
       setLoading(true);
+      // 아이디 저장 처리
+      if (rememberMe) {
+        localStorage.setItem('saved_login_id', data.email);
+      } else {
+        localStorage.removeItem('saved_login_id');
+      }
       await login(data.email, data.password);
     } catch (error) {
       toast({
@@ -76,7 +93,7 @@ export default function LoginPage() {
                   id="email"
                   type="text"
                   autoComplete="username"
-                  placeholder="admin"
+                  placeholder="사번 입력"
                   {...register('email')}
                   error={errors.email?.message}
                 />
@@ -99,6 +116,17 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            {/* 아이디 저장 체크박스 */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/30 accent-primary"
+              />
+              <span className="text-xs text-muted-foreground">아이디 저장</span>
+            </label>
 
             <Button type="submit" className="w-full" size="lg" loading={loading}>
               로그인

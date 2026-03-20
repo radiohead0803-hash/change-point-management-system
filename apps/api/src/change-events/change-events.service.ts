@@ -17,7 +17,7 @@ export class ChangeEventsService {
     const stringFields = [
       'receiptMonth', 'customer', 'project', 'productLine',
       'partNumber', 'productName', 'factory', 'productionLine',
-      'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification',
+      'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'returnComment',
     ];
     // 허용된 필드 (관계 ID - 빈 문자열이면 null, 유효한 ID만)
     const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
@@ -348,7 +348,7 @@ export class ChangeEventsService {
 
     // 데이터 정제 (허용된 필드만, 타입 변환)
     const cleanData: any = {};
-    const stringFields = ['receiptMonth', 'customer', 'project', 'productLine', 'partNumber', 'productName', 'factory', 'productionLine', 'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification'];
+    const stringFields = ['receiptMonth', 'customer', 'project', 'productLine', 'partNumber', 'productName', 'factory', 'productionLine', 'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'returnComment'];
     const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
     const dateFields = ['occurredDate', 'actionDate'];
     const enumFields = ['status'];
@@ -380,6 +380,18 @@ export class ChangeEventsService {
       if (rawUpdateData[key] !== undefined && rawUpdateData[key] !== '') {
         cleanData[key] = rawUpdateData[key];
       }
+    }
+
+    // 보완요청 시 자동 설정
+    if (cleanData.status === 'REVIEW_RETURNED') {
+      cleanData.returnedAt = new Date();
+      cleanData.returnedById = userId;
+    }
+    // 재제출 시 보완요청 코멘트 초기화
+    if (cleanData.status === 'SUBMITTED' && event.status === 'REVIEW_RETURNED') {
+      cleanData.returnComment = null;
+      cleanData.returnedAt = null;
+      cleanData.returnedById = null;
     }
 
     const updated = await this.prisma.changeEvent.update({

@@ -145,6 +145,11 @@ model ChangeEvent {
   department      String?   // 발생부서
   status          EventStatus @default(DRAFT)
 
+  // 보완요청 코멘트
+  returnComment   String?    // 보완요청 사유
+  returnedAt      DateTime?  // 보완요청 일시
+  returnedById    String?    // 보완요청자 ID
+
   // 조치 결과 (운영가이드 필수 작성항목)
   actionDate      DateTime?  // 조치시점
   actionPlan      String?    // 조치방안

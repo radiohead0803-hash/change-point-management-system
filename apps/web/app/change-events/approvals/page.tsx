@@ -44,6 +44,8 @@ export default function ApprovalsPage() {
   const queryClient = useQueryClient();
   const [executiveModal, setExecutiveModal] = useState<{ eventId: string; open: boolean }>({ eventId: '', open: false });
   const [selectedExecutiveId, setSelectedExecutiveId] = useState('');
+  const [returnModal, setReturnModal] = useState<{ eventId: string; open: boolean }>({ eventId: '', open: false });
+  const [returnComment, setReturnComment] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [stepFilter, setStepFilter] = useState<string>('ALL');
@@ -110,13 +112,26 @@ export default function ApprovalsPage() {
     finally { setProcessing(null); }
   };
 
-  const handleReturn = async (eventId: string, e: React.MouseEvent) => {
+  const handleReturnClick = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setReturnModal({ eventId, open: true });
+    setReturnComment('');
+  };
+
+  const handleReturn = async () => {
+    if (!returnComment.trim()) {
+      toast({ variant: 'destructive', title: '보완요청 사유를 입력해주세요.' });
+      return;
+    }
     try {
-      setProcessing(eventId);
-      await changeEvents.update(eventId, { status: 'REVIEW_RETURNED' as any });
+      setProcessing(returnModal.eventId);
+      await changeEvents.update(returnModal.eventId, {
+        status: 'REVIEW_RETURNED' as any,
+        returnComment: returnComment.trim(),
+      });
       queryClient.invalidateQueries({ queryKey: ['change-events'] });
       toast({ title: '보완 요청되었습니다.' });
+      setReturnModal({ eventId: '', open: false });
     } catch { toast({ variant: 'destructive', title: '처리 실패' }); }
     finally { setProcessing(null); }
   };
@@ -178,6 +193,36 @@ export default function ApprovalsPage() {
               <Button className="flex-1" onClick={() => { if (!selectedExecutiveId) { toast({ variant: 'destructive', title: '전담중역을 선택해주세요.' }); return; } handleApprove(executiveModal.eventId, selectedExecutiveId); }}
                 disabled={!selectedExecutiveId || processing === executiveModal.eventId}>
                 <CheckCircle2 className="mr-1.5 h-4 w-4" />{processing === executiveModal.eventId ? '...' : '승인 & 지정'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 보완요청 코멘트 모달 */}
+      {returnModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+            <h3 className="mb-1 text-lg font-bold flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-amber-600" />보완 요청
+            </h3>
+            <p className="mb-4 text-sm text-muted-foreground">보완이 필요한 사유를 입력해주세요.</p>
+            <textarea
+              className="mb-4 w-full rounded-xl border border-input bg-background/60 px-3 py-3 text-sm min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              placeholder="예: 조치방안을 구체적으로 작성해주세요. / 품질검증 결과가 누락되었습니다."
+              value={returnComment}
+              onChange={(e) => setReturnComment(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setReturnModal({ eventId: '', open: false })}>취소</Button>
+              <Button
+                className="flex-1 bg-amber-600 hover:bg-amber-700"
+                onClick={handleReturn}
+                disabled={!returnComment.trim() || processing === returnModal.eventId}
+              >
+                <RotateCcw className="mr-1.5 h-4 w-4" />
+                {processing === returnModal.eventId ? '처리중...' : '보완 요청'}
               </Button>
             </div>
           </div>
@@ -249,7 +294,7 @@ export default function ApprovalsPage() {
                       <TipCell tip={e.qualityVerification || ''} className={`max-w-[70px] truncate px-2 py-1.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                       <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
                         <div className="flex gap-1 justify-center">
-                          <button onClick={(ev) => handleReturn(event.id, ev)} disabled={processing === event.id}
+                          <button onClick={(ev) => handleReturnClick(event.id, ev)} disabled={processing === event.id}
                             className="rounded-md border border-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
                             보완
                           </button>
