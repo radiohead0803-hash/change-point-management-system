@@ -240,7 +240,48 @@ export default function ApprovalsPage() {
           <p className="text-sm font-medium text-muted-foreground">{searchTerm || stepFilter !== 'ALL' ? '조건에 맞는 승인 건이 없습니다' : '승인 대기 건이 없습니다'}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
+        {/* 모바일 카드 뷰 */}
+        <div className="space-y-2 sm:hidden">
+          {filtered.map((event, idx) => {
+            const e = event as any;
+            const step = user ? getApprovalStep(event.status, user.role) : null;
+            return (
+              <div key={event.id} onClick={() => router.push(`/change-events/${event.id}`)}
+                className="cursor-pointer rounded-xl border border-white/60 bg-white/80 p-3.5 shadow-sm transition-all active:scale-[0.98] dark:border-gray-800/60 dark:bg-gray-900/70">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                      event.status === 'SUBMITTED' ? 'bg-indigo-100 text-indigo-700' : event.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                    }`}>{step?.btnLabel || '승인'}</span>
+                    <span className="text-xs text-muted-foreground">{formatDate(event.occurredDate)}</span>
+                  </div>
+                </div>
+                <p className="text-sm font-semibold mb-1.5 line-clamp-1">{e.primaryItem?.name || e.primaryItem?.category?.name || event.description?.slice(0, 30) || '미지정'}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-3">
+                  <span className="text-muted-foreground">발생부서: <span className="text-foreground font-medium">{event.department || '-'}</span></span>
+                  <span className="text-muted-foreground">담당자: <span className="text-foreground font-medium">{e.manager?.name || '-'}</span></span>
+                  <span className={`${e.actionPlan ? 'text-muted-foreground' : 'text-red-400'}`}>조치방안: {e.actionPlan ? '입력' : '미입력'}</span>
+                  <span className={`${e.qualityVerification ? 'text-muted-foreground' : 'text-red-400'}`}>품질검증: {e.qualityVerification ? '입력' : '미입력'}</span>
+                </div>
+                <div className="flex gap-2 justify-end pt-2 border-t border-gray-100 dark:border-gray-800">
+                  {event.status !== 'SUBMITTED' && (
+                    <button onClick={(ev) => handleReturnClick(event.id, ev)} disabled={processing === event.id}
+                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
+                      보완 요청
+                    </button>
+                  )}
+                  <button onClick={(ev) => handleApproveClick(event.id, ev)} disabled={processing === event.id}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50 ${event.status === 'SUBMITTED' ? 'bg-indigo-600' : event.status === 'CONFIRMED' ? 'bg-blue-600' : 'bg-purple-600'}`}>
+                    {processing === event.id ? '처리중...' : step?.btnLabel || '승인'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 데스크톱 테이블 뷰 */}
+        <div className="hidden sm:block overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
           <div className="overflow-auto max-h-[calc(100vh-240px)]">
             <table className="w-full min-w-[1100px] text-xs border-collapse">
               <thead className="sticky top-0 z-10">
