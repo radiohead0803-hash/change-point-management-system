@@ -364,6 +364,139 @@ async function main() {
   }
   console.log('96항목 seed complete');
 
+  // ==========================================
+  // 변동점 발생현황 시드 데이터 (50건)
+  // 2026년 1월 ~ 3월
+  // ==========================================
+
+  // 시드용 사용자 생성
+  const seedPassword = await bcrypt.hash('1234', 10);
+  const seedUsers = [
+    { email: 'kimmy', name: '김명진', role: 'TIER1_EDITOR' as const, team: '생산기술팀', position: '대리' },
+    { email: 'parksj', name: '박서준', role: 'TIER1_EDITOR' as const, team: '품질관리팀', position: '주임' },
+    { email: 'leejh', name: '이지현', role: 'TIER1_EDITOR' as const, team: '생산1팀', position: '사원' },
+    { email: 'junghwan', name: '정환', role: 'TIER1_REVIEWER' as const, team: '품질보증팀', position: '과장' },
+    { email: 'choiyj', name: '최영준', role: 'EXEC_APPROVER' as const, team: '품질경영팀', position: '이사' },
+  ];
+
+  const userMap: Record<string, string> = {};
+  for (const u of seedUsers) {
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, team: u.team, position: u.position, deletedAt: null },
+      create: { email: u.email, name: u.name, password: seedPassword, role: u.role, team: u.team, position: u.position },
+    });
+    userMap[u.email] = user.id;
+  }
+  console.log('Seed users created');
+
+  // 시드용 회사 생성
+  const seedCompanies = [
+    { name: '(주)캠스', code: 'CAMS', type: 'TIER1' },
+    { name: '(주)한성정밀', code: 'HANSUNG', type: 'TIER2' },
+    { name: '(주)동양테크', code: 'DONGYANG', type: 'TIER2' },
+  ];
+  const companyMap: Record<string, string> = {};
+  for (const c of seedCompanies) {
+    const company = await prisma.company.upsert({
+      where: { code: c.code },
+      update: { name: c.name, type: c.type },
+      create: { name: c.name, code: c.code, type: c.type },
+    });
+    companyMap[c.code] = company.id;
+  }
+  console.log('Seed companies created');
+
+  // 분류 항목 ID 수집
+  const allItems = await prisma.changeItem.findMany({ take: 50, select: { id: true } });
+  const itemIds = allItems.map(i => i.id);
+
+  // 공통코드 데이터
+  const customers = ['현대자동차', '기아자동차'];
+  const projects = ['MX5 (싼타페)', 'SP3(셀토스)', 'NQ5(투싼)', 'GN7(그랜저)', 'SU2(스타리아)'];
+  const factories = ['본사 1공장', '본사 2공장', '아산공장'];
+  const lines = ['A라인', 'B라인', 'C라인', 'D라인'];
+  const departments = ['생산기술팀', '품질관리팀', '생산1팀', '생산2팀', '자재팀'];
+  const productLines = ['샤시', '트림', '바디', '도장', '엔진'];
+
+  const statuses = ['DRAFT', 'SUBMITTED', 'CONFIRMED', 'REVIEWED', 'APPROVED', 'CLOSED', 'REVIEW_RETURNED'] as const;
+  const statusWeights = [5, 8, 6, 10, 12, 5, 4]; // 분포 가중치
+
+  function weightedRandom<T>(arr: readonly T[], weights: number[]): T {
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < arr.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return arr[i];
+    }
+    return arr[arr.length - 1];
+  }
+
+  const editors = ['kimmy', 'parksj', 'leejh'];
+  const actionPlans = ['금형 보정 후 재생산', '작업 표준서 개정', '원자재 LOT 변경', '설비 파라미터 재설정', '검사기준 강화', '공정 조건 최적화', '재교육 실시'];
+  const actionResults = ['조치 완료 - 양산 적용', '시험 생산 진행중', '개선 완료 확인', '후속 모니터링 중', '양품 확인 완료'];
+  const qualityChecks = ['초도품 검사 합격', 'SPC 관리 정상', '치수검사 OK', '외관검사 합격', '기능검사 PASS'];
+  const descriptions = [
+    '금형 수명 도달로 인한 신규 금형 투입',
+    '원자재 공급업체 변경에 따른 소재 물성 확인',
+    '작업자 교대 근무 변경으로 인한 공정 관리',
+    '설비 노후화에 따른 신규 설비 도입',
+    '고객사 요청에 의한 사양 변경 대응',
+    '계절 변화에 따른 도장 조건 변경',
+    '품질 클레임 발생에 따른 검사 기준 강화',
+    '2차사 변경에 따른 입고품 품질 확인',
+    '생산 라인 레이아웃 변경',
+    '포장 방법 변경 (고객사 요청)',
+  ];
+
+  // 50건 생성
+  const existingCount = await prisma.changeEvent.count();
+  if (existingCount < 10) {
+    for (let i = 0; i < 50; i++) {
+      const month = Math.floor(Math.random() * 3); // 0=1월, 1=2월, 2=3월
+      const day = Math.floor(Math.random() * 28) + 1;
+      const occurredDate = new Date(2026, month, day);
+      const receiptMonth = `2026-${String(month + 1).padStart(2, '0')}`;
+
+      const status = weightedRandom(statuses, statusWeights);
+      const editor = editors[Math.floor(Math.random() * editors.length)];
+      const company = Math.random() > 0.3 ? 'CAMS' : (Math.random() > 0.5 ? 'HANSUNG' : 'DONGYANG');
+      const itemId = itemIds.length > 0 ? itemIds[Math.floor(Math.random() * itemIds.length)] : undefined;
+
+      const isAdvanced = ['CONFIRMED', 'REVIEWED', 'APPROVED', 'CLOSED'].includes(status);
+
+      await prisma.changeEvent.create({
+        data: {
+          receiptMonth,
+          occurredDate,
+          customer: customers[Math.floor(Math.random() * customers.length)],
+          project: projects[Math.floor(Math.random() * projects.length)],
+          productLine: productLines[Math.floor(Math.random() * productLines.length)],
+          factory: factories[Math.floor(Math.random() * factories.length)],
+          productionLine: lines[Math.floor(Math.random() * lines.length)],
+          department: departments[Math.floor(Math.random() * departments.length)],
+          description: descriptions[Math.floor(Math.random() * descriptions.length)],
+          partNumber: `P${String(1000 + Math.floor(Math.random() * 9000))}`,
+          productName: `부품-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 100)}`,
+          status,
+          companyId: companyMap[company],
+          primaryItemId: itemId,
+          managerId: userMap[editor],
+          createdById: userMap[editor],
+          reviewerId: userMap['junghwan'],
+          executiveId: isAdvanced ? userMap['choiyj'] : undefined,
+          actionDate: isAdvanced ? new Date(2026, month, Math.min(day + 7, 28)) : undefined,
+          actionPlan: isAdvanced ? actionPlans[Math.floor(Math.random() * actionPlans.length)] : undefined,
+          actionResult: ['APPROVED', 'CLOSED'].includes(status) ? actionResults[Math.floor(Math.random() * actionResults.length)] : undefined,
+          qualityVerification: ['APPROVED', 'CLOSED'].includes(status) ? qualityChecks[Math.floor(Math.random() * qualityChecks.length)] : undefined,
+        },
+      });
+    }
+    console.log('50건 변동점 시드 데이터 생성 완료');
+  } else {
+    console.log(`이미 ${existingCount}건 존재 - 변동점 시드 스킵`);
+  }
+
   // 기본 정책 설정
   await prisma.policySetting.upsert({
     where: {
