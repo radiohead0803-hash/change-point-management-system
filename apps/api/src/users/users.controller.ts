@@ -25,7 +25,7 @@ export class UsersController {
   // 내 프로필 조회 (모든 역할 가능)
   @Get('me')
   getMyProfile(@Req() req: any) {
-    return this.usersService.findOne(req.user.sub);
+    return this.usersService.findOne(req.user.id);
   }
 
   // 내 프로필 수정 (모든 역할 - 비밀번호, 이름, 팀, 직급, 전화번호)
@@ -37,7 +37,7 @@ export class UsersController {
     position?: string;
     phone?: string;
   }) {
-    return this.usersService.update(req.user.sub, body);
+    return this.usersService.update(req.user.id, body);
   }
 
   @Get(':id')
