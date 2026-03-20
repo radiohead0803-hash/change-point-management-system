@@ -74,6 +74,8 @@ async function downloadAttachment(attachmentId: string, filename: string) {
 /* ── 첨부파일 섹션 ── */
 function AttachmentSection({ eventId }: { eventId: string }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [returnModal, setReturnModal] = useState(false);
+  const [returnComment, setReturnComment] = useState('');
   const { data: attachments = [] } = useQuery<any[]>({
     queryKey: ['attachments', eventId],
     queryFn: () => changeEvents.getAttachments(eventId).then((r) => r.data),
@@ -250,11 +252,21 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
     }
   };
 
+  const handleReturnOpen = () => {
+    setReturnComment('');
+    setReturnModal(true);
+  };
+
   const handleReturn = async () => {
+    if (!returnComment.trim()) {
+      toast({ variant: 'destructive', title: '보완요청 사유를 입력해주세요.' });
+      return;
+    }
     try {
-      await changeEvents.update(event.id, { status: 'REVIEW_RETURNED' });
+      await changeEvents.update(event.id, { status: 'REVIEW_RETURNED' as any, returnComment: returnComment.trim() });
       queryClient.invalidateQueries({ queryKey: ['change-events', params.id] });
       toast({ title: '보완 요청되었습니다.' });
+      setReturnModal(false);
     } catch {
       toast({ variant: 'destructive', title: '처리 실패' });
     }
@@ -419,18 +431,16 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         )}
       </div>
 
-      {/* 등록자 · 담당자 정보 */}
+      {/* 등록자 · 결재선 정보 */}
       <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">등록자 · 담당자 정보</h3>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-          <InfoCard icon={UserIcon} label="등록자" value={event.createdBy?.name || '-'} />
-          <InfoCard icon={Building2} label="등록자 소속" value={event.company?.name || '-'} />
-          <InfoCard icon={UserIcon} label="담당자" value={event.manager?.name || '-'} />
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">등록자 · 결재선 정보</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+          <InfoCard icon={UserIcon} label="등록자/담당자" value={event.createdBy?.name || '-'} />
+          <InfoCard icon={Building2} label="소속" value={event.company?.name || '-'} />
           <InfoCard icon={UserIcon} label="발생부서" value={event.department || '-'} />
           <InfoCard icon={UserIcon} label="1차 검토자" value={event.reviewer?.name || '-'} />
           <InfoCard icon={UserIcon} label="전담중역" value={event.executive?.name || '-'} />
           <InfoCard icon={Clock} label="등록일시" value={formatDateTime(event.createdAt)} />
-          <InfoCard icon={Clock} label="수정일시" value={formatDateTime(event.updatedAt)} />
         </div>
       </div>
 
@@ -481,13 +491,42 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
           <p className="mb-3 text-xs font-semibold text-primary">승인 처리</p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
             {approvalStep.status !== 'SUBMITTED' && (
-              <Button variant="outline" className="w-full sm:w-auto" onClick={handleReturn}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleReturnOpen}>
                 <RotateCcw className="mr-1.5 h-4 w-4" />보완 요청
               </Button>
             )}
             <Button className="w-full sm:w-auto" onClick={handleApprove}>
               <CheckCircle2 className="mr-1.5 h-4 w-4" />{approvalStep.btnLabel}
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 보완요청 코멘트 모달 */}
+      {returnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+            <h3 className="mb-1 text-lg font-bold flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-amber-600" />보완 요청
+            </h3>
+            <p className="mb-4 text-sm text-muted-foreground">보완이 필요한 사유를 입력해주세요.</p>
+            <textarea
+              className="mb-4 w-full rounded-xl border border-input bg-background/60 px-3 py-3 text-sm min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              placeholder="예: 조치방안을 구체적으로 작성해주세요. / 품질검증 결과가 누락되었습니다."
+              value={returnComment}
+              onChange={(e) => setReturnComment(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setReturnModal(false)}>취소</Button>
+              <Button
+                className="flex-1 bg-amber-600 hover:bg-amber-700"
+                onClick={handleReturn}
+                disabled={!returnComment.trim()}
+              >
+                <RotateCcw className="mr-1.5 h-4 w-4" />보완 요청
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -483,7 +483,7 @@ export class ChangeEventsService {
           }
         } else if (data.status === 'REVIEW_RETURNED') {
           // 보완요청시 등록자에게 알림
-          await this.notificationsService.notifyReturned(id, eventTitle, updated.createdById);
+          await this.notificationsService.notifyReturned(id, eventTitle, updated.createdById, updated.returnComment || undefined);
         }
       } catch (e) {
         // 알림 실패해도 상태 변경은 유지

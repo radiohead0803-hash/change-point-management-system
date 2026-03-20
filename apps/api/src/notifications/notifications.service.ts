@@ -91,12 +91,13 @@ export class NotificationsService {
   }
 
   // 보완 요청 알림 (등록자에게)
-  async notifyReturned(eventId: string, eventTitle: string, creatorId: string) {
+  async notifyReturned(eventId: string, eventTitle: string, creatorId: string, returnComment?: string) {
+    const comment = returnComment ? `\n사유: ${returnComment}` : '';
     return this.create({
       userId: creatorId,
       type: 'REVIEW_RETURNED',
       title: '보완 요청',
-      message: `"${eventTitle}" 변동점에 보완이 요청되었습니다.`,
+      message: `"${eventTitle}" 변동점에 보완이 요청되었습니다.${comment}`,
       eventId,
     });
   }
