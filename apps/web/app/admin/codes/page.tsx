@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getCommonCodes, saveCommonCodes, CodeGroup } from '@/lib/common-codes';
+import { useState } from 'react';
+import { commonCodes } from '@/lib/api-client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+
+interface CodeGroup { key: string; label: string; items: string[] }
 import {
   Plus, Pencil, Trash2, X, Check, Search, GripVertical,
   Building2, Package, Factory, Columns, Users, Car,
@@ -26,61 +29,69 @@ const GROUP_COLORS: Record<string, string> = {
   DEPARTMENT: 'text-pink-600 bg-pink-50 dark:bg-pink-900/20',
 };
 
+const GROUP_LABELS: Record<string, string> = {
+  CUSTOMER: '고객사', PRODUCT_LINE: '제품군', FACTORY: '공장', LINE: '라인', DEPARTMENT: '발생부서',
+};
+
 export default function CommonCodesPage() {
   const { toast } = useToast();
-  const [codes, setCodes] = useState<CodeGroup[]>([]);
+  const queryClient = useQueryClient();
   const [selectedGroup, setSelectedGroup] = useState<string>('CUSTOMER');
   const [adding, setAdding] = useState(false);
   const [addValue, setAddValue] = useState('');
   const [editing, setEditing] = useState<{ index: number; value: string } | null>(null);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    setCodes(getCommonCodes());
-  }, []);
+  // DB에서 공통코드 로드
+  const { data: codeData = {} } = useQuery<Record<string, string[]>>({
+    queryKey: ['common-codes-all'],
+    queryFn: async () => { try { return (await commonCodes.getAll()).data; } catch { return {}; } },
+  });
+
+  const codes: CodeGroup[] = Object.keys(GROUP_LABELS).map((key) => ({
+    key, label: GROUP_LABELS[key], items: codeData[key] || [],
+  }));
 
   const currentGroup = codes.find((c) => c.key === selectedGroup);
   const filteredItems = currentGroup?.items.filter((item) =>
     !search || item.toLowerCase().includes(search.toLowerCase())
   ) || [];
 
-  const handleAdd = () => {
+  const saveToServer = async (group: string, items: string[]) => {
+    try {
+      await commonCodes.save(group, items);
+      queryClient.invalidateQueries({ queryKey: ['common-codes-all'] });
+    } catch {
+      toast({ variant: 'destructive', title: '저장 실패' });
+    }
+  };
+
+  const handleAdd = async () => {
     if (!addValue.trim() || !currentGroup) return;
     if (currentGroup.items.includes(addValue.trim())) {
       toast({ variant: 'destructive', title: '이미 존재하는 항목입니다' });
       return;
     }
-    const updated = codes.map((g) =>
-      g.key === selectedGroup ? { ...g, items: [...g.items, addValue.trim()] } : g
-    );
-    setCodes(updated);
-    saveCommonCodes(updated);
+    const newItems = [...currentGroup.items, addValue.trim()];
+    await saveToServer(selectedGroup, newItems);
     setAddValue('');
     setAdding(false);
     toast({ title: '항목이 추가되었습니다.' });
   };
 
-  const handleEdit = (index: number) => {
+  const handleEdit = async (index: number) => {
     if (!editing || !currentGroup) return;
-    const updated = codes.map((g) => {
-      if (g.key !== selectedGroup) return g;
-      const items = [...g.items];
-      items[index] = editing.value;
-      return { ...g, items };
-    });
-    setCodes(updated);
-    saveCommonCodes(updated);
+    const items = [...currentGroup.items];
+    items[index] = editing.value;
+    await saveToServer(selectedGroup, items);
     setEditing(null);
     toast({ title: '항목이 수정되었습니다.' });
   };
 
-  const handleDelete = (item: string) => {
+  const handleDelete = async (item: string) => {
     if (!confirm(`"${item}"을(를) 삭제하시겠습니까?`)) return;
-    const updated = codes.map((g) =>
-      g.key === selectedGroup ? { ...g, items: g.items.filter((i) => i !== item) } : g
-    );
-    setCodes(updated);
-    saveCommonCodes(updated);
+    const items = currentGroup?.items.filter((i) => i !== item) || [];
+    await saveToServer(selectedGroup, items);
     toast({ title: '항목이 삭제되었습니다.' });
   };
 

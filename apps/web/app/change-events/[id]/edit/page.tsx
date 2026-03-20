@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { changeEvents, users } from '@/lib/api-client';
-import { getCodeOptions } from '@/lib/common-codes';
+import { changeEvents, users, commonCodes } from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,29 +83,18 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     return opts;
   };
 
-  const baseCustomers = useMemo(() => [...getCodeOptions('CUSTOMER'), '기타'], []);
-  const baseProjects = useMemo(() => {
-    try {
-      const stored = typeof window !== 'undefined' ? localStorage.getItem('cpms_vehicles') : null;
-      if (stored) {
-        const vehicles = JSON.parse(stored) as Array<{ name: string; status: string }>;
-        return [...vehicles.filter((v) => v.status !== '단종').map((v) => v.name), '기타'];
-      }
-    } catch { /* ignore */ }
-    return [...getCodeOptions('PROJECT'), '기타'];
-  }, []);
-  const baseProductLines = useMemo(() => [...getCodeOptions('PRODUCT_LINE'), '기타'], []);
-  const baseFactories = useMemo(() => [...getCodeOptions('FACTORY'), '기타'], []);
-  const baseLines = useMemo(() => [...getCodeOptions('LINE'), '기타'], []);
-  const baseDepts = useMemo(() => [...getCodeOptions('DEPARTMENT'), '기타'], []);
-
-  // 이벤트 데이터의 저장된 값을 옵션에 포함
-  const CUSTOMERS = useMemo(() => addIfMissing(baseCustomers, event?.customer), [baseCustomers, event?.customer]);
-  const PROJECTS = useMemo(() => addIfMissing(baseProjects, event?.project), [baseProjects, event?.project]);
-  const PRODUCT_LINES = useMemo(() => addIfMissing(baseProductLines, event?.productLine), [baseProductLines, event?.productLine]);
-  const FACTORIES = useMemo(() => addIfMissing(baseFactories, event?.factory), [baseFactories, event?.factory]);
-  const LINES = useMemo(() => addIfMissing(baseLines, event?.productionLine), [baseLines, event?.productionLine]);
-  const DEPTS = useMemo(() => addIfMissing(baseDepts, event?.department), [baseDepts, event?.department]);
+  // 공통코드 옵션 (DB API 기반)
+  const { data: codeData } = useQuery<Record<string, string[]>>({
+    queryKey: ['common-codes-all'],
+    queryFn: async () => { try { return (await commonCodes.getAll()).data; } catch { return {}; } },
+    staleTime: 60000,
+  });
+  const CUSTOMERS = useMemo(() => addIfMissing(codeData?.CUSTOMER || [], event?.customer), [codeData, event?.customer]);
+  const PROJECTS = useMemo(() => addIfMissing(codeData?.PROJECT || [], event?.project), [codeData, event?.project]);
+  const PRODUCT_LINES = useMemo(() => addIfMissing(codeData?.PRODUCT_LINE || [], event?.productLine), [codeData, event?.productLine]);
+  const FACTORIES = useMemo(() => addIfMissing(codeData?.FACTORY || [], event?.factory), [codeData, event?.factory]);
+  const LINES = useMemo(() => addIfMissing(codeData?.LINE || [], event?.productionLine), [codeData, event?.productionLine]);
+  const DEPTS = useMemo(() => addIfMissing(codeData?.DEPARTMENT || [], event?.department), [codeData, event?.department]);
 
   const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
   const { data: companiesList = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });

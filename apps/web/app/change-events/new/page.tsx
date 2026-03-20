@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { changeEvents, users } from '@/lib/api-client';
-import { getCodeOptions } from '@/lib/common-codes';
+import { changeEvents, users, commonCodes } from '@/lib/api-client';
 import { useQuery } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,33 +69,18 @@ export default function NewChangeEventPage() {
   const [guideOpen, setGuideOpen] = useState(false);
 
   // 공통코드에서 드롭다운 옵션 로드
-  const [CUSTOMERS, setCustomers] = useState<string[]>([]);
-  const [PROJECTS, setProjects] = useState<string[]>([]);
-  const [PRODUCT_LINES, setProductLines] = useState<string[]>([]);
-  const [FACTORIES, setFactories] = useState<string[]>([]);
-  const [LINES, setLines] = useState<string[]>([]);
-  const [DEPTS, setDepts] = useState<string[]>([]);
-
-  useEffect(() => {
-    setCustomers([...getCodeOptions('CUSTOMER'), '기타']);
-    // 프로젝트: 차종현황(localStorage)에서 로드
-    try {
-      const stored = localStorage.getItem('cpms_vehicles');
-      if (stored) {
-        const vehicles = JSON.parse(stored) as Array<{ name: string; status: string }>;
-        const names = vehicles.filter((v) => v.status !== '단종').map((v) => v.name);
-        setProjects([...names, '기타']);
-      } else {
-        setProjects([...getCodeOptions('PROJECT'), '기타']);
-      }
-    } catch {
-      setProjects([...getCodeOptions('PROJECT'), '기타']);
-    }
-    setProductLines([...getCodeOptions('PRODUCT_LINE'), '기타']);
-    setFactories([...getCodeOptions('FACTORY'), '기타']);
-    setLines([...getCodeOptions('LINE'), '기타']);
-    setDepts([...getCodeOptions('DEPARTMENT'), '기타']);
-  }, []);
+  // 공통코드 옵션 (DB API 기반 - 모든 사용자 동일)
+  const { data: codeData } = useQuery<Record<string, string[]>>({
+    queryKey: ['common-codes-all'],
+    queryFn: async () => { try { return (await commonCodes.getAll()).data; } catch { return {}; } },
+    staleTime: 60000, // 1분 캐시
+  });
+  const CUSTOMERS = codeData?.CUSTOMER || [];
+  const PROJECTS = codeData?.PROJECT || [];
+  const PRODUCT_LINES = codeData?.PRODUCT_LINE || [];
+  const FACTORIES = codeData?.FACTORY || [];
+  const LINES = codeData?.LINE || [];
+  const DEPTS = codeData?.DEPARTMENT || [];
 
   const { data: allUsers = [] } = useQuery<any[]>({ queryKey: ['all-users'], queryFn: async () => { try { return (await users.list()).data; } catch { return []; } } });
   const { data: companies = [] } = useQuery<any[]>({ queryKey: ['companies'], queryFn: async () => { try { return (await users.companies()).data; } catch { return []; } } });

@@ -143,6 +143,13 @@ export const settings = {
   remove: (id: string) => api.delete(`/settings/${id}`),
 };
 
+// 공통코드 (DB 기반)
+export const commonCodes = {
+  getAll: () => api.get<Record<string, string[]>>('/settings/common-codes-all'),
+  get: (group: string) => api.get<string[]>(`/settings/common-codes/${group}`),
+  save: (group: string, items: string[]) => api.post(`/settings/common-codes/${group}`, { items }),
+};
+
 export const companies = {
   list: () => api.get<any[]>('/users/companies'),
   create: (data: { name: string; code: string; type: string }) => api.post('/users/companies', data),
