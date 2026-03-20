@@ -16,8 +16,8 @@ import {
 const ROLE_MAP: Record<string, { label: string; shortLabel: string; group: string; level: number; desc: string; color: string; badgeColor: string }> = {
   ADMIN:           { label: '관리자',       shortLabel: '관리자',   group: '관리자',     level: 0, desc: '시스템 전체 관리 / 전체 권한',               color: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',         badgeColor: 'bg-red-500' },
   TIER1_EDITOR:    { label: '캠스 담당자',  shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정·접수 / 1차 승인',           color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
-  TIER1_REVIEWER:  { label: '캠스 담당자',  shortLabel: '담당자',   group: '본사(캠스)', level: 1, desc: '변동점 등록·수정·접수 / 1차 승인',           color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',     badgeColor: 'bg-blue-500' },
-  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '중역',     group: '본사(캠스)', level: 2, desc: '변동점 최종 승인',                           color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
+  TIER1_REVIEWER:  { label: '중역',         shortLabel: '중역',     group: '본사(캠스)', level: 2, desc: '변동점 검토·1차 승인 / 주간 점검',         color: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', badgeColor: 'bg-indigo-500' },
+  EXEC_APPROVER:   { label: '전담중역',     shortLabel: '전담중역', group: '본사(캠스)', level: 3, desc: '변동점 최종 승인 / 사장님 보고',               color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', badgeColor: 'bg-purple-500' },
   TIER2_EDITOR:    { label: '협력사 담당자', shortLabel: '담당자',  group: '협력사',     level: 1, desc: '자사 변동점 등록·수정 / 접수',               color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400', badgeColor: 'bg-green-500' },
   CUSTOMER_VIEWER: { label: '고객사 뷰어',  shortLabel: '뷰어',    group: '협력사',     level: 0, desc: '열람 전용 (수정 불가)',                       color: 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400',       badgeColor: 'bg-gray-500' },
 };

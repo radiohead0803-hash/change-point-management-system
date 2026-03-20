@@ -198,7 +198,7 @@ export default function NewChangeEventPage() {
     } finally { setDraftSaving(false); setLoading(false); }
   };
 
-  const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '캠스 담당자', EXEC_APPROVER: '전담중역' };
+  const ROLES: Record<string, string> = { ADMIN: '관리자', TIER1_EDITOR: '캠스 담당자', TIER1_REVIEWER: '중역', EXEC_APPROVER: '전담중역' };
 
   const Sel = ({ label, req, opts, err, ...p }: any) => (
     <div className="space-y-1.5">
