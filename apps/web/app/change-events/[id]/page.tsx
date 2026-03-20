@@ -225,15 +225,12 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
     );
   }
 
-  const isOwner = event.createdById === user?.id;
+  const isOwner = event.createdById === user?.id || event.managerId === user?.id;
   const isAdmin = user?.role === 'ADMIN';
   const isDraft = event.status === 'DRAFT';
   const isReturned = event.status === 'REVIEW_RETURNED';
-  const canEdit =
-    isAdmin ||
-    (isOwner && (isDraft || isReturned)) ||
-    (user?.role === 'TIER1_EDITOR' && (isDraft || isReturned)) ||
-    (user?.role === 'TIER2_EDITOR' && isOwner && (isDraft || isReturned));
+  // 수정: 등록자(또는 담당자) + ADMIN만 가능
+  const canEdit = isAdmin || (isOwner && (isDraft || isReturned));
   const canDelete = isAdmin || (isOwner && isDraft);
 
   const approvalStep = FLOW_STEPS.find(
@@ -421,12 +418,16 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         )}
       </div>
 
-      {/* 담당자 정보 */}
+      {/* 등록자 · 담당자 정보 */}
       <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:p-5 dark:border-gray-800/60 dark:bg-gray-900/70">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">담당자 정보</h3>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">등록자 · 담당자 정보</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           <InfoCard icon={UserIcon} label="등록자" value={event.createdBy?.name || '-'} />
+          <InfoCard icon={Building2} label="등록자 소속" value={event.company?.name || '-'} />
+          <InfoCard icon={UserIcon} label="담당자" value={event.manager?.name || '-'} />
           <InfoCard icon={UserIcon} label="발생부서" value={event.department || '-'} />
+          <InfoCard icon={UserIcon} label="1차 검토자" value={event.reviewer?.name || '-'} />
+          <InfoCard icon={UserIcon} label="전담중역" value={event.executive?.name || '-'} />
           <InfoCard icon={Clock} label="등록일시" value={formatDateTime(event.createdAt)} />
           <InfoCard icon={Clock} label="수정일시" value={formatDateTime(event.updatedAt)} />
         </div>

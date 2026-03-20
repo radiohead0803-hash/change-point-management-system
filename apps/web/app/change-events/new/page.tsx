@@ -203,15 +203,10 @@ export default function NewChangeEventPage() {
   const Sel = ({ label, req, opts, err, ...p }: any) => (
     <div className="space-y-1.5">
       <label className="text-sm font-medium">{label} {req && <span className="text-red-400">*</span>}</label>
-      {opts && opts.length > 0 ? (
-        <select {...p} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
-          <option value="">{label} 선택</option>
-          {opts.map((o: string) => <option key={o} value={o}>{o}</option>)}
-        </select>
-      ) : (
-        <input {...p} placeholder={`${label} 직접 입력`}
-          className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40" />
-      )}
+      <select {...p} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+        <option value="">{label} 선택</option>
+        {(opts || []).map((o: string) => <option key={o} value={o}>{o}</option>)}
+      </select>
       {err && <p className="text-xs text-red-500">{err}</p>}
     </div>
   );
