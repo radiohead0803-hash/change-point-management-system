@@ -72,3 +72,21 @@
     @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
 }
+
+/* 프린트 전역 스타일 */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .no-print, .print\\:hidden, .print\\:\!hidden,
+  nav[class*="fixed bottom"], nav[class*="sticky bottom"] {
+    display: none !important;
+  }
+}

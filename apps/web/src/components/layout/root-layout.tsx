@@ -25,22 +25,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900 print:block print:h-auto print:overflow-visible print:bg-white">
       {/* 데스크톱 사이드바 */}
-      <div className="hidden lg:flex">
+      <div className="hidden lg:flex print:!hidden">
         <Sidebar />
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden print:block print:overflow-visible">
         {/* 모바일 네비게이션 */}
-        <div className="lg:hidden">
+        <div className="lg:hidden print:!hidden">
           <MobileNav />
         </div>
 
         {/* 컨텐츠 영역 */}
-        <main className="flex-1 overflow-y-auto px-3 py-3 pb-24 sm:px-4 sm:py-4 lg:px-6 lg:py-5 lg:pb-5">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main className="flex-1 overflow-y-auto px-3 py-3 pb-24 sm:px-4 sm:py-4 lg:px-6 lg:py-5 lg:pb-5 print:!p-0 print:!m-0 print:overflow-visible">
+          <div className="mx-auto max-w-7xl print:max-w-full">{children}</div>
         </main>
       </div>
     </div>

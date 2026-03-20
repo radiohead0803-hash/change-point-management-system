@@ -73,7 +73,7 @@ export default function MobileNav() {
       </div>
 
       {/* 하단 네비게이션 바 */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/90 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/90" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/90 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/90 print:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="mx-auto flex max-w-lg justify-around px-1">
           {bottomNav.map((item) => {
             if (item.roles && !item.roles.includes(user?.role || '')) return null;
