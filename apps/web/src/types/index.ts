@@ -59,6 +59,10 @@ export interface ChangeEvent {
   actionPlan?: string;
   actionResult?: string;
   qualityVerification?: string;
+  // 보완요청
+  returnComment?: string;
+  returnedAt?: string;
+  returnedById?: string;
   // 담당자
   managerId: string;
   manager: User;
