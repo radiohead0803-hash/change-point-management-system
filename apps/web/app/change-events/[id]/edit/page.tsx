@@ -113,12 +113,13 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
     },
   });
 
-  // 폼 초기화 - event 로드 완료 후 1회 실행
+  // 폼 초기화 - event + codeData 모두 로드 완료 후 1회 실행
   const formInitRef = useRef(false);
   const eventIdRef = useRef('');
 
   useEffect(() => {
-    if (!event || (formInitRef.current && eventIdRef.current === event.id)) return;
+    // 공통코드(codeData)가 로드되기 전에는 reset 하지 않음 (SELECT 옵션이 비어서 값이 유실됨)
+    if (!event || !codeData || (formInitRef.current && eventIdRef.current === event.id)) return;
     formInitRef.current = true;
     eventIdRef.current = event.id;
 
@@ -148,7 +149,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
       reviewerId: event.reviewerId || '',
       executiveId: event.executiveId || '',
     });
-  }, [event, reset, user]);
+  }, [event, reset, user, codeData]);
 
   // Populate existing attachments
   const attsInitRef = useRef(false);

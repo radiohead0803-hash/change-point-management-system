@@ -47,11 +47,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const { data } = await auth.login(email, password);
+      // 1. 토큰 저장
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('refreshToken', data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
-
+      // 2. 이전 세션의 캐시 완전 제거
+      queryClient.clear();
+      // 3. 새 JWT로 최신 프로필 가져와서 localStorage 동기화
+      try {
+        const { data: profile } = await usersApi.getMyProfile();
+        localStorage.setItem('user', JSON.stringify(profile));
+        setUser(profile as User);
+      } catch {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+      }
       router.push('/dashboard');
     } catch (error) {
       throw error;
