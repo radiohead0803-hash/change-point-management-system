@@ -240,6 +240,7 @@ export default function ApprovalsPage() {
           <p className="text-sm font-medium text-muted-foreground">{searchTerm || stepFilter !== 'ALL' ? '조건에 맞는 승인 건이 없습니다' : '승인 대기 건이 없습니다'}</p>
         </div>
       ) : (
+        <>
         {/* 모바일 카드 뷰 */}
         <div className="space-y-2 sm:hidden">
           {filtered.map((event, idx) => {
@@ -356,6 +357,7 @@ export default function ApprovalsPage() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );

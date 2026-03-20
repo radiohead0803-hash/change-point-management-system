@@ -263,6 +263,7 @@ export default function MyChangeEventsPage() {
           )}
         </div>
       ) : (
+        <>
         {/* 모바일 카드 뷰 */}
         <div className="space-y-2 sm:hidden">
           {sorted.map((event, idx) => {
@@ -401,6 +402,7 @@ export default function MyChangeEventsPage() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );
