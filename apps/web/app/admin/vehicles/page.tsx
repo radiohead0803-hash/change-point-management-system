@@ -54,7 +54,18 @@ type EditTarget = { id: string } | null;
 
 export default function VehiclesPage() {
   const { toast } = useToast();
-  const [vehicles, setVehicles] = useState<VehicleModel[]>(() => vehicleApi.list());
+  const queryClient = useQueryClient();
+  const { data: vehicles = [], isLoading } = useQuery<VehicleModel[]>({
+    queryKey: ['vehicles-master'],
+    queryFn: () => vehicleApi.list(),
+  });
+  const saveAndRefresh = async (updated: VehicleModel[]) => {
+    await vehicleApi.save(updated);
+    queryClient.invalidateQueries({ queryKey: ['vehicles-master'] });
+    // 공통코드 PROJECT도 동기화
+    const projectNames = updated.filter(v => v.status !== '단종').map(v => v.name);
+    try { await commonCodes.save('PROJECT', projectNames); queryClient.invalidateQueries({ queryKey: ['common-codes-all'] }); } catch {}
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [editing, setEditing] = useState<EditTarget>(null);
@@ -79,19 +90,13 @@ export default function VehiclesPage() {
     단종: vehicles.filter(v => v.status === '단종').length,
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name || !form.code) {
       toast({ variant: 'destructive', title: '차종명과 코드를 입력해주세요' });
       return;
     }
-    const newVehicle: VehicleModel = {
-      id: Date.now().toString(),
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newVehicle, ...vehicles];
-    setVehicles(updated);
-    vehicleApi.save(updated);
+    const newVehicle: VehicleModel = { id: Date.now().toString(), ...form, createdAt: new Date().toISOString() };
+    await saveAndRefresh([newVehicle, ...vehicles]);
     setAdding(false);
     setForm({ name: '', code: '', customer: '', segment: '', year: '', status: '양산' });
     toast({ title: '차종이 추가되었습니다.' });
@@ -104,21 +109,17 @@ export default function VehiclesPage() {
     setForm({ name: v.name, code: v.code, customer: v.customer, segment: v.segment, year: v.year, status: v.status });
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editing) return;
-    const updated = vehicles.map(v => v.id === editing.id ? { ...v, ...form } : v);
-    setVehicles(updated);
-    vehicleApi.save(updated);
+    await saveAndRefresh(vehicles.map(v => v.id === editing.id ? { ...v, ...form } : v));
     setEditing(null);
     setForm({ name: '', code: '', customer: '', segment: '', year: '', status: '양산' });
     toast({ title: '차종 정보가 수정되었습니다.' });
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`"${name}"을(를) 삭제하시겠습니까?`)) return;
-    const updated = vehicles.filter(v => v.id !== id);
-    setVehicles(updated);
-    vehicleApi.save(updated);
+    await saveAndRefresh(vehicles.filter(v => v.id !== id));
     toast({ title: '차종이 삭제되었습니다.' });
   };
 

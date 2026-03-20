@@ -145,9 +145,9 @@ export const settings = {
 
 // 공통코드 (DB 기반)
 export const commonCodes = {
-  getAll: () => api.get<Record<string, string[]>>('/settings/common-codes-all'),
-  get: (group: string) => api.get<string[]>(`/settings/common-codes/${group}`),
-  save: (group: string, items: string[]) => api.post(`/settings/common-codes/${group}`, { items }),
+  getAll: () => api.get<Record<string, any[]>>('/settings/common-codes-all'),
+  get: (group: string) => api.get<any[]>(`/settings/common-codes/${group}`),
+  save: (group: string, items: any) => api.post(`/settings/common-codes/${group}`, { items }),
 };
 
 export const companies = {

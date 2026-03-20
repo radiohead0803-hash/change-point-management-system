@@ -41,7 +41,7 @@ export class SettingsController {
   @Get('common-codes-all')
   @ApiOperation({ summary: '모든 공통코드 조회' })
   async getAllCommonCodes() {
-    const groups = ['CUSTOMER', 'PROJECT', 'PRODUCT_LINE', 'FACTORY', 'LINE', 'DEPARTMENT'];
+    const groups = ['CUSTOMER', 'PROJECT', 'PRODUCT_LINE', 'FACTORY', 'LINE', 'DEPARTMENT', 'VEHICLES'];
     const result: Record<string, string[]> = {};
     for (const g of groups) {
       const setting = await this.settingsService.findActiveSetting(`COMMON_CODE_${g}`, 'GLOBAL' as any);
