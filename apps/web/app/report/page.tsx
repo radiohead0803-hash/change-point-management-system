@@ -250,24 +250,27 @@ function ReportContent() {
             </div>
           </section>
 
-          {/* 4. 상세 목록 */}
+          {/* 4. 필수 작성 항목 (발생 & 조치결과) */}
           <section className="mb-8">
-            <SectionTitle icon={FileText} number={4} title={`변동점 상세 목록 (${filtered.length}건)`} />
+            <SectionTitle icon={FileText} number={4} title={`필수 작성 항목 (${filtered.length}건)`} />
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-[10px] border-collapse">
                 <thead>
                   <tr className="border-b-2 border-gray-300 bg-gray-50">
-                    <th className="px-1.5 py-2 text-center w-6 font-bold text-gray-500">NO</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">발생일</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">고객사</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">세부항목</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">부서</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">담당자</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">조치시점</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">조치방안</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">조치결과</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">품질검증</th>
-                    <th className="px-1.5 py-2 text-center font-bold text-gray-500">상태</th>
+                    <th className="px-2 py-2 text-center w-8 font-bold text-gray-500 border-r border-gray-200" rowSpan={2}>NO</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-blue-600 border-r border-gray-200" colSpan={4}>발생내역</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-amber-600 border-r border-gray-200" colSpan={4}>조치결과</th>
+                    <th className="px-2 py-2 text-center w-14 font-bold text-gray-500" rowSpan={2}>상태</th>
+                  </tr>
+                  <tr className="border-b border-gray-200 bg-gray-50/60">
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">발생일</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">발생항목</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80">발생부서</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-blue-500/80 border-r border-gray-200">담당자</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치시점</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치방안</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
+                    <th className="px-2 py-1 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,17 +278,16 @@ function ReportContent() {
                     const e = event as any;
                     return (
                       <tr key={event.id} className={`border-b border-gray-100 ${idx % 2 === 1 ? 'bg-gray-50/40' : ''}`}>
-                        <td className="px-1.5 py-1.5 text-center text-gray-400 font-medium">{idx + 1}</td>
-                        <td className="px-1.5 py-1.5 text-center whitespace-nowrap">{formatDate(event.occurredDate).slice(5)}</td>
-                        <td className="px-1.5 py-1.5 text-center truncate max-w-[60px]">{event.customer || '-'}</td>
-                        <td className="px-1.5 py-1.5 text-center truncate max-w-[70px]">{e.primaryItem?.name || '-'}</td>
-                        <td className="px-1.5 py-1.5 text-center">{event.department || '-'}</td>
-                        <td className="px-1.5 py-1.5 text-center">{e.manager?.name || e.createdBy?.name || '-'}</td>
-                        <td className={`px-1.5 py-1.5 text-center ${!e.actionDate ? 'text-red-400' : ''}`}>{e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}</td>
-                        <td className={`px-1.5 py-1.5 text-center truncate max-w-[60px] ${!e.actionPlan ? 'text-red-400' : ''}`}>{e.actionPlan || '미입력'}</td>
-                        <td className={`px-1.5 py-1.5 text-center truncate max-w-[60px] ${!e.actionResult ? 'text-red-400' : ''}`}>{e.actionResult || '미입력'}</td>
-                        <td className={`px-1.5 py-1.5 text-center truncate max-w-[50px] ${!e.qualityVerification ? 'text-red-400' : ''}`}>{e.qualityVerification || '미입력'}</td>
-                        <td className="px-1.5 py-1.5 text-center">
+                        <td className="px-2 py-1.5 text-center text-gray-400 font-medium border-r border-gray-100">{idx + 1}</td>
+                        <td className="px-2 py-1.5 text-center whitespace-nowrap">{formatDate(event.occurredDate).slice(5)}</td>
+                        <td className="px-2 py-1.5 text-center truncate max-w-[80px]">{e.primaryItem?.name || '-'}</td>
+                        <td className="px-2 py-1.5 text-center">{event.department || '-'}</td>
+                        <td className="px-2 py-1.5 text-center border-r border-gray-100">{e.manager?.name || e.createdBy?.name || '-'}</td>
+                        <td className={`px-2 py-1.5 text-center whitespace-nowrap ${!e.actionDate ? 'text-red-400' : ''}`}>{e.actionDate ? formatDate(e.actionDate).slice(5) : '미입력'}</td>
+                        <td className={`px-2 py-1.5 text-center truncate max-w-[70px] ${!e.actionPlan ? 'text-red-400' : ''}`}>{e.actionPlan || '미입력'}</td>
+                        <td className={`px-2 py-1.5 text-center truncate max-w-[70px] ${!e.actionResult ? 'text-red-400' : ''}`}>{e.actionResult || '미입력'}</td>
+                        <td className={`px-2 py-1.5 text-center truncate max-w-[60px] border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400' : ''}`}>{e.qualityVerification || '미입력'}</td>
+                        <td className="px-2 py-1.5 text-center">
                           <span className={`inline-block rounded-full px-1.5 py-0.5 text-[8px] font-bold ${getStatusBadgeClass(event.status)}`}>{getStatusText(event.status)}</span>
                         </td>
                       </tr>
