@@ -74,8 +74,6 @@ async function downloadAttachment(attachmentId: string, filename: string) {
 /* ── 첨부파일 섹션 ── */
 function AttachmentSection({ eventId }: { eventId: string }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const [returnModal, setReturnModal] = useState(false);
-  const [returnComment, setReturnComment] = useState('');
   const { data: attachments = [] } = useQuery<any[]>({
     queryKey: ['attachments', eventId],
     queryFn: () => changeEvents.getAttachments(eventId).then((r) => r.data),
@@ -206,6 +204,8 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
   const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [returnModal, setReturnModal] = useState(false);
+  const [returnComment, setReturnComment] = useState('');
 
   const { data: event, isLoading } = useQuery<ChangeEvent>({
     queryKey: ['change-events', params.id],
