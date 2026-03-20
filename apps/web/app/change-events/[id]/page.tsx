@@ -480,9 +480,11 @@ export default function ChangeEventDetailPage({ params }: { params: { id: string
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 backdrop-blur-xl sm:p-5 dark:bg-primary/10">
           <p className="mb-3 text-xs font-semibold text-primary">승인 처리</p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={handleReturn}>
-              <RotateCcw className="mr-1.5 h-4 w-4" />보완 요청
-            </Button>
+            {approvalStep.status !== 'SUBMITTED' && (
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleReturn}>
+                <RotateCcw className="mr-1.5 h-4 w-4" />보완 요청
+              </Button>
+            )}
             <Button className="w-full sm:w-auto" onClick={handleApprove}>
               <CheckCircle2 className="mr-1.5 h-4 w-4" />{approvalStep.btnLabel}
             </Button>

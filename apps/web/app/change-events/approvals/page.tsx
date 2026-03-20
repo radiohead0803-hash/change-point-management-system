@@ -296,12 +296,14 @@ export default function ApprovalsPage() {
                       <TipCell tip={e.qualityVerification || ''} className={`max-w-[70px] truncate px-2 py-1.5 text-center border-r border-gray-100 ${!e.qualityVerification ? 'text-red-400 font-medium' : ''}`}>{e.qualityVerification || '미입력'}</TipCell>
                       <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
                         <div className="flex gap-1 justify-center">
-                          <button onClick={(ev) => handleReturnClick(event.id, ev)} disabled={processing === event.id}
-                            className="rounded-md border border-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
-                            보완
-                          </button>
+                          {event.status !== 'SUBMITTED' && (
+                            <button onClick={(ev) => handleReturnClick(event.id, ev)} disabled={processing === event.id}
+                              className="rounded-md border border-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground hover:bg-gray-100 disabled:opacity-50">
+                              보완
+                            </button>
+                          )}
                           <button onClick={(ev) => handleApproveClick(event.id, ev)} disabled={processing === event.id}
-                            className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold text-white disabled:opacity-50 ${isSubmitted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
+                            className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold text-white disabled:opacity-50 ${event.status === 'SUBMITTED' ? 'bg-indigo-600 hover:bg-indigo-700' : event.status === 'CONFIRMED' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
                             {processing === event.id ? '...' : step?.btnLabel || '승인'}
                           </button>
                         </div>

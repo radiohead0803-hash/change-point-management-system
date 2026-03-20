@@ -307,7 +307,7 @@ export class ChangeEventsService {
       // 허용된 상태 전이 규칙
       const allowedTransitions: Record<string, string[]> = {
         'DRAFT': ['SUBMITTED', 'DRAFT'],
-        'SUBMITTED': ['CONFIRMED', 'REVIEW_RETURNED'],
+        'SUBMITTED': ['CONFIRMED'],
         'CONFIRMED': ['REVIEWED', 'REVIEW_RETURNED'],
         'REVIEW_RETURNED': ['SUBMITTED', 'DRAFT'],
         'REVIEWED': ['APPROVED', 'REJECTED'],
