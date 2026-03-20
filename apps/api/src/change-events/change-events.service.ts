@@ -40,10 +40,10 @@ export class ChangeEventsService {
     // ID 필드: 빈 문자열 → undefined (Prisma에 전달 안 함), 유효한 ID만 설정
     for (const key of idFields) {
       const val = rawData[key];
-      if (val && val !== '') {
+      if (val && val !== '' && !val.startsWith('custom_')) {
         eventData[key] = val;
       }
-      // 빈 문자열이거나 없으면 eventData에 포함하지 않음 → Prisma default/null 사용
+      // 빈 문자열, custom_ prefix, 없으면 eventData에 포함하지 않음 → Prisma default/null 사용
     }
 
     // 날짜 필드: 문자열 → Date 객체 변환
@@ -368,7 +368,7 @@ export class ChangeEventsService {
     }
     for (const key of idFields) {
       if (rawUpdateData[key] !== undefined) {
-        if (rawUpdateData[key] && rawUpdateData[key] !== '') {
+        if (rawUpdateData[key] && rawUpdateData[key] !== '' && !rawUpdateData[key].startsWith('custom_')) {
           cleanData[key] = rawUpdateData[key];
         } else {
           cleanData[key] = null;
