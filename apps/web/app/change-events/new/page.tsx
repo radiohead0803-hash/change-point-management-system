@@ -293,7 +293,10 @@ export default function NewChangeEventPage() {
               <label className="text-sm font-medium">품명</label>
               <Input {...register('productName')} placeholder="품명 입력" />
             </div>
-            <CSel name="productionLine" label="라인" opts={LINES} />
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">라인</label>
+              <Input {...register('productionLine')} placeholder="라인 입력" />
+            </div>
             <CSel name="department" label="발생부서" req opts={DEPTS} err={errors.department?.message} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>

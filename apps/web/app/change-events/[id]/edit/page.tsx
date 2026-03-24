@@ -351,7 +351,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
             <CSel name="factory" label="공장" opts={FACTORIES} />
             <div className="space-y-1.5"><label className="text-sm font-medium">품번</label><Input {...register('partNumber')} placeholder="품번 입력" /></div>
             <div className="space-y-1.5"><label className="text-sm font-medium">품명</label><Input {...register('productName')} placeholder="품명 입력" /></div>
-            <CSel name="productionLine" label="라인" opts={LINES} />
+            <div className="space-y-1.5"><label className="text-sm font-medium">라인</label><Input {...register('productionLine')} placeholder="라인 입력" /></div>
             <CSel name="department" label="발생부서" opts={DEPTS} />
             <div className="space-y-1.5">
               <label className="text-sm font-medium">협력사 <span className="text-red-400">*</span></label>
