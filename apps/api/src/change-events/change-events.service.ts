@@ -424,15 +424,41 @@ export class ChangeEventsService {
       cleanData.returnedById = null;
     }
 
+    // 태그에 커스텀 태그가 있으면 ChangeItem으로 생성
+    let processedUpdateTags: { itemId: string; tagType: string }[] | null = null;
+    if (tags) {
+      processedUpdateTags = [];
+      for (const tag of tags) {
+        if (!tag.itemId || tag.itemId === '') continue;
+        if (tag.itemId.startsWith('custom_')) {
+          const customName = tag.customName || tag.itemId.replace('custom_', '');
+          if (!customName) continue;
+          const etcCategory = await this.prisma.changeCategory.findFirst({ where: { name: '기타', deletedAt: null } });
+          if (etcCategory) {
+            const code = `ETC_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const newItem = await this.prisma.changeItem.create({ data: { categoryId: etcCategory.id, code, name: customName } });
+            processedUpdateTags.push({ itemId: newItem.id, tagType: tag.tagType || 'TAG' });
+          }
+        } else {
+          processedUpdateTags.push({ itemId: tag.itemId, tagType: tag.tagType || 'TAG' });
+        }
+      }
+      // 커스텀 PRIMARY 태그 → primaryItemId 자동 설정
+      if (!cleanData.primaryItemId) {
+        const primaryTag = processedUpdateTags.find(t => t.tagType === 'PRIMARY');
+        if (primaryTag) cleanData.primaryItemId = primaryTag.itemId;
+      }
+    }
+
     const updated = await this.prisma.changeEvent.update({
       where: { id },
       data: {
         ...cleanData,
         updatedById: userId,
-        ...(tags ? {
+        ...(processedUpdateTags ? {
           tags: {
             deleteMany: {},
-            create: tags.map((tag: any) => ({
+            create: processedUpdateTags.map((tag) => ({
               itemId: tag.itemId,
               tagType: tag.tagType,
             })),
