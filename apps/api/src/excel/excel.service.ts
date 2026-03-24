@@ -172,8 +172,17 @@ export class ExcelService {
     const monthStr = String(month).padStart(2, '0');
     const workbook = new ExcelJS.Workbook();
 
+    // 점검기준 데이터 조회 (DB에서 동적으로)
+    const criteriaData = await this.prisma.changeCategory.findMany({
+      where: { deletedAt: null },
+      include: {
+        items: { where: { deletedAt: null }, orderBy: { code: 'asc' } },
+      },
+      orderBy: { code: 'asc' },
+    });
+
     // ===== Sheet 1: 점검기준 =====
-    this.buildCriteriaSheet(workbook);
+    this.buildCriteriaSheet(workbook, criteriaData);
 
     // ===== Sheet 2: 점검결과 =====
     this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName, itemNames);
@@ -181,8 +190,8 @@ export class ExcelService {
     return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 
-  /* ── 점검기준 시트 ── */
-  private buildCriteriaSheet(workbook: ExcelJS.Workbook) {
+  /* ── 점검기준 시트 (DB 기반 동적 생성) ── */
+  private buildCriteriaSheet(workbook: ExcelJS.Workbook, categories: any[]) {
     const ws = workbook.addWorksheet('점검기준');
 
     ws.getColumn('A').width = 17;
@@ -199,45 +208,37 @@ export class ExcelService {
       cell.border = THIN_BORDER;
     });
 
-    // 데이터
-    const data: [string, string, string][] = [
-      ['작업자', '작업자 임시 대체', '실명제 등록 작업자의 일시적 부재(휴가,병가 등)으로 인해 임시 대체 작업자로 변경'],
-      ['', '작업자 근무 교대시간 변경', '정규 근무 체계 내에서 작업자들의 근무교대 시간 일시적 조정'],
-      ['', '작업자 역할 분담 변경', '작업자 간 역할 재배치'],
-      ['설비/공구', '툴(공구) 변경', '절삭공구, 드릴, 팁 교체 등 작업 공구 변경'],
-      ['', '동일 조건의 설비/라인 변경', '동일 규격內 설비 또는 라인 전환 (예. A,B 동일 톤수 설비 -> A고장시 B사용)'],
-      ['공장 조건', '도장/토출 조건 변경', '도장라인 스프레이 토출량, 분사각도 등 변경'],
-      ['', '작업 속도/주기 변경', 'UPH, 생산속도 조정 등'],
-      ['', '설비 온도/압력 변경', '설비 온도,압력 등 공정 조건 변경'],
-      ['', '작업 각도/방식 변경', '용접 각도, 조립 방식 등 공정內 작업 변경'],
-      ['소모품/윤활 관리', '그리스/윤활유 정기보충(교체)', '윤활유, 그리스 등 보충/교체'],
-      ['', '냉각수/워터호스 정기보충(교체)', '냉각수, 워터호스, 에어호스 등 보충/교체'],
-      ['', '설비 부자재 정기교체', '유지보수 목적의 부품 교체'],
-      ['공정 외', '단전/단수 발생', '전력/수도 공급 중단'],
-      ['', '파업 발생', '파업에 따른 대체 작업 또는 신규 작업'],
-      ['', '물류/파렛트 변경', '납품 차량 긴급 변경 및 파렛트 변경'],
-      ['2/3차사 관련', '2/3차사 입고품 변경', '외부 협력사 부품/완제품 변동'],
-      ['기타', '상기 16항목 외', '상기 16항목 외 변동점 발생 시 변동점 전담중역 최종 판단하에 점검'],
-    ];
+    // DB 데이터 → [분류, 항목, 상세내용] 행 생성 + 병합 정보 수집
+    let rowIdx = 2;
+    const mergeRanges: [number, number][] = []; // [startRow, endRow]
 
-    data.forEach((d, i) => {
-      const r = ws.getRow(i + 2);
-      r.values = d;
-      r.getCell('A').font = { name: 'Malgun Gothic', size: 12, bold: true };
-      r.getCell('A').alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      r.getCell('B').font = { name: 'Malgun Gothic', size: 11, bold: true };
-      r.getCell('B').alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      r.getCell('C').font = { name: 'Malgun Gothic', size: 11 };
-      r.getCell('C').alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-      r.eachCell(cell => { cell.border = THIN_BORDER; });
+    categories.forEach(cat => {
+      if (cat.items.length === 0) return;
+      const startRow = rowIdx;
+
+      cat.items.forEach((item: any, i: number) => {
+        const r = ws.getRow(rowIdx);
+        r.values = [i === 0 ? cat.name : '', item.name, item.description || ''];
+        r.getCell('A').font = { name: 'Malgun Gothic', size: 12, bold: true };
+        r.getCell('A').alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        r.getCell('B').font = { name: 'Malgun Gothic', size: 11, bold: true };
+        r.getCell('B').alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        r.getCell('C').font = { name: 'Malgun Gothic', size: 11 };
+        r.getCell('C').alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+        r.eachCell(cell => { cell.border = THIN_BORDER; });
+        rowIdx++;
+      });
+
+      // 같은 카테고리 항목이 2개 이상이면 A열 병합
+      if (cat.items.length > 1) {
+        mergeRanges.push([startRow, rowIdx - 1]);
+      }
     });
 
-    // 병합 (A열)
-    ws.mergeCells('A2:A4');   // 작업자
-    ws.mergeCells('A5:A6');   // 설비/공구
-    ws.mergeCells('A7:A10');  // 공장 조건
-    ws.mergeCells('A11:A13'); // 소모품/윤활 관리
-    ws.mergeCells('A14:A16'); // 공정 외
+    // A열 병합 적용
+    mergeRanges.forEach(([start, end]) => {
+      ws.mergeCells(`A${start}:A${end}`);
+    });
   }
 
   /* ── 점검결과 시트 ── */
