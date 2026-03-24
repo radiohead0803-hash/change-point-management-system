@@ -78,6 +78,8 @@ export const inspection = {
 export const excel = {
   downloadMonthly: (year: number, month: number) =>
     api.get(`/excel/monthly/${year}/${month}`, { responseType: 'blob' }),
+  downloadInspection: (year: number, month: number, companyId?: string) =>
+    api.get(`/excel/inspection/${year}/${month}`, { responseType: 'blob', params: companyId ? { companyId } : {} }),
 };
 
 export const codeMasters = {

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -22,10 +23,7 @@ export class ExcelController {
 
   @Get('monthly/:year/:month')
   @ApiOperation({ summary: '월별 변동점 엑셀 다운로드' })
-  @ApiResponse({
-    status: 200,
-    description: '월별 변동점 엑셀 파일을 다운로드합니다.',
-  })
+  @ApiResponse({ status: 200, description: '월별 변동점 엑셀 파일을 다운로드합니다.' })
   @Roles(Role.ADMIN, Role.TIER1_EDITOR, Role.TIER1_REVIEWER, Role.EXEC_APPROVER)
   async downloadMonthlyReport(
     @Param('year') year: string,
@@ -42,7 +40,30 @@ export class ExcelController {
       'Content-Disposition': `attachment; filename=change_points_${year}_${month}.xlsx`,
       'Content-Length': buffer.length,
     });
+    res.send(buffer);
+  }
 
+  @Get('inspection/:year/:month')
+  @ApiOperation({ summary: '변동점 담당제 점검결과 엑셀 다운로드' })
+  @ApiResponse({ status: 200, description: '변동점 담당제 점검결과 엑셀 파일을 다운로드합니다.' })
+  @Roles(Role.ADMIN, Role.TIER1_EDITOR, Role.TIER1_REVIEWER, Role.EXEC_APPROVER)
+  async downloadInspectionReport(
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @Query('companyId') companyId: string,
+    @Res() res: Response,
+  ) {
+    const y = parseInt(year, 10);
+    const m = parseInt(month, 10);
+    const buffer = await this.excelService.generateInspectionReport(y, m, companyId || undefined);
+
+    const mm = String(m).padStart(2, '0');
+    const filename = encodeURIComponent(`변동점_담당제_${y}년_${mm}월_점검결과.xlsx`);
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename*=UTF-8''${filename}`,
+      'Content-Length': buffer.length,
+    });
     res.send(buffer);
   }
 }
