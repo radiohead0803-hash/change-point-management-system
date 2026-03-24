@@ -158,6 +158,7 @@ model ChangeEvent {
   actionPlan      String?    // 조치방안
   actionResult    String?    // 조치결과
   qualityVerification String? // 품질검증
+  qpointInstalled String?    // Q-POINT 설치여부 (●, X)
   
   // 담당자 정보
   managerId       String    // 실무담당자

@@ -403,7 +403,7 @@ export class ExcelService {
         ws.getCell(`I${r}`).value = event.actionPlan || '';
         ws.getCell(`J${r}`).value = event.actionResult || '';
         ws.getCell(`K${r}`).value = event.qualityVerification || '';
-        ws.getCell(`L${r}`).value = ''; // Q-POINT
+        ws.getCell(`L${r}`).value = event.qpointInstalled || ''; // Q-POINT
         ws.getCell(`M${r}`).value = ''; // 비고
 
         // 셀 스타일

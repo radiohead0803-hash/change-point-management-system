@@ -38,6 +38,7 @@ const schema = z.object({
   actionPlan: z.string().optional(),
   actionResult: z.string().optional(),
   qualityVerification: z.string().optional(),
+  qpointInstalled: z.string().optional(),
   managerId: z.string().min(1),
   reviewerId: z.string().optional(),
   executiveId: z.string().optional(),
@@ -109,7 +110,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
       occurredDate: '', companyId: '', customer: '', project: '', productLine: '',
       partNumber: '', productName: '', factory: '', productionLine: '',
       description: '', department: '', managerId: '',
-      actionDate: '', actionPlan: '', actionResult: '', qualityVerification: '',
+      actionDate: '', actionPlan: '', actionResult: '', qualityVerification: '', qpointInstalled: '',
       primaryItemId: '', tags: [], reviewerId: '', executiveId: '',
     },
   });
@@ -146,6 +147,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
       actionPlan: event.actionPlan || '',
       actionResult: event.actionResult || '',
       qualityVerification: event.qualityVerification || '',
+      qpointInstalled: event.qpointInstalled || '',
       managerId: event.managerId || user?.id || '',
       reviewerId: event.reviewerId || '',
       executiveId: event.executiveId || '',
@@ -424,6 +426,14 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
             <div className="space-y-1.5">
               <label className="text-sm font-medium">품질검증</label>
               <Input {...register('qualityVerification')} placeholder="품질검증 내용 입력" />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-sm font-medium">Q-POINT 설치여부</label>
+              <select {...register('qpointInstalled')} className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
+                <option value="">선택</option>
+                <option value="●">● (설치)</option>
+                <option value="X">X (미설치)</option>
+              </select>
             </div>
           </div>
         </div>

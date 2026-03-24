@@ -17,7 +17,7 @@ export class ChangeEventsService {
     const stringFields = [
       'receiptMonth', 'customer', 'project', 'productLine',
       'partNumber', 'productName', 'factory', 'productionLine',
-      'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'returnComment',
+      'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'qpointInstalled', 'returnComment',
     ];
     // 허용된 필드 (관계 ID - 빈 문자열이면 null, 유효한 ID만)
     const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
@@ -378,7 +378,7 @@ export class ChangeEventsService {
 
     // 데이터 정제 (허용된 필드만, 타입 변환)
     const cleanData: any = {};
-    const stringFields = ['receiptMonth', 'customer', 'project', 'productLine', 'partNumber', 'productName', 'factory', 'productionLine', 'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'returnComment'];
+    const stringFields = ['receiptMonth', 'customer', 'project', 'productLine', 'partNumber', 'productName', 'factory', 'productionLine', 'description', 'department', 'actionPlan', 'actionResult', 'qualityVerification', 'qpointInstalled', 'returnComment'];
     const idFields = ['companyId', 'primaryItemId', 'managerId', 'executiveId', 'reviewerId'];
     const dateFields = ['occurredDate', 'actionDate'];
     const enumFields = ['status'];
