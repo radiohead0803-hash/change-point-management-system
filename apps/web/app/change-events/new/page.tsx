@@ -34,7 +34,7 @@ const schema = z.object({
   productionLine: z.string().optional(),
   companyId: z.string().min(1, '협력사를 선택해주세요'),
   primaryItemId: z.string().optional(),
-  tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']) })).default([]),
+  tags: z.array(z.object({ itemId: z.string(), tagType: z.enum(['PRIMARY', 'TAG']), customName: z.string().optional() })).default([]),
   description: z.string().optional(),
   // 조치결과
   actionDate: z.string().optional(),
