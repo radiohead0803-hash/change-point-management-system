@@ -71,22 +71,25 @@ export class ChangeEventsController {
   @Get('codes/classes')
   @ApiOperation({ summary: '변경 분류 코드 조회' })
   @ApiResponse({ status: 200, description: '변경 분류 코드 목록을 반환합니다.' })
-  findClasses() {
-    return this.changeEventsService.findClasses();
+  findClasses(@Request() req: any) {
+    const activeOnly = req.user?.role !== Role.ADMIN;
+    return this.changeEventsService.findClasses(activeOnly);
   }
 
   @Get('codes/categories')
   @ApiOperation({ summary: '변경 카테고리 코드 조회' })
   @ApiResponse({ status: 200, description: '변경 카테고리 코드 목록을 반환합니다.' })
-  findCategories(@Query('classCode') classCode?: string) {
-    return this.changeEventsService.findCategories(classCode);
+  findCategories(@Query('classCode') classCode: string, @Request() req: any) {
+    const activeOnly = req.user?.role !== Role.ADMIN;
+    return this.changeEventsService.findCategories(classCode, activeOnly);
   }
 
   @Get('codes/items')
   @ApiOperation({ summary: '변경 항목 코드 조회' })
   @ApiResponse({ status: 200, description: '변경 항목 코드 목록을 반환합니다.' })
-  findItems(@Query('categoryId') categoryId?: string) {
-    return this.changeEventsService.findItems(categoryId);
+  findItems(@Query('categoryId') categoryId: string, @Request() req: any) {
+    const activeOnly = req.user?.role !== Role.ADMIN;
+    return this.changeEventsService.findItems(categoryId, activeOnly);
   }
 
   // ── Master Data CRUD (ADMIN only) ──
@@ -99,7 +102,7 @@ export class ChangeEventsController {
 
   @Patch('codes/classes/:id')
   @Roles(Role.ADMIN)
-  updateClass(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+  updateClass(@Param('id') id: string, @Body() body: { name?: string; description?: string; isActive?: boolean }) {
     return this.changeEventsService.updateClass(id, body);
   }
 
@@ -117,7 +120,7 @@ export class ChangeEventsController {
 
   @Patch('codes/categories/:id')
   @Roles(Role.ADMIN)
-  updateCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+  updateCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string; isActive?: boolean }) {
     return this.changeEventsService.updateCategory(id, body);
   }
 
@@ -135,7 +138,7 @@ export class ChangeEventsController {
 
   @Patch('codes/items/:id')
   @Roles(Role.ADMIN)
-  updateItem(@Param('id') id: string, @Body() body: { name?: string; description?: string }) {
+  updateItem(@Param('id') id: string, @Body() body: { name?: string; description?: string; isActive?: boolean }) {
     return this.changeEventsService.updateItem(id, body);
   }
 

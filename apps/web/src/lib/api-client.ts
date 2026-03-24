@@ -91,17 +91,17 @@ export const codeMasters = {
   // CRUD
   createClass: (data: { code: string; name: string; description?: string }) =>
     api.post<ChangeClass>('/change-events/codes/classes', data),
-  updateClass: (id: string, data: { name?: string; description?: string }) =>
+  updateClass: (id: string, data: { name?: string; description?: string; isActive?: boolean }) =>
     api.patch<ChangeClass>(`/change-events/codes/classes/${id}`, data),
   deleteClass: (id: string) => api.delete(`/change-events/codes/classes/${id}`),
   createCategory: (data: { classId: string; code: string; name: string; parentId?: string; depth?: number }) =>
     api.post<ChangeCategory>('/change-events/codes/categories', data),
-  updateCategory: (id: string, data: { name?: string; description?: string }) =>
+  updateCategory: (id: string, data: { name?: string; description?: string; isActive?: boolean }) =>
     api.patch<ChangeCategory>(`/change-events/codes/categories/${id}`, data),
   deleteCategory: (id: string) => api.delete(`/change-events/codes/categories/${id}`),
   createItem: (data: { categoryId: string; code: string; name: string; description?: string }) =>
     api.post<any>('/change-events/codes/items', data),
-  updateItem: (id: string, data: { name?: string; description?: string }) =>
+  updateItem: (id: string, data: { name?: string; description?: string; isActive?: boolean }) =>
     api.patch<any>(`/change-events/codes/items/${id}`, data),
   deleteItem: (id: string) => api.delete(`/change-events/codes/items/${id}`),
 };

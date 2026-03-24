@@ -11,9 +11,9 @@ import {
   ChevronRight, ChevronDown,
 } from 'lucide-react';
 
-interface ChangeClass { id: string; code: string; name: string; description?: string; }
-interface ChangeCategory { id: string; classId: string; code: string; name: string; depth: number; parentId?: string; class?: ChangeClass; parent?: ChangeCategory; }
-interface ChangeItem { id: string; categoryId: string; code: string; name: string; description?: string; }
+interface ChangeClass { id: string; code: string; name: string; description?: string; isActive?: boolean; }
+interface ChangeCategory { id: string; classId: string; code: string; name: string; depth: number; parentId?: string; class?: ChangeClass; parent?: ChangeCategory; isActive?: boolean; }
+interface ChangeItem { id: string; categoryId: string; code: string; name: string; description?: string; isActive?: boolean; }
 
 type EditTarget = { type: 'class' | 'category' | 'item'; id: string; name: string } | null;
 type AddTarget = { type: 'class' | 'category' | 'item'; parentId?: string; classId?: string } | null;
@@ -70,6 +70,13 @@ export default function MasterDataPage() {
   const createItemM = useMutation({ mutationFn: (d: any) => codeMasters.createItem(d), onSuccess: () => { invalidateAll(); toast({ title: '항목 추가됨' }); resetAdd(); } });
   const updateItemM = useMutation({ mutationFn: ({ id, data }: any) => codeMasters.updateItem(id, data), onSuccess: () => { invalidateAll(); toast({ title: '수정됨' }); setEditing(null); } });
   const deleteItemM = useMutation({ mutationFn: (id: string) => codeMasters.deleteItem(id), onSuccess: () => { invalidateAll(); toast({ title: '삭제됨' }); } });
+
+  const toggleActive = (type: 'class' | 'category' | 'item', id: string, currentActive: boolean) => {
+    const newActive = !currentActive;
+    if (type === 'class') updateClassM.mutate({ id, data: { isActive: newActive } });
+    else if (type === 'category') updateCatM.mutate({ id, data: { isActive: newActive } });
+    else updateItemM.mutate({ id, data: { isActive: newActive } });
+  };
 
   const resetAdd = () => { setAdding(null); setAddCode(''); setAddName(''); };
 
@@ -177,14 +184,16 @@ export default function MasterDataPage() {
                             : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/40'
                         }`}
                       >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${cls.isActive !== false ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
                           {classIcons[cls.code] || 'C'}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className={`flex-1 min-w-0 ${cls.isActive === false ? 'opacity-40' : ''}`}>
                           <p className="text-sm font-medium truncate">{cls.name}</p>
                           <p className="text-[10px] text-muted-foreground">{cls.code}</p>
                         </div>
-                        <div className="flex gap-0.5">
+                        <div className="flex items-center gap-0.5">
+                          <input type="checkbox" checked={cls.isActive !== false} onChange={e => { e.stopPropagation(); toggleActive('class', cls.id, cls.isActive !== false); }}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30 cursor-pointer" title={cls.isActive !== false ? '활성' : '비활성'} />
                           <button onClick={e => { e.stopPropagation(); startEdit('class', cls.id, cls.name); }} className="rounded p-1 text-muted-foreground/50 hover:text-primary hover:bg-primary/10"><Pencil className="h-3 w-3" /></button>
                           <button onClick={e => { e.stopPropagation(); handleDelete('class', cls.id, cls.name); }} className="rounded p-1 text-muted-foreground/50 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="h-3 w-3" /></button>
                         </div>
@@ -230,11 +239,13 @@ export default function MasterDataPage() {
                             <button onClick={() => toggleCat(cat.id)} className="p-0.5">
                               {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
                             </button>
-                            <div className="flex-1 min-w-0" onClick={() => { setSelectedCatId(cat.id); }}>
+                            <div className={`flex-1 min-w-0 ${cat.isActive === false ? 'opacity-40' : ''}`} onClick={() => { setSelectedCatId(cat.id); }}>
                               <span className="text-sm font-medium">{cat.name}</span>
                               <span className="ml-1.5 text-[10px] text-muted-foreground">({cat.code})</span>
                             </div>
-                            <div className="flex gap-0.5">
+                            <div className="flex items-center gap-0.5">
+                              <input type="checkbox" checked={cat.isActive !== false} onChange={e => { e.stopPropagation(); toggleActive('category', cat.id, cat.isActive !== false); }}
+                                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30 cursor-pointer" />
                               <button onClick={e => { e.stopPropagation(); setAdding({ type: 'category', classId: selectedClassId!, parentId: cat.id }); }} className="rounded p-1 text-muted-foreground/50 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"><Plus className="h-3 w-3" /></button>
                               <button onClick={() => startEdit('category', cat.id, cat.name)} className="rounded p-1 text-muted-foreground/50 hover:text-primary hover:bg-primary/10"><Pencil className="h-3 w-3" /></button>
                               <button onClick={() => handleDelete('category', cat.id, cat.name)} className="rounded p-1 text-muted-foreground/50 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="h-3 w-3" /></button>
@@ -256,9 +267,11 @@ export default function MasterDataPage() {
                                       selectedCatId === sub.id ? 'bg-blue-50/80 dark:bg-blue-900/10' : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/40'
                                     }`}
                                   >
-                                    <span className="flex-1 text-xs font-medium truncate">{sub.name}</span>
+                                    <span className={`flex-1 text-xs font-medium truncate ${sub.isActive === false ? 'opacity-40' : ''}`}>{sub.name}</span>
                                     <span className="text-[10px] text-muted-foreground">{sub.code}</span>
-                                    <div className="flex gap-0.5">
+                                    <div className="flex items-center gap-0.5">
+                                      <input type="checkbox" checked={sub.isActive !== false} onChange={e => { e.stopPropagation(); toggleActive('category', sub.id, sub.isActive !== false); }}
+                                        className="h-3 w-3 rounded border-gray-300 text-primary focus:ring-primary/30 cursor-pointer" />
                                       <button onClick={e => { e.stopPropagation(); startEdit('category', sub.id, sub.name); }} className="rounded p-0.5 text-muted-foreground/50 hover:text-primary"><Pencil className="h-2.5 w-2.5" /></button>
                                       <button onClick={e => { e.stopPropagation(); handleDelete('category', sub.id, sub.name); }} className="rounded p-0.5 text-muted-foreground/50 hover:text-destructive"><Trash2 className="h-2.5 w-2.5" /></button>
                                     </div>
@@ -297,6 +310,7 @@ export default function MasterDataPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/30">
+                        <th className="px-4 py-2 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground w-10">활성</th>
                         <th className="px-4 py-2 text-left text-[10px] font-medium uppercase tracking-wider text-muted-foreground w-16">코드</th>
                         <th className="px-4 py-2 text-left text-[10px] font-medium uppercase tracking-wider text-muted-foreground">항목명</th>
                         <th className="px-4 py-2 text-right text-[10px] font-medium uppercase tracking-wider text-muted-foreground w-20">관리</th>
@@ -305,15 +319,19 @@ export default function MasterDataPage() {
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
                       {adding?.type === 'item' && (
                         <tr className="bg-green-50/50 dark:bg-green-900/10">
-                          <td colSpan={3} className="p-0"><AddRow placeholder="항목명" /></td>
+                          <td colSpan={4} className="p-0"><AddRow placeholder="항목명" /></td>
                         </tr>
                       )}
                       {items.map((item, i) => (
-                        <tr key={item.id} className="transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
+                        <tr key={item.id} className={`transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/40 ${item.isActive === false ? 'opacity-40' : ''}`}>
                           {editing?.type === 'item' && editing.id === item.id ? (
-                            <td colSpan={3} className="p-0"><EditRow /></td>
+                            <td colSpan={4} className="p-0"><EditRow /></td>
                           ) : (
                             <>
+                              <td className="px-4 py-2.5 text-center">
+                                <input type="checkbox" checked={item.isActive !== false} onChange={() => toggleActive('item', item.id, item.isActive !== false)}
+                                  className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30 cursor-pointer" />
+                              </td>
                               <td className="whitespace-nowrap px-4 py-2.5 font-mono text-[10px] text-muted-foreground">{item.code}</td>
                               <td className="px-4 py-2.5">
                                 <span className="text-sm">{item.name}</span>
@@ -334,7 +352,7 @@ export default function MasterDataPage() {
                       ))}
                       {items.length === 0 && (
                         <tr>
-                          <td colSpan={3} className="py-10 text-center text-sm text-muted-foreground/50">
+                          <td colSpan={4} className="py-10 text-center text-sm text-muted-foreground/50">
                             항목이 없습니다
                           </td>
                         </tr>

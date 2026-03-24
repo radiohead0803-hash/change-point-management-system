@@ -77,6 +77,7 @@ model ChangeClass {
   code        String    @unique // FOUR_M, OUTSIDE_17, CP_96
   name        String
   description String?
+  isActive    Boolean   @default(true)
   categories  ChangeCategory[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -97,6 +98,7 @@ model ChangeCategory {
   name        String
   description String?
   depth       Int      @default(1)
+  isActive    Boolean   @default(true)
   items       ChangeItem[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -114,6 +116,7 @@ model ChangeItem {
   code        String
   name        String
   description String?
+  isActive    Boolean   @default(true)
   tags        ChangeEventTag[]
   primaryEvents ChangeEvent[] @relation("PrimaryClassification")
   createdAt   DateTime  @default(now())

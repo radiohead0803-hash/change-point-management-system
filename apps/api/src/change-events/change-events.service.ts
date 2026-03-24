@@ -167,18 +167,20 @@ export class ChangeEventsService {
     });
   }
 
-  async findClasses() {
+  async findClasses(activeOnly = false) {
     return this.prisma.changeClass.findMany({
       where: {
         deletedAt: null,
+        ...(activeOnly ? { isActive: true } : {}),
       },
     });
   }
 
-  async findCategories(classCode?: string) {
+  async findCategories(classCode?: string, activeOnly = false) {
     return this.prisma.changeCategory.findMany({
       where: {
         deletedAt: null,
+        ...(activeOnly ? { isActive: true } : {}),
         class: classCode ? {
           code: classCode,
         } : undefined,
@@ -190,10 +192,11 @@ export class ChangeEventsService {
     });
   }
 
-  async findItems(categoryId?: string) {
+  async findItems(categoryId?: string, activeOnly = false) {
     return this.prisma.changeItem.findMany({
       where: {
         deletedAt: null,
+        ...(activeOnly ? { isActive: true } : {}),
         categoryId: categoryId || undefined,
       },
       include: {
@@ -208,7 +211,7 @@ export class ChangeEventsService {
     return this.prisma.changeClass.create({ data });
   }
 
-  async updateClass(id: string, data: { name?: string; description?: string }) {
+  async updateClass(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
     return this.prisma.changeClass.update({ where: { id }, data });
   }
 
@@ -223,7 +226,7 @@ export class ChangeEventsService {
     });
   }
 
-  async updateCategory(id: string, data: { name?: string; description?: string }) {
+  async updateCategory(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
     return this.prisma.changeCategory.update({ where: { id }, data, include: { class: true, parent: true } });
   }
 
@@ -235,7 +238,7 @@ export class ChangeEventsService {
     return this.prisma.changeItem.create({ data, include: { category: true } });
   }
 
-  async updateItem(id: string, data: { name?: string; description?: string }) {
+  async updateItem(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
     return this.prisma.changeItem.update({ where: { id }, data, include: { category: true } });
   }
 
