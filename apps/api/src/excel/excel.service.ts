@@ -131,7 +131,7 @@ export class ExcelService {
   }
 
   /* ── 변동점 담당제 점검결과 (템플릿 양식) ── */
-  async generateInspectionReport(year: number, month: number, companyId?: string): Promise<Buffer> {
+  async generateInspectionReport(year: number, month: number, companyId?: string, userId?: string): Promise<Buffer> {
     // 이벤트 조회 (모든 상태)
     const where: any = {
       occurredDate: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) },
@@ -150,18 +150,24 @@ export class ExcelService {
       orderBy: { occurredDate: 'asc' },
     });
 
-    // 협력사 정보
-    let companyName = '';
-    let companyCode = '';
+    // 협력사 정보: 고정값 KU67 / (주)캠스
+    const companyCode = 'KU67';
+    const companyName = '(주)캠스';
+
+    // 전담중역: 출력 담당자(로그인 사용자) 이름
     let executiveName = '';
-    if (companyId) {
-      const company = await this.prisma.company.findUnique({ where: { id: companyId } });
-      if (company) { companyName = company.name; companyCode = company.code; }
+    if (userId) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (user) executiveName = user.name;
     }
-    if (events.length > 0) {
-      if (!companyName) { companyName = events[0].company.name; companyCode = events[0].company.code; }
-      executiveName = events[0].executive?.name || '';
-    }
+
+    // 세부항목 목록 (발생항목 드롭다운용)
+    const allItems = await this.prisma.changeItem.findMany({
+      where: { deletedAt: null },
+      select: { name: true },
+      orderBy: { name: 'asc' },
+    });
+    const itemNames = [...new Set(allItems.map(i => i.name))];
 
     const monthStr = String(month).padStart(2, '0');
     const workbook = new ExcelJS.Workbook();
@@ -170,7 +176,7 @@ export class ExcelService {
     this.buildCriteriaSheet(workbook);
 
     // ===== Sheet 2: 점검결과 =====
-    this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName);
+    this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName, itemNames);
 
     return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
@@ -244,6 +250,7 @@ export class ExcelService {
     companyCode: string,
     companyName: string,
     executiveName: string,
+    itemNames: string[] = [],
   ) {
     const ws = workbook.addWorksheet('점검결과');
 
@@ -395,6 +402,18 @@ export class ExcelService {
         allowBlank: true,
         formulae: ['"●,X"'],
       };
+    }
+
+    // D열 발생항목 드롭다운 (세부항목 리스트)
+    if (itemNames.length > 0) {
+      const itemList = itemNames.join(',');
+      for (let r = startRow; r <= lastDataRow; r++) {
+        ws.getCell(`D${r}`).dataValidation = {
+          type: 'list',
+          allowBlank: true,
+          formulae: [`"${itemList}"`],
+        };
+      }
     }
 
     // 뷰 고정

@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   Query,
+  Request,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -51,11 +52,12 @@ export class ExcelController {
     @Param('year') year: string,
     @Param('month') month: string,
     @Query('companyId') companyId: string,
+    @Request() req: any,
     @Res() res: Response,
   ) {
     const y = parseInt(year, 10);
     const m = parseInt(month, 10);
-    const buffer = await this.excelService.generateInspectionReport(y, m, companyId || undefined);
+    const buffer = await this.excelService.generateInspectionReport(y, m, companyId || undefined, req.user?.id);
 
     const mm = String(m).padStart(2, '0');
     const filename = encodeURIComponent(`변동점_담당제_${y}년_${mm}월_점검결과.xlsx`);
