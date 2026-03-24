@@ -134,13 +134,25 @@ export class ExcelService {
   }
 
   /* ── 변동점 담당제 점검결과 (템플릿 양식) ── */
-  async generateInspectionReport(year: number, month: number, companyId?: string, userId?: string): Promise<Buffer> {
-    // 이벤트 조회 (모든 상태)
-    const where: any = {
-      occurredDate: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) },
-      deletedAt: null,
-    };
+  async generateInspectionReport(
+    year: number, month: number, companyId?: string, userId?: string,
+    filters?: { dateFrom?: string; dateTo?: string; status?: string; customer?: string },
+  ): Promise<Buffer> {
+    // 이벤트 조회 (필터 적용)
+    const where: any = { deletedAt: null };
+
+    // 날짜 필터: dateFrom/dateTo가 있으면 사용, 없으면 year/month 기준
+    if (filters?.dateFrom || filters?.dateTo) {
+      where.occurredDate = {};
+      if (filters.dateFrom) where.occurredDate.gte = new Date(filters.dateFrom);
+      if (filters.dateTo) where.occurredDate.lte = new Date(filters.dateTo + 'T23:59:59');
+    } else {
+      where.occurredDate = { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) };
+    }
+
     if (companyId) where.companyId = companyId;
+    if (filters?.status && filters.status !== 'ALL') where.status = filters.status;
+    if (filters?.customer && filters.customer !== 'ALL') where.customer = filters.customer;
 
     const events = await this.prisma.changeEvent.findMany({
       where,

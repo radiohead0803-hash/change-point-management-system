@@ -52,12 +52,19 @@ export class ExcelController {
     @Param('year') year: string,
     @Param('month') month: string,
     @Query('companyId') companyId: string,
+    @Query('dateFrom') dateFrom: string,
+    @Query('dateTo') dateTo: string,
+    @Query('status') status: string,
+    @Query('customer') customer: string,
     @Request() req: any,
     @Res() res: Response,
   ) {
     const y = parseInt(year, 10);
     const m = parseInt(month, 10);
-    const buffer = await this.excelService.generateInspectionReport(y, m, companyId || undefined, req.user?.id);
+    const buffer = await this.excelService.generateInspectionReport(
+      y, m, companyId || undefined, req.user?.id,
+      { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, status: status || undefined, customer: customer || undefined },
+    );
 
     const mm = String(m).padStart(2, '0');
     const filename = encodeURIComponent(`변동점_담당제_${y}년_${mm}월_점검결과.xlsx`);

@@ -19,8 +19,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-/* ── 보고서 (점검결과 Excel 바로 다운로드) ── */
-function ReportExportButton() {
+/* ── 보고서 (점검결과 Excel - 필터 반영 다운로드) ── */
+function ReportExportButton({ filters }: { filters?: { dateFrom?: string; dateTo?: string; status?: string; customer?: string } }) {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
@@ -28,7 +28,7 @@ function ReportExportButton() {
     setDownloading(true);
     try {
       const now = new Date();
-      const res = await excel.downloadInspection(now.getFullYear(), now.getMonth() + 1);
+      const res = await excel.downloadInspection(now.getFullYear(), now.getMonth() + 1, filters);
       const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -576,7 +576,7 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <h3 className="text-sm font-semibold">필수 작성 항목 (발생 & 조치결과)</h3>
         <div className="flex flex-wrap gap-2">
-          {!isTier2 && <ReportExportButton />}
+          {!isTier2 && <ReportExportButton filters={{ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, status: statusFilter !== 'ALL' ? statusFilter : undefined, customer: customerFilter !== 'ALL' ? customerFilter : undefined }} />}
           {!isTier2 && (
             <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
               <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />

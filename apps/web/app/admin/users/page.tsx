@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Plus, Pencil, Trash2, X, Search, Shield, UserCheck, Eye,
-  UserCog, Users as UsersIcon, Building2, ChevronRight,
+  UserCog, Users as UsersIcon, Building2, ChevronRight, KeyRound,
 } from 'lucide-react';
 
 /* ── 역할 정의 ── */
@@ -91,6 +91,13 @@ export default function UserManagementPage() {
     },
     onError: () => {
       toast({ variant: 'destructive', title: '수정 실패' });
+    },
+  });
+
+  const resetPwMutation = useMutation({
+    mutationFn: ({ id, email }: { id: string; email: string }) => users.update(id, { password: email }),
+    onSuccess: () => {
+      toast({ title: '비밀번호가 아이디와 동일하게 초기화되었습니다.' });
     },
   });
 
@@ -516,6 +523,19 @@ export default function UserManagementPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8 text-amber-600 hover:text-amber-700"
+                            title="비밀번호 초기화"
+                            onClick={() => {
+                              if (confirm(`${u.name}님의 비밀번호를 아이디(${u.email})와 동일하게 초기화하시겠습니까?`)) {
+                                resetPwMutation.mutate({ id: u.id, email: u.email });
+                              }
+                            }}
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => {
                               if (confirm(`${u.name}님을 삭제하시겠습니까?`)) {
@@ -559,6 +579,17 @@ export default function UserManagementPage() {
                         className="rounded-lg p-1.5 text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        title="비밀번호 초기화"
+                        onClick={() => {
+                          if (confirm(`${u.name}님의 비밀번호를 아이디(${u.email})와 동일하게 초기화하시겠습니까?`)) {
+                            resetPwMutation.mutate({ id: u.id, email: u.email });
+                          }
+                        }}
+                        className="rounded-lg p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                      >
+                        <KeyRound className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => {
