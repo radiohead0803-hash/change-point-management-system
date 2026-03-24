@@ -288,6 +288,15 @@ export class ExcelService {
       c.border = THIN_BORDER;
     });
 
+    // Row 5: 드랍박스 선택 도우미 텍스트
+    const yellowFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+    ws.getCell('D5').value = '드랍박스 선택';
+    ws.getCell('D5').fill = yellowFill;
+    ws.getCell('D5').font = { name: 'Malgun Gothic', size: 11 };
+    ws.getCell('L5').value = '드랍박스 선택';
+    ws.getCell('L5').fill = yellowFill;
+    ws.getCell('L5').font = { name: 'Malgun Gothic', size: 11 };
+
     // Rows 6-7: 2단 헤더
     ws.getRow(6).height = 18.75;
     ws.getRow(7).height = 18.75;
