@@ -10,8 +10,10 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,12 +33,13 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  @ApiOperation({ summary: '회원가입' })
+  @ApiOperation({ summary: '회원가입 (관리자 전용)' })
   @ApiResponse({
     status: 201,
     description: '회원가입 성공',
   })
-  @Public()
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
   @Post('register')
   async register(
     @Body('email') email: string,

@@ -1,0 +1,4 @@
+-- NOTE: SUBMITTED 상태는 상태머신에서 사용되지 않으므로 deprecated 처리.
+-- 기존 데이터 호환성을 위해 enum 값은 유지하되, 코드에서는 사용하지 않음.
+-- 향후 SUBMITTED 상태의 레코드가 없음이 확인되면 완전 제거 가능.
+-- This is an empty migration to document the deprecation of SUBMITTED status.

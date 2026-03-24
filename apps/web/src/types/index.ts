@@ -60,6 +60,7 @@ export interface ChangeEvent {
   actionPlan?: string;
   actionResult?: string;
   qualityVerification?: string;
+  qpointInstalled?: string;
   // 보완요청
   returnComment?: string;
   returnedAt?: string;

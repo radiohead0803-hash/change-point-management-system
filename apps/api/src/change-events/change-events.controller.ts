@@ -53,6 +53,11 @@ export class ChangeEventsController {
       where.companyId = req.user.companyId;
     }
 
+    // 고객사 뷰어는 자사 관련 데이터만 조회 가능 (customer 필드 기준)
+    if (req.user.role === Role.CUSTOMER_VIEWER && req.user.companyId) {
+      where.company = { id: req.user.companyId };
+    }
+
     return this.changeEventsService.findAll({
       skip: skip ? parseInt(skip, 10) : undefined,
       take: take ? parseInt(take, 10) : undefined,

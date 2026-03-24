@@ -183,6 +183,11 @@ model ChangeEvent {
   updatedById   String?
   updatedBy     User?     @relation("EventUpdatedBy", fields: [updatedById], references: [id])
 
+  @@index([deletedAt, status])
+  @@index([deletedAt, companyId])
+  @@index([deletedAt, createdById])
+  @@index([deletedAt, occurredDate])
+  @@index([receiptMonth])
   @@map("change_events")
 }
 
@@ -233,7 +238,7 @@ enum ScopeType {
 
 enum EventStatus {
   DRAFT
-  SUBMITTED
+  SUBMITTED    // @deprecated - 미사용 상태. 상태머신에서 사용하지 않음. 향후 제거 예정.
   CONFIRMED
   REVIEW_RETURNED
   REVIEWED

@@ -19,7 +19,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.FRONTEND_URL
       ? process.env.FRONTEND_URL.split(',').map((s) => s.trim())
-      : true, // 개발 환경에서는 모든 origin 허용
+      : ['http://localhost:3001'], // 명시적 프론트엔드 URL만 허용
     credentials: true,
   });
 
@@ -32,15 +32,17 @@ async function bootstrap() {
     },
   }));
 
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('(주)캠스 변동점 관리시스템 API')
-    .setDescription('(주)캠스 변동점 관리시스템 REST API 문서')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Swagger (운영 환경에서는 비활성화)
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('(주)캠스 변동점 관리시스템 API')
+      .setDescription('(주)캠스 변동점 관리시스템 REST API 문서')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api-docs', app, document);
+  }
 
   // Global prefix
   app.setGlobalPrefix('api');
@@ -49,6 +51,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger documentation: http://localhost:${port}/api`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Swagger documentation: http://localhost:${port}/api-docs`);
+  }
 }
 bootstrap();

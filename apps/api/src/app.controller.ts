@@ -1,7 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './auth/decorators/public.decorator';
+import { Roles } from './auth/decorators/roles.decorator';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { Role } from '@prisma/client';
 import { PrismaService } from './prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 
@@ -21,7 +25,9 @@ export class AppController {
     return this.appService.healthCheck();
   }
 
-  @Public()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get('restore-admin')
   async restoreAdmin() {
     const password = await bcrypt.hash('cams@2002', 10);

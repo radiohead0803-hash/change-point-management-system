@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
@@ -51,7 +51,7 @@ export class AuthService {
       where: { id: userId },
     });
 
-    if (!user) {
+    if (!user || user.deletedAt !== null) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -64,6 +64,10 @@ export class AuthService {
   }
 
   async register(email: string, password: string, name: string, companyId: string) {
+    if (!password || password.length < 4) {
+      throw new BadRequestException('비밀번호는 최소 4자 이상이어야 합니다.');
+    }
+
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
