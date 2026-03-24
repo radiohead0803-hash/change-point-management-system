@@ -18,6 +18,7 @@ import {
   ChevronDown, Info, Search,
 } from 'lucide-react';
 import { ClassificationGuidePanel } from '@/components/change-events/classification-guide';
+import { SearchSelect } from '@/components/ui/search-select';
 
 const schema = z.object({
   // 발생내역
@@ -317,17 +318,25 @@ export default function NewChangeEventPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">1차 검토자 <span className="text-red-400">*</span></label>
-              <select {...register('reviewerId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
-                <option value="">검토자 선택</option>
-                {reviewers.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
-              </select>
+              <Controller name="reviewerId" control={control} render={({ field }) => (
+                <SearchSelect
+                  options={reviewers.map((u: any) => ({ value: u.id, label: `${u.name} (${ROLES[u.role] || u.role})` }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="검토자 선택"
+                />
+              )} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">전담중역 <span className="text-xs text-muted-foreground">(선택)</span></label>
-              <select {...register('executiveId')} className="h-11 w-full rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40">
-                <option value="">전담중역 선택</option>
-                {executives.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({ROLES[u.role] || u.role})</option>)}
-              </select>
+              <Controller name="executiveId" control={control} render={({ field }) => (
+                <SearchSelect
+                  options={executives.map((u: any) => ({ value: u.id, label: `${u.name} (${ROLES[u.role] || u.role})` }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="전담중역 선택"
+                />
+              )} />
             </div>
           </div>
         </div>
