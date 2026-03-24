@@ -208,8 +208,20 @@ export class ExcelService {
     // 발생항목 드롭다운 = 점검기준 항목명 리스트
     const itemNames = criteriaData.flatMap(([, items]) => items.map(([name]) => name));
 
+    // 제목용 기간 라벨
+    let titlePeriod: string;
+    if (filters?.dateFrom && filters?.dateTo) {
+      titlePeriod = `${filters.dateFrom} ~ ${filters.dateTo}`;
+    } else if (filters?.dateFrom) {
+      titlePeriod = `${filters.dateFrom} ~`;
+    } else if (filters?.dateTo) {
+      titlePeriod = `~ ${filters.dateTo}`;
+    } else {
+      titlePeriod = `전체`;
+    }
+
     // ===== Sheet 2: 점검결과 =====
-    this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName, itemNames);
+    this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName, itemNames, titlePeriod);
 
     return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
@@ -267,6 +279,7 @@ export class ExcelService {
     companyName: string,
     executiveName: string,
     itemNames: string[] = [],
+    titlePeriod: string = '',
   ) {
     const ws = workbook.addWorksheet('점검결과');
 
@@ -288,7 +301,7 @@ export class ExcelService {
     // Row 2: 타이틀
     ws.getRow(2).height = 24;
     const titleCell = ws.getCell('B2');
-    titleCell.value = `■ 변동점 담당제 ${monthStr}월 점검결과`;
+    titleCell.value = `■ 변동점 담당제 점검결과 (${titlePeriod})`;
     titleCell.font = { name: 'Malgun Gothic', size: 18, bold: true };
 
     // Row 4: 협력사 정보

@@ -66,8 +66,18 @@ export class ExcelController {
       { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, status: status || undefined, customer: customer || undefined },
     );
 
-    const mm = String(m).padStart(2, '0');
-    const filename = encodeURIComponent(`변동점_담당제_${y}년_${mm}월_점검결과.xlsx`);
+    // 파일명: 필터 기준 반영
+    let periodLabel: string;
+    if (dateFrom && dateTo) {
+      periodLabel = `${dateFrom}~${dateTo}`;
+    } else if (dateFrom) {
+      periodLabel = `${dateFrom}~`;
+    } else if (dateTo) {
+      periodLabel = `~${dateTo}`;
+    } else {
+      periodLabel = '전체';
+    }
+    const filename = encodeURIComponent(`변동점_담당제_${periodLabel}_점검결과.xlsx`);
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename*=UTF-8''${filename}`,

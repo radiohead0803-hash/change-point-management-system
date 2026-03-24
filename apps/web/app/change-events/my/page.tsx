@@ -196,8 +196,7 @@ export default function MyChangeEventsPage() {
               const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
-              const mm = String(now.getMonth() + 1).padStart(2, '0');
-              a.href = url; a.download = `변동점_담당제_${now.getFullYear()}년_${mm}월_점검결과.xlsx`; a.click();
+              a.href = url; a.download = `변동점_담당제_전체_점검결과.xlsx`; a.click();
               URL.revokeObjectURL(url);
             } catch { /* ignore */ }
           }}>

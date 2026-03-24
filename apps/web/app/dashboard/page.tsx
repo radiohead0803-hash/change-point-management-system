@@ -32,8 +32,10 @@ function ReportExportButton({ filters }: { filters?: { dateFrom?: string; dateTo
       const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      a.href = url; a.download = `변동점_담당제_${now.getFullYear()}년_${mm}월_점검결과.xlsx`; a.click();
+      const period = filters?.dateFrom || filters?.dateTo
+        ? `${filters.dateFrom || ''}~${filters.dateTo || ''}`
+        : '전체';
+      a.href = url; a.download = `변동점_담당제_${period}_점검결과.xlsx`; a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('점검결과 엑셀 다운로드 실패:', err);
