@@ -222,11 +222,11 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
 
     // tags에서 primaryItemId 자동 추출
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
-    const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
+    const primaryItemId = primaryTag?.itemId?.startsWith('custom_') ? '' : (data.primaryItemId || primaryTag?.itemId || '');
 
     if (status === 'CONFIRMED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
-      if (!primaryItemId) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
+      if (!primaryItemId && !primaryTag?.customName) { toast({ variant: 'destructive', title: '주 분류 항목을 선택해주세요.' }); return; }
       if (!data.description) { toast({ variant: 'destructive', title: '변경 상세내용을 입력해주세요.' }); return; }
     }
 

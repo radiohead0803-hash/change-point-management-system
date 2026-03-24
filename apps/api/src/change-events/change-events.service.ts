@@ -108,6 +108,12 @@ export class ChangeEventsService {
       }
     }
 
+    // 커스텀 태그가 PRIMARY인 경우 primaryItemId 자동 설정
+    if (!eventData.primaryItemId) {
+      const primaryProcessed = processedTags.find(t => t.tagType === 'PRIMARY');
+      if (primaryProcessed) eventData.primaryItemId = primaryProcessed.itemId;
+    }
+
     // 필수 필드 검증
     if (!eventData.receiptMonth) throw new BadRequestException('접수월(receiptMonth)은 필수입니다.');
     if (!eventData.occurredDate) throw new BadRequestException('발생일(occurredDate)은 필수입니다.');

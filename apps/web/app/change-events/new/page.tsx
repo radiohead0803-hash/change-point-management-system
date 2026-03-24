@@ -164,9 +164,9 @@ export default function NewChangeEventPage() {
   const save = async (data: FormData, status: 'DRAFT' | 'CONFIRMED') => {
     if (!user?.id) return;
 
-    // tags에서 primaryItemId 자동 추출
+    // tags에서 primaryItemId 자동 추출 (커스텀 태그는 서버에서 처리)
     const primaryTag = data.tags?.find((t) => t.tagType === 'PRIMARY');
-    const primaryItemId = data.primaryItemId || primaryTag?.itemId || '';
+    const primaryItemId = primaryTag?.itemId?.startsWith('custom_') ? '' : (data.primaryItemId || primaryTag?.itemId || '');
 
     if (status === 'CONFIRMED') {
       if (!data.reviewerId) { toast({ variant: 'destructive', title: '1차 검토자를 지정해주세요.' }); return; }
