@@ -401,12 +401,16 @@ export default function DashboardPage() {
               try { const r = await changeEvents.seedTestData(); alert(`${(r.data as any)?.created || 50}건 생성 완료`); window.location.reload(); } catch { alert('시드 생성 실패'); }
             }}>테스트 데이터 생성</Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="hidden sm:inline-flex">
-            <Download className="mr-1.5 h-4 w-4" />월간 리포트
-          </Button>
-          <Button size="icon" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="h-9 w-9 sm:hidden">
-            <Download className="h-4 w-4" />
-          </Button>
+          {user?.role !== 'TIER2_EDITOR' && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="hidden sm:inline-flex">
+                <Download className="mr-1.5 h-4 w-4" />월간 리포트
+              </Button>
+              <Button size="icon" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)} className="h-9 w-9 sm:hidden">
+                <Download className="h-4 w-4" />
+              </Button>
+            </>
+          )}
           <Button size="sm" className="sm:hidden" onClick={() => router.push('/change-events/new')}>
             <Plus className="mr-1 h-4 w-4" />등록
           </Button>
@@ -576,6 +580,8 @@ export default function DashboardPage() {
 
 /* ── 변동점 테이블 (필터 + 엑셀 내보내기) ── */
 function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]; isLoading: boolean; router: any }) {
+  const { user: tableUser } = useAuth();
+  const isTier2 = tableUser?.role === 'TIER2_EDITOR';
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -658,11 +664,13 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <h3 className="text-sm font-semibold">필수 작성 항목 (발생 & 조치결과)</h3>
         <div className="flex flex-wrap gap-2">
-          <ReportExportButtons events={events} />
-          <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
-            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
-            {exporting ? '내보내기...' : `목록 CSV (${filtered.length}건)`}
-          </Button>
+          {!isTier2 && <ReportExportButtons events={events} />}
+          {!isTier2 && (
+            <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+              {exporting ? '내보내기...' : `목록 CSV (${filtered.length}건)`}
+            </Button>
+          )}
           <button onClick={() => router.push('/change-events/my')} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80">
             전체보기 <ArrowRight className="h-3.5 w-3.5" />
           </button>
