@@ -141,14 +141,13 @@ export class ExcelService {
     // 이벤트 조회 (필터 적용)
     const where: any = { deletedAt: null };
 
-    // 날짜 필터: dateFrom/dateTo가 있으면 사용, 없으면 year/month 기준
+    // 날짜 필터: dateFrom/dateTo가 있으면 사용, 없으면 전체 조회
     if (filters?.dateFrom || filters?.dateTo) {
       where.occurredDate = {};
       if (filters.dateFrom) where.occurredDate.gte = new Date(filters.dateFrom);
       if (filters.dateTo) where.occurredDate.lte = new Date(filters.dateTo + 'T23:59:59');
-    } else {
-      where.occurredDate = { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) };
     }
+    // dateFrom/dateTo 없으면 날짜 제한 없이 전체 조회
 
     if (companyId) where.companyId = companyId;
     if (filters?.status && filters.status !== 'ALL') where.status = filters.status;
