@@ -76,7 +76,7 @@ export function SearchSelect({ options, value, onChange, placeholder = '선택',
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
             />
           </div>
-          <div className="max-h-48 overflow-y-auto p-1">
+          <div className="max-h-[40vh] sm:max-h-48 overflow-y-auto p-1">
             {filtered.length === 0 ? (
               <div className="px-3 py-4 text-center text-xs text-muted-foreground">결과 없음</div>
             ) : (

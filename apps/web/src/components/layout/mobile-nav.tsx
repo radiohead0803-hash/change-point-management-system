@@ -91,10 +91,10 @@ export default function MobileNav() {
                     menuOpen ? 'text-primary' : 'text-muted-foreground/60',
                   )}
                 >
-                  <div className={cn('flex h-8 w-8 items-center justify-center rounded-xl transition-all', menuOpen && 'bg-primary/10')}>
+                  <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl transition-all', menuOpen && 'bg-primary/10')}>
                     {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                   </div>
-                  <span className="mt-0.5 text-[10px] font-medium">{menuOpen ? '닫기' : '더보기'}</span>
+                  <span className="mt-0.5 text-[11px] font-medium">{menuOpen ? '닫기' : '더보기'}</span>
                 </button>
               );
             }
@@ -109,10 +109,10 @@ export default function MobileNav() {
                   isActive ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground',
                 )}
               >
-                <div className={cn('flex h-8 w-8 items-center justify-center rounded-xl transition-all', isActive && 'bg-primary/10 scale-105')}>
+                <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl transition-all', isActive && 'bg-primary/10 scale-105')}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className={cn('mt-0.5 text-[10px] font-medium', isActive && 'font-semibold')}>{item.name}</span>
+                <span className={cn('mt-0.5 text-[11px] font-medium', isActive && 'font-semibold')}>{item.name}</span>
               </Link>
             );
           })}

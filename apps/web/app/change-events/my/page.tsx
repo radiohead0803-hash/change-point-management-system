@@ -237,10 +237,10 @@ export default function MyChangeEventsPage() {
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="h-8 rounded-lg border border-input bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[130px]" />
+              className="h-8 rounded-lg border border-input bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-full sm:w-[130px]" />
             <span className="text-xs text-muted-foreground">~</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="h-8 rounded-lg border border-input bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-[130px]" />
+              className="h-8 rounded-lg border border-input bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 w-full sm:w-[130px]" />
           </div>
           {hasFilters && (
             <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}

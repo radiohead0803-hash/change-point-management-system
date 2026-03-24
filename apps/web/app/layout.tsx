@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: '(주)캠스 변동점 관리시스템',
   description: '(주)캠스 변동점 관리시스템',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
