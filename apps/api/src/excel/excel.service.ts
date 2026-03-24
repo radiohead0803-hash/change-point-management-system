@@ -341,13 +341,8 @@ export class ExcelService {
         const r = startRow + idx;
         const row = ws.getRow(r);
 
-        // 발생항목: 대분류 > 중분류 > 세부항목
-        let itemLabel = '';
-        if (event.primaryItem) {
-          const cat = event.primaryItem.category;
-          const cls = cat?.class;
-          itemLabel = [cls?.name, cat?.name, event.primaryItem.name].filter(Boolean).join(' > ');
-        }
+        // 발생항목: 세부항목명만 표시
+        const itemLabel = event.primaryItem?.name || '';
 
         ws.getCell(`B${r}`).value = idx + 1;
         ws.getCell(`C${r}`).value = event.occurredDate
