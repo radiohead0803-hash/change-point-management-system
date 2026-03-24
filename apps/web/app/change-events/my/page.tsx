@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { changeEvents } from '@/lib/api-client';
+import { changeEvents, excel } from '@/lib/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { ChangeEvent } from '@/types';
@@ -189,10 +189,19 @@ export default function MyChangeEventsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={handleExcelExport} disabled={exporting || filtered.length === 0}>
-            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
-            <span className="hidden sm:inline">엑셀 ({filtered.length}건)</span>
-            <span className="sm:hidden">{filtered.length}</span>
+          <Button size="sm" variant="outline" onClick={async () => {
+            try {
+              const now = new Date();
+              const res = await excel.downloadInspection(now.getFullYear(), now.getMonth() + 1);
+              const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              const mm = String(now.getMonth() + 1).padStart(2, '0');
+              a.href = url; a.download = `변동점_담당제_${now.getFullYear()}년_${mm}월_점검결과.xlsx`; a.click();
+              URL.revokeObjectURL(url);
+            } catch { /* ignore */ }
+          }}>
+            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />보고서
           </Button>
           <Button size="sm" onClick={() => router.push('/change-events/new')}>
             <Plus className="mr-1 h-4 w-4" />

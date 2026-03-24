@@ -12,8 +12,10 @@ import {
 import {
   BarChart3, Building2, Calendar, TrendingUp, TrendingDown, AlertTriangle,
   Lightbulb, Filter, Clock, CheckCircle2, Shield, ArrowRight, PieChart as PieIcon,
-  Activity, Target, Users, Layers, Zap,
+  Activity, Target, Users, Layers, Zap, Download,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#6b7280'];
 const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4'];
@@ -21,6 +23,7 @@ const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#0
 type TimeRange = 'week' | 'month' | 'quarter' | 'half' | 'year' | 'all';
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [companyFilter, setCompanyFilter] = useState('ALL');
@@ -165,9 +168,14 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-5">
       {/* 헤더 */}
-      <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">시각화 분석</h1>
-        <p className="mt-1 text-sm text-muted-foreground">변동점 데이터 심층 분석 · {filtered.length}건</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">시각화 분석</h1>
+          <p className="mt-1 text-sm text-muted-foreground">변동점 데이터 심층 분석 · {filtered.length}건</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => router.push(`/report?year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`)}>
+          <Download className="mr-1.5 h-4 w-4" />월간 리포트
+        </Button>
       </div>
 
       {/* 필터 바 */}

@@ -21,40 +21,8 @@ const HEADER_FONT: Partial<ExcelJS.Font> = {
   bold: true,
 };
 
-// 점검기준 원본 양식 데이터: [분류, [[항목, 상세내용], ...]]
-const CRITERIA_DATA: [string, [string, string][]][] = [
-  ['작업자', [
-    ['작업자 임시 대체', '실명제 등록 작업자의 일시적 부재(휴가,병가 등)으로 인해 임시 대체 작업자로 변경'],
-    ['작업자 근무 교대시간 변경', '정규 근무 체계 내에서 작업자들의 근무교대 시간 일시적 조정'],
-    ['작업자 역할 분담 변경', '작업자 간 역할 재배치'],
-  ]],
-  ['설비/공구', [
-    ['툴(공구) 변경', '절삭공구, 드릴, 팁 교체 등 작업 공구 변경'],
-    ['동일 조건의 설비/라인 변경', '동일 규격內 설비 또는 라인 전환 (예. A,B 동일 톤수 설비 -> A고장시 B사용)'],
-  ]],
-  ['공장 조건', [
-    ['도장/토출 조건 변경', '도장라인 스프레이 토출량, 분사각도 등 변경'],
-    ['작업 속도/주기 변경', 'UPH, 생산속도 조정 등'],
-    ['설비 온도/압력 변경', '설비 온도,압력 등 공정 조건 변경'],
-    ['작업 각도/방식 변경', '용접 각도, 조립 방식 등 공정內 작업 변경'],
-  ]],
-  ['소모품/윤활 관리', [
-    ['그리스/윤활유 정기보충(교체)', '윤활유, 그리스 등 보충/교체'],
-    ['냉각수/워터호스 정기보충(교체)', '냉각수, 워터호스, 에어호스 등 보충/교체'],
-    ['설비 부자재 정기교체', '유지보수 목적의 부품 교체'],
-  ]],
-  ['공정 외', [
-    ['단전/단수 발생', '전력/수도 공급 중단'],
-    ['파업 발생', '파업에 따른 대체 작업 또는 신규 작업'],
-    ['물류/파렛트 변경', '납품 차량 긴급 변경 및 파렛트 변경'],
-  ]],
-  ['2/3차사 관련', [
-    ['2/3차사 입고품 변경', '외부 협력사 부품/완제품 변동'],
-  ]],
-  ['기타', [
-    ['상기 16항목 외', '상기 16항목 외 변동점 발생 시 변동점 전담중역 최종 판단하에 점검'],
-  ]],
-];
+// 점검기준 데이터 타입
+type CriteriaData = [string, [string, string][]][];
 
 @Injectable()
 export class ExcelService {
@@ -185,25 +153,49 @@ export class ExcelService {
       orderBy: { occurredDate: 'asc' },
     });
 
-    // 협력사 정보: 고정값 KU67 / (주)캠스
-    const companyCode = 'KU67';
-    const companyName = '(주)캠스';
-
-    // 전담중역: 출력 담당자(로그인 사용자) 이름
+    // 협력사 정보: 로그인 사용자의 소속 회사 또는 1차사 정보
+    let companyCode = '';
+    let companyName = '';
     let executiveName = '';
     if (userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (user) executiveName = user.name;
+      const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { company: true } });
+      if (user) {
+        executiveName = user.name;
+        if (user.company) {
+          companyCode = user.company.code;
+          companyName = user.company.name;
+        }
+      }
+    }
+    // 회사 정보가 없으면 1차사(TIER1) 조회
+    if (!companyName) {
+      const tier1 = await this.prisma.company.findFirst({ where: { type: 'TIER1', deletedAt: null } });
+      if (tier1) { companyCode = tier1.code; companyName = tier1.name; }
+    }
+
+    // 점검기준 데이터를 DB에서 조회 (NON_FOUR_M 분류의 카테고리/항목)
+    const nonFourMClass = await this.prisma.changeClass.findFirst({ where: { code: 'NON_FOUR_M', deletedAt: null } });
+    const criteriaData: CriteriaData = [];
+    if (nonFourMClass) {
+      const categories = await this.prisma.changeCategory.findMany({
+        where: { classId: nonFourMClass.id, deletedAt: null, isActive: true },
+        include: { items: { where: { deletedAt: null, isActive: true }, orderBy: { code: 'asc' } } },
+        orderBy: { code: 'asc' },
+      });
+      for (const cat of categories) {
+        if (cat.items.length === 0) continue;
+        criteriaData.push([cat.name, cat.items.map(item => [item.name, item.description || ''] as [string, string])]);
+      }
     }
 
     const monthStr = String(month).padStart(2, '0');
     const workbook = new ExcelJS.Workbook();
 
     // ===== Sheet 1: 점검기준 =====
-    this.buildCriteriaSheet(workbook);
+    this.buildCriteriaSheet(workbook, criteriaData);
 
     // 발생항목 드롭다운 = 점검기준 항목명 리스트
-    const itemNames = CRITERIA_DATA.flatMap(([, items]) => items.map(([name]) => name));
+    const itemNames = criteriaData.flatMap(([, items]) => items.map(([name]) => name));
 
     // ===== Sheet 2: 점검결과 =====
     this.buildResultSheet(workbook, events, year, month, monthStr, companyCode, companyName, executiveName, itemNames);
@@ -211,8 +203,8 @@ export class ExcelService {
     return await workbook.xlsx.writeBuffer() as unknown as Buffer;
   }
 
-  /* ── 점검기준 시트 (원본 양식 고정) ── */
-  private buildCriteriaSheet(workbook: ExcelJS.Workbook) {
+  /* ── 점검기준 시트 (DB 기반) ── */
+  private buildCriteriaSheet(workbook: ExcelJS.Workbook, criteriaData: CriteriaData) {
     const ws = workbook.addWorksheet('점검기준');
 
     ws.getColumn('A').width = 17;
@@ -233,7 +225,7 @@ export class ExcelService {
     let rowIdx = 2;
     const mergeRanges: [number, number][] = [];
 
-    CRITERIA_DATA.forEach(([catName, items]) => {
+    criteriaData.forEach(([catName, items]) => {
       const startRow = rowIdx;
       items.forEach(([itemName, desc], i) => {
         const r = ws.getRow(rowIdx);

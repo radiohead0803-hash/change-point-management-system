@@ -81,7 +81,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight">변동점 관리</h1>
-            <p className="text-[10px] text-muted-foreground">(주)캠스</p>
+            <p className="text-[10px] text-muted-foreground">{user?.company?.name || '(주)캠스'}</p>
           </div>
         </div>
         <Link href="/notifications" className="relative rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-gray-100 hover:text-foreground dark:hover:bg-gray-800">

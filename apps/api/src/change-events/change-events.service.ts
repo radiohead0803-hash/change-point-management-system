@@ -418,7 +418,7 @@ export class ChangeEventsService {
       cleanData.returnedById = userId;
     }
     // 재제출 시 보완요청 코멘트 초기화
-    if (cleanData.status === 'SUBMITTED' && event.status === 'REVIEW_RETURNED') {
+    if (cleanData.status === 'CONFIRMED' && event.status === 'REVIEW_RETURNED') {
       cleanData.returnComment = null;
       cleanData.returnedAt = null;
       cleanData.returnedById = null;
