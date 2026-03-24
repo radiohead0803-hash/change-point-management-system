@@ -85,8 +85,28 @@ export class ChangeEventsService {
       throw new ForbiddenException('96항목 태그는 필수항목입니다.');
     }
 
-    // 태그 데이터 정제 (유효한 태그만)
-    const validTags = (tags || []).filter((t: any) => t.itemId && t.itemId !== '' && !t.itemId.startsWith('custom_'));
+    // 태그 데이터 정제: 커스텀 태그는 기타 카테고리에 ChangeItem으로 생성 후 실제 ID로 변환
+    const processedTags: { itemId: string; tagType: string }[] = [];
+    for (const tag of (tags || [])) {
+      if (!tag.itemId || tag.itemId === '') continue;
+      if (tag.itemId.startsWith('custom_')) {
+        // 커스텀 태그 → 기타 카테고리에 ChangeItem 생성
+        const customName = tag.customName || tag.itemId.replace('custom_', '');
+        if (!customName) continue;
+        const etcCategory = await this.prisma.changeCategory.findFirst({
+          where: { name: '기타', deletedAt: null },
+        });
+        if (etcCategory) {
+          const code = `ETC_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+          const newItem = await this.prisma.changeItem.create({
+            data: { categoryId: etcCategory.id, code, name: customName },
+          });
+          processedTags.push({ itemId: newItem.id, tagType: tag.tagType || 'TAG' });
+        }
+      } else {
+        processedTags.push({ itemId: tag.itemId, tagType: tag.tagType || 'TAG' });
+      }
+    }
 
     // 필수 필드 검증
     if (!eventData.receiptMonth) throw new BadRequestException('접수월(receiptMonth)은 필수입니다.');
@@ -99,9 +119,9 @@ export class ChangeEventsService {
         data: {
           ...eventData,
           createdById: userId,
-          ...(validTags.length > 0 ? {
+          ...(processedTags.length > 0 ? {
             tags: {
-              create: validTags.map((tag: any) => ({
+              create: processedTags.map((tag: any) => ({
                 itemId: tag.itemId,
                 tagType: tag.tagType || 'TAG',
               })),

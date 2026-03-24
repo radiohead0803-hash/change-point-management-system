@@ -240,7 +240,7 @@ export default function EditChangeEventPage({ params }: { params: { id: string }
         primaryItemId: primaryItemId || undefined,
         receiptMonth: receiptMonth || rest.occurredDate?.slice(0, 7),
         status,
-        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
+        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType, customName: t.customName })),
       });
 
       // Remove deleted attachments

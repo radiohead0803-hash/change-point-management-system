@@ -186,7 +186,7 @@ export default function NewChangeEventPage() {
         managerId: rest.managerId || user?.id,
         primaryItemId: primaryItemId || undefined,
         receiptMonth, status,
-        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType })),
+        tags: tags.map((t) => ({ itemId: t.itemId, tagType: t.tagType, customName: t.customName })),
       });
       if (attachments.length && result.data?.id) {
         await Promise.all(attachments.map((a) => changeEvents.addAttachment(result.data.id, { filename: a.filename, mimetype: a.mimetype, size: a.size, data: a.data })));
