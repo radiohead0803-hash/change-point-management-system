@@ -72,6 +72,7 @@ export class UsersService {
   }
 
   async update(id: string, data: {
+    email?: string;
     name?: string;
     role?: Role;
     companyId?: string;
@@ -87,6 +88,7 @@ export class UsersService {
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다');
 
     const updateData: any = {};
+    if (data.email !== undefined) updateData.email = data.email;
     if (data.name !== undefined) updateData.name = data.name;
     if (data.role !== undefined) updateData.role = data.role;
     if (data.companyId !== undefined) updateData.companyId = data.companyId || null;

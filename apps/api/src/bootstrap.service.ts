@@ -13,19 +13,23 @@ export class BootstrapService implements OnApplicationBootstrap {
   }
 
   private async ensureAdminAccount() {
-    const hashedPassword = await bcrypt.hash('1234', 10);
-    await this.prisma.user.upsert({
-      where: { email: 'admin' },
-      update: {
-        password: hashedPassword,
-      },
-      create: {
-        email: 'admin',
-        name: '시스템관리자',
-        password: hashedPassword,
-        role: 'ADMIN',
-      },
+    // 관리자 계정이 없을 때만 생성 (기존 계정은 변경하지 않음)
+    const adminExists = await this.prisma.user.findFirst({
+      where: { role: 'ADMIN', deletedAt: null },
     });
-    this.logger.log('Admin account ready: admin / 1234');
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash('cams@2002', 10);
+      await this.prisma.user.create({
+        data: {
+          email: 'ku67000',
+          name: '시스템관리자',
+          password: hashedPassword,
+          role: 'ADMIN',
+        },
+      });
+      this.logger.log('Admin account created: ku67000');
+    } else {
+      this.logger.log('Admin account exists: ' + adminExists.email);
+    }
   }
 }

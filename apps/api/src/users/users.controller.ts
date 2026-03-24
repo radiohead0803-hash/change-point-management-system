@@ -64,6 +64,7 @@ export class UsersController {
   @Patch(':id')
   @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() body: {
+    email?: string;
     name?: string;
     role?: Role;
     companyId?: string;
