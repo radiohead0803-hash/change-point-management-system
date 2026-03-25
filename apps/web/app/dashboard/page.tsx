@@ -521,12 +521,6 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
   const [exporting, setExporting] = useState(false);
   const [sortKey, setSortKey] = useState<string>('occurredDate');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [colFilters, setColFilters] = useState<Record<string, string>>({
-    className: '', categoryName: '', itemName: '', department: '', manager: '',
-    customer: '', project: '', factory: '', company: '',
-    actionPlan: '', actionResult: '', qualityVerification: '',
-  });
-  const updateColFilter = (key: string, val: string) => setColFilters(prev => ({ ...prev, [key]: val }));
 
   const toggleSort = (key: string) => {
     if (sortKey === key) { setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }
@@ -558,24 +552,9 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
           (e.description || '').toLowerCase().includes(s) ||
           (e.partNumber || '').toLowerCase().includes(s))) return false;
       }
-      // 컬럼별 필터
-      const ev = e as any;
-      const cf = colFilters;
-      if (cf.className && !(ev.primaryItem?.category?.class?.name || '').toLowerCase().includes(cf.className.toLowerCase())) return false;
-      if (cf.categoryName && !(ev.primaryItem?.category?.name || '').toLowerCase().includes(cf.categoryName.toLowerCase())) return false;
-      if (cf.itemName && !(ev.primaryItem?.name || '').toLowerCase().includes(cf.itemName.toLowerCase())) return false;
-      if (cf.department && !(e.department || '').toLowerCase().includes(cf.department.toLowerCase())) return false;
-      if (cf.manager && !(ev.manager?.name || ev.createdBy?.name || '').toLowerCase().includes(cf.manager.toLowerCase())) return false;
-      if (cf.customer && !(e.customer || '').toLowerCase().includes(cf.customer.toLowerCase())) return false;
-      if (cf.project && !(e.project || '').toLowerCase().includes(cf.project.toLowerCase())) return false;
-      if (cf.factory && !(e.factory || '').toLowerCase().includes(cf.factory.toLowerCase())) return false;
-      if (cf.company && !(ev.company?.name || '').toLowerCase().includes(cf.company.toLowerCase())) return false;
-      if (cf.actionPlan && !(ev.actionPlan || '').toLowerCase().includes(cf.actionPlan.toLowerCase())) return false;
-      if (cf.actionResult && !(ev.actionResult || '').toLowerCase().includes(cf.actionResult.toLowerCase())) return false;
-      if (cf.qualityVerification && !(ev.qualityVerification || '').toLowerCase().includes(cf.qualityVerification.toLowerCase())) return false;
       return true;
     });
-  }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText, colFilters]);
+  }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -645,12 +624,10 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
     }
   };
 
-  const hasColFilters = Object.values(colFilters).some(v => v !== '');
-  const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText || hasColFilters;
+  const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText;
 
   const resetAll = () => {
     setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText('');
-    setColFilters({ className: '', categoryName: '', itemName: '', department: '', manager: '', customer: '', project: '', factory: '', company: '', actionPlan: '', actionResult: '', qualityVerification: '' });
   };
 
   return (
@@ -753,37 +730,6 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
                 <th className="whitespace-nowrap px-2 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200">품질검증</th>
                 <DashSortTh label="상태" sortKey="status" currentKey={sortKey} dir={sortDir} onSort={toggleSort} className="text-muted-foreground" />
                 <th className="px-2 py-1.5"></th>
-              </tr>
-              {/* 컬럼별 필터 행 */}
-              <tr className="border-b border-gray-200 bg-white/80 dark:border-gray-700 dark:bg-gray-900/40">
-                <th className="px-1 py-1 border-r border-gray-200"></th>
-                <th className="px-1 py-1"></th>
-                {(['className', 'categoryName', 'itemName', 'department', 'manager'] as const).map((key, i) => (
-                  <th key={key} className={`px-1 py-1 ${i === 4 ? 'border-r border-gray-200' : ''}`}>
-                    <input value={colFilters[key]} onChange={(e) => updateColFilter(key, e.target.value)}
-                      placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
-                  </th>
-                ))}
-                {(['customer', 'project', 'factory'] as const).map((key) => (
-                  <th key={key} className="px-1 py-1">
-                    <input value={colFilters[key]} onChange={(e) => updateColFilter(key, e.target.value)}
-                      placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
-                  </th>
-                ))}
-                <th className="px-1 py-1"></th>
-                <th className="px-1 py-1 border-r border-gray-200">
-                  <input value={colFilters.company} onChange={(e) => updateColFilter('company', e.target.value)}
-                    placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
-                </th>
-                <th className="px-1 py-1"></th>
-                {(['actionPlan', 'actionResult', 'qualityVerification'] as const).map((key, i) => (
-                  <th key={key} className={`px-1 py-1 ${i === 2 ? 'border-r border-gray-200' : ''}`}>
-                    <input value={colFilters[key]} onChange={(e) => updateColFilter(key, e.target.value)}
-                      placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
-                  </th>
-                ))}
-                <th className="px-1 py-1"></th>
-                <th className="px-1 py-1"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
