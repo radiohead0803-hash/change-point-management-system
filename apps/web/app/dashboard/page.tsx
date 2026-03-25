@@ -502,6 +502,11 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [searchText, setSearchText] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [colFilters, setColFilters] = useState<Record<string, string>>({
+    className: '', categoryName: '', itemName: '', department: '', manager: '',
+    actionPlan: '', actionResult: '', qualityVerification: '',
+  });
+  const updateColFilter = (key: string, val: string) => setColFilters(prev => ({ ...prev, [key]: val }));
 
   const customers = useMemo(() => {
     const set = new Set(events.map((e) => e.customer || '').filter(Boolean));
@@ -516,14 +521,25 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
       if (customerFilter !== 'ALL' && (e.customer || '') !== customerFilter) return false;
       if (searchText) {
         const s = searchText.toLowerCase();
-        return (e.customer || '').toLowerCase().includes(s) ||
+        if (!((e.customer || '').toLowerCase().includes(s) ||
           (e.project || '').toLowerCase().includes(s) ||
           (e.department || '').toLowerCase().includes(s) ||
-          (e.description || '').toLowerCase().includes(s);
+          (e.description || '').toLowerCase().includes(s))) return false;
       }
+      // 컬럼별 필터
+      const ev = e as any;
+      const cf = colFilters;
+      if (cf.className && !(ev.primaryItem?.category?.class?.name || '').toLowerCase().includes(cf.className.toLowerCase())) return false;
+      if (cf.categoryName && !(ev.primaryItem?.category?.name || '').toLowerCase().includes(cf.categoryName.toLowerCase())) return false;
+      if (cf.itemName && !(ev.primaryItem?.name || '').toLowerCase().includes(cf.itemName.toLowerCase())) return false;
+      if (cf.department && !(e.department || '').toLowerCase().includes(cf.department.toLowerCase())) return false;
+      if (cf.manager && !(ev.manager?.name || ev.createdBy?.name || '').toLowerCase().includes(cf.manager.toLowerCase())) return false;
+      if (cf.actionPlan && !(ev.actionPlan || '').toLowerCase().includes(cf.actionPlan.toLowerCase())) return false;
+      if (cf.actionResult && !(ev.actionResult || '').toLowerCase().includes(cf.actionResult.toLowerCase())) return false;
+      if (cf.qualityVerification && !(ev.qualityVerification || '').toLowerCase().includes(cf.qualityVerification.toLowerCase())) return false;
       return true;
     });
-  }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText]);
+  }, [events, dateFrom, dateTo, statusFilter, customerFilter, searchText, colFilters]);
 
   const handleExcelExport = async () => {
     setExporting(true);
@@ -570,7 +586,8 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
     }
   };
 
-  const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText;
+  const hasColFilters = Object.values(colFilters).some(v => v !== '');
+  const hasFilters = dateFrom || dateTo || statusFilter !== 'ALL' || customerFilter !== 'ALL' || searchText || hasColFilters;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/70">
@@ -621,7 +638,7 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
               className="h-8 w-[100px] rounded-lg border border-input bg-white pl-6 pr-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring/40 dark:bg-gray-900 sm:w-[140px]" />
           </div>
           {hasFilters && (
-            <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); }}
+            <button onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('ALL'); setCustomerFilter('ALL'); setSearchText(''); setColFilters({ className: '', categoryName: '', itemName: '', department: '', manager: '', actionPlan: '', actionResult: '', qualityVerification: '' }); }}
               className="text-[10px] text-primary hover:underline whitespace-nowrap">초기화</button>
           )}
           <span className="ml-auto text-[10px] text-muted-foreground whitespace-nowrap">{filtered.length}건</span>
@@ -661,6 +678,25 @@ function ChangeEventTable({ events, isLoading, router }: { events: ChangeEvent[]
                 <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80">조치결과</th>
                 <th className="whitespace-nowrap px-3 py-1.5 text-center text-[9px] font-semibold text-amber-500/80 border-r border-gray-200 dark:border-gray-700">품질검증</th>
                 <th className="px-3 py-1.5"></th>
+              </tr>
+              {/* 컬럼별 필터 행 */}
+              <tr className="border-b border-gray-200 bg-white/80 dark:border-gray-700 dark:bg-gray-900/40">
+                <th className="px-1 py-1 border-r border-gray-200 dark:border-gray-700"></th>
+                <th className="px-1 py-1"></th>
+                {(['className', 'categoryName', 'itemName', 'department', 'manager'] as const).map((key, i) => (
+                  <th key={key} className={`px-1 py-1 ${i === 4 ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
+                    <input value={colFilters[key]} onChange={(e) => updateColFilter(key, e.target.value)}
+                      placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
+                  </th>
+                ))}
+                <th className="px-1 py-1"></th>
+                {(['actionPlan', 'actionResult', 'qualityVerification'] as const).map((key, i) => (
+                  <th key={key} className={`px-1 py-1 ${i === 2 ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}>
+                    <input value={colFilters[key]} onChange={(e) => updateColFilter(key, e.target.value)}
+                      placeholder="필터" className="w-full h-5 rounded border border-gray-200 bg-gray-50 px-1 text-[9px] text-center focus:outline-none focus:ring-1 focus:ring-primary/40 dark:border-gray-700 dark:bg-gray-800" />
+                  </th>
+                ))}
+                <th className="px-1 py-1"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
