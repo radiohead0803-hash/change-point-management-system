@@ -52,14 +52,18 @@ export async function subscribeToPush(): Promise<boolean> {
 
     const subscriptionJson = subscription.toJSON();
 
-    // 서버에 구독 정보 전송
-    await push.subscribe({
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: subscriptionJson.keys!.p256dh!,
-        auth: subscriptionJson.keys!.auth!,
-      },
-    });
+    // 서버에 구독 정보 전송 (실패해도 브라우저 알림은 동작)
+    try {
+      await push.subscribe({
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: subscriptionJson.keys!.p256dh!,
+          auth: subscriptionJson.keys!.auth!,
+        },
+      });
+    } catch (e) {
+      console.warn('Server push registration failed, but browser push is active:', e);
+    }
 
     return true;
   } catch (error) {
@@ -76,7 +80,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
-      await push.unsubscribe({ endpoint: subscription.endpoint });
+      try { await push.unsubscribe({ endpoint: subscription.endpoint }); } catch {}
       await subscription.unsubscribe();
     }
 
