@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Bell, CheckCircle2, AlertTriangle, Send, FileCheck,
-  CheckCheck, Clock, Trash2, X,
+  CheckCheck, Clock, Trash2, X, Settings,
 } from 'lucide-react';
+import { NotificationSettingsModal } from '@/components/notification-settings-modal';
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
   APPROVAL_REQUEST: { icon: Send, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
@@ -36,6 +37,7 @@ export default function NotificationsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>('ALL');
+  const [showSettings, setShowSettings] = useState(false);
 
   const { data: notifs = [], isLoading } = useQuery<any[]>({
     queryKey: ['notifications'],
@@ -112,6 +114,10 @@ export default function NotificationsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowSettings(true)}>
+            <Settings className="mr-1.5 h-4 w-4" />
+            알림 설정
+          </Button>
           {unreadCount > 0 && (
             <Button size="sm" variant="outline" onClick={() => markAllReadMutation.mutate()}>
               <CheckCheck className="mr-1.5 h-4 w-4" />
@@ -197,6 +203,8 @@ export default function NotificationsPage() {
           })}
         </div>
       )}
+
+      <NotificationSettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 }
