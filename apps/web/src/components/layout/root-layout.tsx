@@ -13,14 +13,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
 
+  const isPublic = publicPaths.includes(pathname);
+
+  // 인증이 필요한 페이지에서 로그인되지 않은 경우 → 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!loading && !user && !isPublic) {
+      router.replace('/login');
+    }
+  }, [loading, user, isPublic, router]);
+
   // 로딩 중이거나 공개 페이지인 경우 레이아웃 없이 렌더링
-  if (loading || publicPaths.includes(pathname)) {
+  if (loading || isPublic) {
     return <>{children}</>;
   }
 
-  // 인증이 필요한 페이지에서 로그인되지 않은 경우 → 로그인 페이지로 리다이렉트
-  if (!user && !publicPaths.includes(pathname)) {
-    router.replace('/login');
+  // 인증 안 된 상태에서는 빈 화면 (useEffect에서 리다이렉트 처리)
+  if (!user) {
     return null;
   }
 
