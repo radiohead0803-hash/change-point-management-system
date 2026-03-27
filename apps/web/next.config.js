@@ -4,60 +4,24 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   importScripts: ['/custom-sw.js'],
-  buildExcludes: [/middleware-manifest\.json$/],
+  buildExcludes: [/middleware-manifest\.json$/, /\.map$/],
+  // 페이지 프리캐싱 비활성화 - 캐시된 에러 페이지 문제 방지
+  dynamicStartUrl: false,
+  cacheOnFrontEndNav: false,
+  reloadOnOnline: true,
   runtimeCaching: [
     {
-      // HTML 페이지 (네비게이션 요청) - 항상 네트워크 우선
-      urlPattern: ({ request }) => request.mode === 'navigate',
-      handler: 'NetworkFirst',
+      // HTML 페이지 - 네트워크만 사용 (캐시 안 함)
+      urlPattern: /^https:\/\/.*/,
+      handler: 'NetworkOnly',
       options: {
         cacheName: 'pages',
-        expiration: { maxEntries: 32, maxAgeSeconds: 60 },
-        networkTimeoutSeconds: 10,
       },
-    },
-    {
-      urlPattern: /^https:\/\/.*\/api\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        expiration: { maxEntries: 32, maxAgeSeconds: 60 },
-        networkTimeoutSeconds: 10,
-      },
-    },
-    {
-      urlPattern: /\/_next\/data\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'next-data',
-        expiration: { maxEntries: 32, maxAgeSeconds: 60 },
-      },
-    },
-    {
-      urlPattern: /\.(?:js|css)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-resources',
-        expiration: { maxEntries: 64, maxAgeSeconds: 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|ico|webp)$/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'image-cache',
-        expiration: { maxEntries: 64, maxAgeSeconds: 7 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https:\/\/fonts\..*/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'google-fonts',
-        expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
-      },
+      method: 'GET',
     },
   ],
+  // next-pwa 기본 캐싱 규칙 사용 안 함
+  publicExcludes: ['!icons/**/*'],
 });
 
 /** @type {import('next').NextConfig} */

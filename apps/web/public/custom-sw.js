@@ -1,14 +1,24 @@
-// 서비스 워커 활성화 시 이전 캐시 정리
+// 서비스 워커 활성화 시 모든 캐시 정리
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames
-          .filter((name) => name === 'pages')
-          .map((name) => caches.delete(name))
-      )
+      Promise.all(cacheNames.map((name) => caches.delete(name)))
     )
   );
+});
+
+// fetch 이벤트 - 네비게이션 요청은 항상 네트워크로
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/') || new Response('오프라인 상태입니다.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+      })
+    );
+  }
 });
 
 // 푸시 알림 이벤트 핸들러
