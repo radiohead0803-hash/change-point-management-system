@@ -11,28 +11,36 @@ export function PushNotificationPrompt() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    if (!isPushSupported()) return;
+    try {
+      if (!user) return;
+      if (!isPushSupported()) return;
 
-    const permission = getPermissionState();
-    const dismissed = sessionStorage.getItem('push-prompt-dismissed');
+      const permission = getPermissionState();
+      const dismissed = sessionStorage.getItem('push-prompt-dismissed');
 
-    if (permission === 'default' && !dismissed) {
-      // 약간의 지연 후 표시
-      const timer = setTimeout(() => setVisible(true), 3000);
-      return () => clearTimeout(timer);
+      if (permission === 'default' && !dismissed) {
+        const timer = setTimeout(() => setVisible(true), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // 브라우저 API 접근 실패 시 무시
     }
   }, [user]);
 
   const handleAllow = async () => {
-    setLoading(true);
-    await subscribeToPush();
-    setVisible(false);
-    setLoading(false);
+    try {
+      setLoading(true);
+      await subscribeToPush();
+    } catch {
+      // 구독 실패 무시
+    } finally {
+      setVisible(false);
+      setLoading(false);
+    }
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem('push-prompt-dismissed', 'true');
+    try { sessionStorage.setItem('push-prompt-dismissed', 'true'); } catch {}
     setVisible(false);
   };
 
