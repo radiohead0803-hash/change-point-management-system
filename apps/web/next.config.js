@@ -7,6 +7,16 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
+      // HTML 페이지 (네비게이션 요청) - 항상 네트워크 우선
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        expiration: { maxEntries: 32, maxAgeSeconds: 60 },
+        networkTimeoutSeconds: 10,
+      },
+    },
+    {
       urlPattern: /^https:\/\/.*\/api\/.*/i,
       handler: 'NetworkFirst',
       options: {

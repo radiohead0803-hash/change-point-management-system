@@ -1,3 +1,16 @@
+// 서비스 워커 활성화 시 이전 캐시 정리
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames
+          .filter((name) => name === 'pages')
+          .map((name) => caches.delete(name))
+      )
+    )
+  );
+});
+
 // 푸시 알림 이벤트 핸들러
 self.addEventListener('push', (event) => {
   if (!event.data) return;
