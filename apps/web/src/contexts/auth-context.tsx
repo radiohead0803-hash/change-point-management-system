@@ -24,24 +24,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    const restoreSession = async () => {
+      try {
+        if (typeof window === 'undefined') return;
 
-    // localStorage에서 임시 로드 후 API에서 최신 데이터 갱신
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
-    setLoading(false);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
 
-    // 백그라운드에서 최신 프로필 동기화
-    usersApi.getMyProfile().then(({ data }) => {
-      localStorage.setItem('user', JSON.stringify(data));
-      setUser(data as User);
-    }).catch(() => {});
+        // localStorage에서 안전하게 유저 정보 복원
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed && typeof parsed === 'object' && parsed.id) {
+              setUser(parsed);
+            }
+          } catch {
+            // 깨진 JSON - 정리
+            localStorage.removeItem('user');
+          }
+        }
+        setLoading(false);
+
+        // 백그라운드에서 최신 프로필 동기화
+        try {
+          const { data } = await usersApi.getMyProfile();
+          localStorage.setItem('user', JSON.stringify(data));
+          setUser(data as User);
+        } catch {
+          // API 실패 시 토큰이 만료되었을 수 있음
+        }
+      } catch {
+        // 세션 복원 실패 시 안전하게 초기화
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -92,8 +118,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
     } catch {
-      const stored = localStorage.getItem('user');
-      if (stored) setUser(JSON.parse(stored));
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+      } catch { /* 깨진 JSON 무시 */ }
     }
   };
 
