@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 import RootLayout from '@/components/layout/root-layout';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { PushNotificationPrompt } from '@/components/push-notification-prompt';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <RootLayout>{children}</RootLayout>
+            <PushNotificationPrompt />
             <Toaster />
           </AuthProvider>
         </ThemeProvider>

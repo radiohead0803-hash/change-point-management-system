@@ -10,6 +10,7 @@ import { ExcelModule } from './excel/excel.module';
 import { SettingsModule } from './settings/settings.module';
 import { UsersModule } from './users/users.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PushModule } from './push/push.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -37,6 +38,7 @@ import { BootstrapService } from './bootstrap.service';
     SettingsModule,
     UsersModule,
     NotificationsModule,
+    PushModule,
   ],
   controllers: [AppController],
   providers: [

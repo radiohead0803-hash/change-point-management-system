@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pushService: PushService,
+  ) {}
 
   async findByUser(userId: string) {
     return this.prisma.notification.findMany({
@@ -52,7 +56,17 @@ export class NotificationsService {
     message: string;
     eventId?: string;
   }) {
-    return this.prisma.notification.create({ data: data as any });
+    const notification = await this.prisma.notification.create({ data: data as any });
+
+    // 푸시 알림 전송 (비동기, 실패해도 알림 생성에 영향 없음)
+    this.pushService.sendPush(data.userId, {
+      title: data.title,
+      body: data.message,
+      url: data.eventId ? `/change-events/${data.eventId}` : '/notifications',
+      tag: data.type,
+    }).catch(() => {});
+
+    return notification;
   }
 
   // 승인 요청 알림 전송 (검토자·중역에게)

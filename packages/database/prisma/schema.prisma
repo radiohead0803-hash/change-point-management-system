@@ -36,6 +36,7 @@ model User {
   reviewedEvents ChangeEvent[] @relation("EventReviewer")
   approvedEvents ChangeEvent[] @relation("EventApprover")
   managedEvents ChangeEvent[] @relation("EventManager")
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -342,4 +343,18 @@ enum NotificationType {
   APPROVED           // 승인 완료
   REVIEW_RETURNED    // 보완 요청
   SUBMITTED          // 제출됨
+}
+
+// 푸시 구독
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

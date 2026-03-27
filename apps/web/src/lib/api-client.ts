@@ -168,3 +168,10 @@ export const notifications = {
   remove: (id: string) => api.delete(`/notifications/${id}`),
   removeAll: () => api.delete('/notifications'),
 };
+
+export const push = {
+  getVapidKey: () => api.get<{ key: string | null }>('/push/vapid-public-key'),
+  subscribe: (data: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    api.post('/push/subscribe', data),
+  unsubscribe: (data: { endpoint: string }) => api.delete('/push/unsubscribe', { data }),
+};
